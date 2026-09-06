@@ -1,0 +1,90 @@
+# StudentStack — Agent Brief
+
+Paste this whole file as your first message to the coding agent (Kilo Code, Claude Code, Cursor, etc.) working in this repo. Re-paste it (or point the agent at this file) at the start of every new session — it's the persistent source of truth for what this project is and how to work on it.
+
+---
+
+## 1. What this project is
+
+StudentStack is a student resources directory — a better-designed, more feature-complete version of sites like resources.tensorboy.com and studentoffers.co. It curates free tools, software discounts, certifications, scholarships, and internships for students.
+
+**Read `student-resources-prd.md` in the repo root before writing any code.** It is the full spec: goals, non-goals, personas, data model, every feature broken into P0/P1/P2 with acceptance criteria, the route map, non-functional requirements, and the phased roadmap. This brief does not repeat that document — it tells you what to do *right now* and how to pick the work back up later.
+
+## 2. Current repo state
+
+- `student-resources-prd.md` — the full PRD. Source of truth for scope and schema.
+- `offers.json` — 593 raw offer records pulled live from studentoffers.co's public API. This is real, messy, production-shaped data — not a mockup. Use it as-is; do not regenerate or fabricate rows.
+- If a second file `student_resources.json` (151 records from a different source) is present in the repo, treat it as a second raw dataset to merge in. If it isn't present, proceed with `offers.json` alone and leave a `TODO` noting the second source can be added later.
+- Nothing else exists yet — no `package.json`, no app code, no database. You are starting the build from zero.
+
+## 3. How to work
+
+- Follow the PRD's phasing (§13). Do not jump ahead to P1/P2 features (accounts, bookmarks, submissions, reviews, digest emails) before the P0 MVP (§8.1–8.6) is solid. Building the wrong thing well is worse than asking.
+- Before any non-trivial architectural choice the PRD doesn't already pin down, state your assumption and proceed — don't block on it — but log it in `PROGRESS.md` (see §7) so it can be revisited.
+- Commit in small, working increments with clear messages. Don't hand back one giant unreviewable diff.
+- Prefer the exact tech stack in PRD §5. If current documentation for any of these libraries has moved on since the PRD was written, use the latest stable APIs and note the change in `PROGRESS.md` rather than silently deviating.
+
+## 4. Immediate task: Phase 1 (PRD §8.1–8.3, seeded data, no backend writes yet)
+
+### 4.1 Scaffold
+
+```bash
+npx create-next-app@latest . --typescript --tailwind --app --src-dir --import-alias "@/*"
+npx shadcn@latest init -t next
+```
+
+Confirm Tailwind v4 is installed (`tailwindcss` + `@tailwindcss/postcss`, CSS-first config via `@theme` in `globals.css` — no `tailwind.config.js` needed for the standard case). If the scaffold tool gives you an older Tailwind v3 setup, upgrade it.
+
+Add: `pnpm add fuse.js` for client-side fuzzy search.
+
+### 4.2 Data model
+
+Implement the Drizzle schema exactly as specified in PRD §7 (`categories`, `resources`, `bookmarks`, `reviews`, `click_events`). Use `drizzle-kit` with PostgreSQL. For local development without a live Supabase project yet, it's fine to point at a local Postgres via Docker or SQLite as a stand-in — just don't let the schema drift from the PRD's Postgres-specific types (arrays, enums) in a way that blocks the real migration later.
+
+### 4.3 Normalize the raw data into the schema
+
+Write a one-off script (`scripts/normalize-data.ts` or similar) that reads `offers.json` (and `student_resources.json` if present) and outputs seed data matching the `resources` table. Handle these known quirks explicitly — they are not edge cases, they are common in this dataset:
+
+- **Category naming**: `offers.json` uses `category_main` / `category_sub` (two levels); the PRD schema has one `categoryId` referencing a flat `categories` table. Decide and document whether `category_sub` becomes a tag instead, or whether you extend `categories` to support a parent/child relationship — either is defensible, but pick one and note it in `PROGRESS.md`.
+- **Tags**: `offers.json` stores `tag1`/`tag2`/`tag3` (nullable) plus a pre-computed `tags` array with empties removed. Use the `tags` array field directly — don't re-derive it from tag1-3.
+- **`extra_info` is a JSON string, not an object** — `JSON.parse()` it before reading `important_notes` / `disclaimer` out of it. It's `null` for many rows; guard for that.
+- **`claim_url` is sometimes `""` or `null`** (e.g., region-gated offers like Amazon Prime, Dell, Google Cloud Skills Boost route through in-app redirects instead of one static URL). Don't drop these rows — flag them (e.g., `status: 'needs_review'` or a boolean `has_static_claim_url: false`) so the UI can handle them differently (show a "varies by region" note instead of a dead link).
+- **Cost type mapping**: `tag2` on this dataset roughly corresponds to the PRD's `cost_type` enum (`Free`/`Discount`/`Credit`/`Trial` → map `Trial` to whichever of the PRD's enum values fits best, or extend the enum — your call, document it).
+- **No deadline field exists in either raw source.** The PRD's `deadline` column and the `/deadlines` view (§8.4) have nothing to populate them yet. Leave the column nullable and skip building the deadline view in this phase — it's dead UI with zero data. Note it as blocked on future data in `PROGRESS.md`.
+- **Dedup across sources** (if both JSON files are present): the same brand (GitHub Student Pack, Figma, Notion, Canva, etc.) appears in both raw sources under different slugs. Match on normalized name (lowercase, strip punctuation) before assuming they're distinct rows. When two sources disagree on details for the same offer, prefer `offers.json` — it's the more complete and current dataset.
+
+### 4.4 Seed
+
+Load the normalized output into the `resources` and `categories` tables via a seed script, not manual SQL.
+
+### 4.5 Build the directory UI (PRD §8.1–8.3)
+
+- Server-rendered resource grid at `/directory`, cards per PRD §8.3 (name, tagline, description, category icon, clickable tags, "Claim" CTA, freshness badge — freshness can show "Not yet verified" for now since the link-health cron is Phase 2).
+- Client-side combinable filters: category, tag, region, cost type. Reflect filter state in the URL query string.
+- Fuse.js fuzzy search across name/tagline/description/tags, combined with active filters (AND logic).
+- Skip: accounts, bookmarks, admin CRUD UI, link-health cron, deadline view, comparison view, submissions — all later phases per the PRD.
+
+## 5. Conventions
+
+- TypeScript strict mode, no `any` without a comment explaining why.
+- Server Components by default; add `"use client"` only where interactivity actually requires it (filter controls, search input).
+- Keep the seed/normalization script re-runnable and idempotent — you will re-run it as the raw data sources get updated or a third source gets added.
+- `.env.example` for every environment variable you introduce, even before a real Supabase project exists.
+
+## 6. Definition of done for this phase
+
+- [ ] `pnpm dev` runs a working `/directory` page
+- [ ] All ~590+ normalized resources are seeded and rendering
+- [ ] Category, tag, region, and cost-type filters all combine correctly
+- [ ] Search works and combines with active filters
+- [ ] Rows with a missing `claim_url` render without breaking the "Claim" CTA
+- [ ] `PROGRESS.md` exists and documents every judgment call made in §4.3
+
+## 7. Continuing work in later sessions
+
+Maintain a `PROGRESS.md` at the repo root. At the end of every session, update it with:
+- Which PRD phase/section you just completed
+- Any assumption or deviation from the PRD you made, and why
+- What's next, referencing the PRD's phase table (§13)
+
+At the start of a new session, read `PROGRESS.md` first, then the relevant PRD section for whatever phase comes next, then continue — don't ask the human to re-explain context that's already written down.
