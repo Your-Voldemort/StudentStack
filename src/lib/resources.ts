@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 
 export type Resource = {
@@ -69,4 +69,27 @@ export function getCategories(): Category[] {
 
 export function getAllTags(resources: Resource[]): string[] {
   return [...new Set(resources.flatMap((r) => r.tags))].sort();
+}
+
+export function getCategoriesWithCounts(): (Category & { count: number })[] {
+  return db
+    .select({
+      slug: schema.categories.slug,
+      name: schema.categories.name,
+      icon: schema.categories.icon,
+      count: sql<number>`count(${schema.resources.id})`,
+    })
+    .from(schema.categories)
+    .innerJoin(schema.resources, eq(schema.resources.categoryId, schema.categories.id))
+    .groupBy(schema.categories.id)
+    .orderBy(sql`count(${schema.resources.id}) desc`)
+    .all();
+}
+
+export function getResourceCount(): number {
+  const [row] = db
+    .select({ count: sql<number>`count(*)` })
+    .from(schema.resources)
+    .all();
+  return row.count;
 }
