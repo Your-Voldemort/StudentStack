@@ -3,11 +3,19 @@
 Read this first at the start of a new session, then the relevant PRD section
 for whatever phase comes next.
 
-## Status: Phase 1 (PRD §13) — done
+## Status: Phase 1 (PRD §13) — done, homepage added
 
 `pnpm dev` → `/directory` renders all 593 seeded resources with combinable
 category/tag/region/cost-type filters + Fuse.js fuzzy search, all reflected
-in the URL query string.
+in the URL query string. `/` is a real homepage now (was the default
+create-next-app template) — hero + live category grid + 3-step explainer,
+all funneling to `/directory`. Category tiles link to
+`/directory?category=<slug>`, reusing the existing filter param. Added
+`getCategoriesWithCounts()` / `getResourceCount()` to `src/lib/resources.ts`
+for the real numbers on that page. Homepage-only palette/display font
+(`--color-paper/ink/navy/marigold/sage/line`, `--font-display` → Space Mono)
+added to `globals.css`/`layout.tsx`; `/directory`'s shadcn components are
+untouched and still use the default theme.
 
 ### What's built
 
