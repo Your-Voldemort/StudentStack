@@ -1,7 +1,7 @@
 # PRD: StudentStack — A Student Resources Directory
 
 **Status:** Draft v1
-**Owner:** Anshu Pal
+**Owner:** Shrey Tripathi
 **Last updated:** September 2026
 **Reference inspiration:** resources.tensorboy.com (151 resources extracted, see Appendix A)
 
