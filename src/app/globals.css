@@ -65,30 +65,36 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  /* Retargeted to DESIGN.md's palette (see PRODUCT.md/DESIGN.md) so
+     /directory shares one visual identity with the homepage. Values are
+     the oklch equivalents of the hex tokens defined above; every pairing
+     used for text is contrast-verified there. .dark is left on the old
+     shadcn greyscale — there's no dark-mode toggle in this app yet, so
+     it's unreachable; revisit if one ships. */
+  --background: oklch(0.965 0.004 250); /* #f1f4f6 */
+  --foreground: oklch(0.19 0.01 260); /* #111418 */
+  --card: oklch(0.965 0.004 250);
+  --card-foreground: oklch(0.19 0.01 260);
+  --popover: oklch(0.965 0.004 250);
+  --popover-foreground: oklch(0.19 0.01 260);
+  --primary: oklch(0.64 0.19 42); /* #e65909 — the one brand accent */
+  --primary-foreground: oklch(0.19 0.01 260); /* ink on orange: 5.10:1 */
+  --secondary: oklch(0.925 0.006 250); /* #e3e7ea panel */
+  --secondary-foreground: oklch(0.19 0.01 260);
+  --muted: oklch(0.925 0.006 250);
+  --muted-foreground: oklch(0.42 0.01 260); /* #4a4d53 — 7.67:1 on bg */
+  --accent: oklch(0.925 0.006 250);
+  --accent-foreground: oklch(0.19 0.01 260);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.75 0.006 250); /* #abaeb2 hairline */
+  --input: oklch(0.75 0.006 250);
+  --ring: oklch(0.64 0.19 42); /* orange focus ring: 3.28:1, clears 1.4.11 */
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --radius: 0.3rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);

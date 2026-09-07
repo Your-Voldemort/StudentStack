@@ -3,6 +3,9 @@
 import { useDeferredValue, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Fuse from "fuse.js";
+import { X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -92,6 +95,12 @@ export function DirectoryClient({
     syncUrl({ tags: next });
   }
 
+  function removeTag(tag: string) {
+    const next = tags.filter((t) => t !== tag);
+    setTags(next);
+    syncUrl({ tags: next });
+  }
+
   function clearAll() {
     setSearch("");
     setCategory("all");
@@ -104,9 +113,53 @@ export function DirectoryClient({
   const hasActiveFilters =
     search || category !== "all" || region !== "all" || costType !== "all" || tags.length > 0;
 
+  // Every active facet filter becomes a removable chip, so the current
+  // selection is always visible at a glance, not just implied by the count.
+  const filterChips: { key: string; label: string; onRemove: () => void }[] = [
+    ...(category !== "all"
+      ? [
+          {
+            key: "category",
+            label: categories.find((c) => c.slug === category)?.name ?? category,
+            onRemove: () => {
+              setCategory("all");
+              syncUrl({ category: "all" });
+            },
+          },
+        ]
+      : []),
+    ...(region !== "all"
+      ? [
+          {
+            key: "region",
+            label: `Region: ${region}`,
+            onRemove: () => {
+              setRegion("all");
+              syncUrl({ region: "all" });
+            },
+          },
+        ]
+      : []),
+    ...(costType !== "all"
+      ? [
+          {
+            key: "cost",
+            label: `Cost: ${costType[0].toUpperCase()}${costType.slice(1)}`,
+            onRemove: () => {
+              setCostType("all");
+              syncUrl({ costType: "all" });
+            },
+          },
+        ]
+      : []),
+    ...tags.map((tag) => ({ key: `tag-${tag}`, label: tag, onRemove: () => removeTag(tag) })),
+  ];
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+    <div className="flex flex-col gap-4">
+      {/* z-10: sits above card content but below shadcn's popover/select
+          portals (z-50), so dropdowns never clip behind it. */}
+      <div className="bg-background/95 sticky top-0 z-10 -mx-4 flex flex-col gap-3 border-b px-4 py-4 backdrop-blur-sm sm:flex-row sm:flex-wrap sm:items-center">
         <Input
           placeholder="Search resources... (try a typo, e.g. 'gtihub')"
           value={search}
@@ -114,7 +167,7 @@ export function DirectoryClient({
             setSearch(e.target.value);
             syncUrl({ search: e.target.value });
           }}
-          className="sm:max-w-xs"
+          className="sm:max-w-[280px]"
         />
 
         <Select
@@ -124,7 +177,7 @@ export function DirectoryClient({
             syncUrl({ category: v });
           }}
         >
-          <SelectTrigger className="sm:w-56">
+          <SelectTrigger className="sm:w-48">
             <SelectValue placeholder="Category">
               {category === "all"
                 ? "All categories"
@@ -148,7 +201,7 @@ export function DirectoryClient({
             syncUrl({ region: v });
           }}
         >
-          <SelectTrigger className="sm:w-36">
+          <SelectTrigger className="sm:w-28">
             <SelectValue placeholder="Region">
               {region === "all" ? "All regions" : region}
             </SelectValue>
@@ -170,7 +223,7 @@ export function DirectoryClient({
             syncUrl({ costType: v });
           }}
         >
-          <SelectTrigger className="sm:w-40">
+          <SelectTrigger className="sm:w-32">
             <SelectValue placeholder="Cost type">
               {costType === "all" ? "All cost types" : costType[0].toUpperCase() + costType.slice(1)}
             </SelectValue>
@@ -193,25 +246,45 @@ export function DirectoryClient({
             syncUrl({ tags: next });
           }}
         />
+      </div>
 
-        {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={clearAll}
-            className="text-muted-foreground text-sm underline underline-offset-2"
-          >
-            Clear all filters
-          </button>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <p className="text-muted-foreground text-sm">
+          {filtered.length} of {resources.length} resources
+        </p>
+        {filterChips.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {filterChips.map((chip) => (
+              <Badge key={chip.key} variant="secondary" className="gap-1">
+                {chip.label}
+                <button
+                  type="button"
+                  aria-label={`Remove ${chip.label} filter`}
+                  onClick={chip.onRemove}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+            <button
+              type="button"
+              onClick={clearAll}
+              className="text-muted-foreground text-sm underline underline-offset-2"
+            >
+              Clear all
+            </button>
+          </div>
         )}
       </div>
 
-      <p className="text-muted-foreground text-sm">
-        {filtered.length} of {resources.length} resources
-      </p>
-
       {filtered.length === 0 ? (
-        <div className="text-muted-foreground rounded-lg border border-dashed py-16 text-center">
-          No matches — try removing a filter.
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed py-16 text-center">
+          <p className="text-muted-foreground">No matches — try removing a filter.</p>
+          {hasActiveFilters && (
+            <Button variant="outline" size="sm" onClick={clearAll}>
+              Clear filters
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

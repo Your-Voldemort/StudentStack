@@ -26,9 +26,49 @@ ledger/manifest list (dotted-leader rows with real counts) instead of
 identical bordered cards — the previous grid was a textbook "identical card
 grid" tell. Tokens live in `src/app/globals.css` under
 `--color-bg/panel/ink/ink-muted/line/orange/orange-deep`, homepage-scoped
-same as before; `/directory`'s shadcn theme is still untouched.
+same as before at that point.
 `.impeccable/live/config.json` is configured for live-mode iteration
 (`src/app/layout.tsx`, Next.js App Router, no CSP to patch).
+
+`/directory` then got the same `/impeccable` treatment (register: product,
+per `reference/product.md` — it's a filter/search tool, not a marketing
+surface). The shadcn `:root` tokens in `globals.css` are now retargeted to
+the same palette as the homepage (oklch equivalents of the hex values
+above; `--primary` = the orange accent, `--radius` shrunk from 0.625rem to
+0.3rem) so the two pages finally share one visual identity — previously
+`/directory` was left on the stock black/white Nova theme. `.dark` is
+intentionally untouched (no dark-mode toggle exists anywhere in the app,
+so it's unreachable). Because resource-card.tsx and the filter controls
+already used semantic Tailwind/shadcn classes (`bg-primary`,
+`text-muted-foreground`, etc.) rather than hardcoded colors, this
+retargeting needed no component-level color changes.
+
+Also, three real fixes, not just a reskin:
+- `src/app/directory/page.tsx`'s `<main>` was a direct flex child of
+  `<body>` (`flex flex-col`, from `layout.tsx`) with `mx-auto` on itself.
+  Per the flexbox spec, an auto margin on the cross axis disables stretch,
+  so `main` was falling back to shrink-to-fit sizing instead of filling
+  `max-w-6xl` — the entire directory page (filter bar *and* the resource
+  grid) has never reliably used its full available width. Fixed by adding
+  `w-full` alongside `max-w-6xl`. (The homepage doesn't have this bug: its
+  root wrapper, the actual direct child of `body`, has no `mx-auto` of its
+  own — centering happens one level deeper.)
+- The filter bar's five controls (search input + 3 selects + tag filter)
+  had fixed widths that summed to more than the container even after the
+  width fix, so one control reliably wrapped onto its own line at almost
+  every viewport width ≥640px. Narrowed each control
+  (`directory-client.tsx`, `tag-filter.tsx`) so all five sit on one row
+  with margin to spare.
+- The empty state and the "clear filters" action were text-only. Added a
+  real `Button` in the empty state, and a unified, removable filter-chip
+  row (category/region/cost-type/tags all shown as one consistent set of
+  chips, `Region:`/`Cost:` prefixed to disambiguate from tag values,
+  e.g. a tag literally named "Free") above the results — `TagFilter` no
+  longer renders its own separate chip list, to avoid showing tags twice.
+
+A `DirectorySkeleton` component now backs the `Suspense` fallback in
+`directory/page.tsx` (was `null`) for the brief CSR-bailout flash caused by
+`useSearchParams`.
 
 ### What's built
 
