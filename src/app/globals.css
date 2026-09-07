@@ -4,16 +4,18 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Homepage-only palette (index-card / campus-catalog concept). Scoped by
-   naming, not by CSS nesting, so it's additive to the shadcn tokens below
-   that /directory's components rely on. */
+/* Homepage-only palette — riso-print zine on photocopy grey, one safety-
+   orange spot ink. Scoped by naming, not CSS nesting, so it's additive to
+   the shadcn tokens below that /directory's components rely on. Values
+   verified for contrast in PRODUCT.md's revamp pass; see DESIGN.md. */
 @theme {
-  --color-paper: #fbfaf5;
-  --color-ink: #14171f;
-  --color-navy: #22314f;
-  --color-marigold: #f2a93b;
-  --color-sage: #55755b;
-  --color-line: #dedbce;
+  --color-bg: #f1f4f6;
+  --color-panel: #e3e7ea;
+  --color-ink: #111418;
+  --color-ink-muted: #4a4d53;
+  --color-line: #abaeb2;
+  --color-orange: #e65909;
+  --color-orange-deep: #ad3300;
 }
 
 @theme inline {
@@ -22,6 +24,7 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-display);
+  --font-body-brand: var(--font-body-brand);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -139,5 +142,49 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* Homepage entrance: one orchestrated moment on load — hero copy settles,
+   then the stamped card stack fans out. Both collapse to their resting
+   state instantly under reduced motion. */
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fan-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) translate(0, 28px) rotate(0deg) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(1);
+  }
+}
+
+.hero-in {
+  animation: hero-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.fan-card {
+  animation: fan-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-in {
+    animation: none;
+  }
+  .fan-card {
+    animation: none;
+    opacity: 1;
+    transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) rotate(var(--rot));
   }
 }

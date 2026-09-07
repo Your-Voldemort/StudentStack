@@ -1,23 +1,39 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
+import { Big_Shoulders, Public_Sans } from "next/font/google";
 import { getCategoriesWithCounts, getResourceCount } from "@/lib/resources";
 
+const bigShoulders = Big_Shoulders({
+  variable: "--font-display",
+  weight: ["700", "800", "900"],
+  subsets: ["latin"],
+});
+
+const publicSans = Public_Sans({
+  variable: "--font-body-brand",
+  weight: ["400", "500", "600"],
+  subsets: ["latin"],
+});
+
 // Illustrative only — a fixed, hand-picked slice of the real dataset for the
-// hero's card stack. Not a live query: swap these five if the roster changes.
+// hero's stamped-card stack. Not a live query: swap these five if the roster
+// changes.
 const HERO_CARDS = [
-  { icon: "🤖", name: "GitHub Copilot", tagline: "Free Copilot Student plan", dot: "bg-marigold" },
-  { icon: "🎨", name: "Adobe Creative Cloud", tagline: "4 months free + 71% off", dot: "bg-navy" },
-  { icon: "☁️", name: "Azure for Students", tagline: "$100 credit, no card needed", dot: "bg-sage" },
-  { icon: "⚡", name: "Notion", tagline: "Free Plus plan + AI trial", dot: "bg-marigold" },
-  { icon: "🛠️", name: "JetBrains", tagline: "All IDEs free (worth $299/yr)", dot: "bg-marigold" },
+  { icon: "🤖", name: "GitHub Copilot", tagline: "Free Copilot Student plan", tag: "Free" },
+  { icon: "🎨", name: "Adobe Creative Cloud", tagline: "4 months free + 71% off", tag: "Discount" },
+  { icon: "☁️", name: "Azure for Students", tagline: "$100 credit, no card needed", tag: "Credit" },
+  { icon: "⚡", name: "Notion", tagline: "Free Plus plan + AI trial", tag: "Free" },
+  { icon: "🛠️", name: "JetBrains", tagline: "All IDEs free (worth $299/yr)", tag: "Free" },
 ] as const;
 
-const HERO_TRANSFORMS = [
-  "rotate-[-14deg] translate-x-[-64px] translate-y-[18px]",
-  "rotate-[-7deg] translate-x-[-32px] translate-y-[2px]",
-  "rotate-[2deg] translate-x-[2px] translate-y-[-10px]",
-  "rotate-[9deg] translate-x-[36px] translate-y-[0px]",
-  "rotate-[16deg] translate-x-[70px] translate-y-[16px]",
-];
+// Final resting position for each fanned card: rotation + offset from center.
+const HERO_CARD_STYLE = [
+  { rot: "-14deg", tx: "-64px", ty: "18px" },
+  { rot: "-7deg", tx: "-32px", ty: "2px" },
+  { rot: "2deg", tx: "2px", ty: "-10px" },
+  { rot: "9deg", tx: "36px", ty: "0px" },
+  { rot: "16deg", tx: "70px", ty: "16px" },
+] as const;
 
 const STEPS = [
   {
@@ -40,15 +56,21 @@ const STEPS = [
 export default function Home() {
   const categories = getCategoriesWithCounts();
   const resourceCount = getResourceCount();
+  const half = Math.ceil(categories.length / 2);
+  const columns = [categories.slice(0, half), categories.slice(half)];
 
   return (
-    <div className="bg-paper text-ink flex flex-1 flex-col">
-      <header className="border-line/80 border-b">
+    <div
+      className={`${bigShoulders.variable} ${publicSans.variable} bg-bg text-ink font-body-brand flex flex-1 flex-col`}
+    >
+      <header className="border-line border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <span className="font-display text-lg font-bold tracking-tight">StudentStack</span>
+          <span className="font-display text-xl font-black tracking-tight uppercase">
+            StudentStack
+          </span>
           <Link
             href="/directory"
-            className="border-ink/15 hover:bg-ink hover:text-paper rounded-md border px-4 py-2 text-sm font-medium transition-colors"
+            className="border-ink hover:bg-ink hover:text-bg rounded-[3px] border px-4 py-2 text-sm font-medium transition-colors"
           >
             Browse directory
           </Link>
@@ -56,87 +78,115 @@ export default function Home() {
       </header>
 
       <section className="mx-auto grid w-full max-w-6xl gap-16 px-6 pt-16 pb-24 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pt-24 lg:pb-32">
-        <div>
-          <h1 className="font-display text-[2.6rem] leading-[1.08] tracking-tight sm:text-6xl">
+        <div className="hero-in">
+          <h1 className="font-display text-balance text-[2.75rem] leading-[1.05] tracking-tight uppercase sm:text-6xl">
             What being a student is actually worth.
           </h1>
-          <p className="text-ink/70 mt-6 max-w-md text-lg leading-relaxed">
+          <p className="text-ink-muted mt-6 max-w-[42ch] text-lg leading-relaxed text-pretty">
             Free software, cloud credits, scholarships, and discounts — one
             directory, filtered to what you can actually use.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-5">
             <Link
               href="/directory"
-              className="bg-ink text-paper hover:bg-navy rounded-md px-6 py-3 text-sm font-medium transition-colors"
+              className="bg-orange text-ink hover:bg-orange-deep hover:text-bg rounded-[3px] px-6 py-3 text-sm font-bold uppercase tracking-wide transition-colors"
             >
               Browse the directory
             </Link>
-            <span className="text-ink/65 font-display text-sm">
+            <span className="text-ink-muted text-sm">
               {resourceCount} resources · {categories.length} categories
             </span>
           </div>
         </div>
 
         <div className="relative h-[280px] overflow-hidden sm:h-[320px] sm:overflow-visible" aria-hidden>
-          {HERO_CARDS.map((card, i) => (
-            <div
-              key={card.name}
-              style={{ zIndex: i }}
-              className={`border-line bg-paper absolute top-1/2 left-1/2 w-56 -translate-x-1/2 -translate-y-1/2 rounded-lg border p-4 shadow-[0_10px_30px_-6px_rgba(20,23,31,0.22)] ${HERO_TRANSFORMS[i]}`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xl">{card.icon}</span>
-                <span className={`h-2 w-2 rounded-full ${card.dot}`} />
+          {HERO_CARDS.map((card, i) => {
+            const style = HERO_CARD_STYLE[i];
+            return (
+              <div
+                key={card.name}
+                style={
+                  {
+                    zIndex: i,
+                    "--rot": style.rot,
+                    "--tx": style.tx,
+                    "--ty": style.ty,
+                    animationDelay: `${300 + i * 90}ms`,
+                  } as CSSProperties
+                }
+                className="fan-card border-ink bg-bg absolute top-1/2 left-1/2 w-56 rounded-[4px] border p-4 shadow-[6px_6px_0_#111418]"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xl">{card.icon}</span>
+                  <span className="font-display text-ink-muted text-[10px] font-bold tracking-wide uppercase">
+                    {card.tag}
+                  </span>
+                </div>
+                <p className="font-display mt-3 text-base font-bold tracking-tight uppercase">
+                  {card.name}
+                </p>
+                <p className="text-ink-muted mt-1 text-xs leading-snug">{card.tagline}</p>
               </div>
-              <p className="font-display mt-3 text-sm font-bold">{card.name}</p>
-              <p className="text-ink/65 mt-1 text-xs leading-snug">{card.tagline}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
-      <section className="border-line/80 border-t">
+      <section className="border-line border-t">
         <div className="mx-auto max-w-6xl px-6 py-16">
-          <h2 className="font-display text-3xl tracking-tight">What&apos;s actually in here</h2>
-          <p className="text-ink/60 mt-2 max-w-lg">
+          <h2 className="font-display text-balance text-3xl tracking-tight uppercase">
+            What&apos;s actually in here
+          </h2>
+          <p className="text-ink-muted mt-2 max-w-[55ch] text-pretty">
             Fifteen categories, pulled straight from the live directory — not
             a preview number, the real count.
           </p>
-          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {categories.map((c) => (
-              <Link
-                key={c.slug}
-                href={`/directory?category=${c.slug}`}
-                className="border-line hover:border-ink/40 rounded-lg border p-4 transition-colors"
-              >
-                <span className="text-2xl">{c.icon}</span>
-                <p className="mt-3 text-sm font-medium">{c.name}</p>
-                <p className="font-display text-ink/65 mt-1 text-xs">{c.count}</p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-line/80 border-t">
-        <div className="mx-auto max-w-6xl px-6 py-16">
-          <h2 className="font-display text-3xl tracking-tight">How to actually use this</h2>
-          <div className="mt-10 grid gap-10 sm:grid-cols-3">
-            {STEPS.map((step) => (
-              <div key={step.n}>
-                <p className="font-display text-marigold text-3xl font-bold">{step.n}</p>
-                <h3 className="mt-3 text-base font-semibold">{step.title}</h3>
-                <p className="text-ink/60 mt-2 text-sm leading-relaxed">{step.body}</p>
+          <div className="mt-10 grid gap-x-12 md:grid-cols-2">
+            {columns.map((col, colIdx) => (
+              <div key={colIdx}>
+                {col.map((c) => (
+                  <Link
+                    key={c.slug}
+                    href={`/directory?category=${c.slug}`}
+                    className="hover:bg-panel border-line -mx-2 flex items-baseline gap-3 border-b px-2 py-4 transition-colors last:border-b-0"
+                  >
+                    <span className="w-7 shrink-0 text-xl">{c.icon}</span>
+                    <span className="font-display text-lg tracking-tight uppercase">
+                      {c.name}
+                    </span>
+                    <span className="border-line mx-1 h-px flex-1 border-b border-dotted" aria-hidden />
+                    <span className="font-display text-orange-deep text-2xl tabular-nums">
+                      {c.count}
+                    </span>
+                  </Link>
+                ))}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <footer className="border-line/80 mt-auto border-t">
+      <section className="bg-orange">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <h2 className="font-display text-balance text-3xl tracking-tight uppercase">
+            How to actually use this
+          </h2>
+          <div className="mt-10 grid gap-10 sm:grid-cols-3">
+            {STEPS.map((step) => (
+              <div key={step.n}>
+                <p className="font-display text-5xl font-black">{step.n}</p>
+                <h3 className="mt-3 text-base font-semibold">{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-pretty">{step.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-line mt-auto border-t">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-10 sm:flex-row sm:items-center sm:justify-between">
-          <span className="font-display text-sm font-bold">StudentStack</span>
-          <Link href="/directory" className="text-ink/60 hover:text-ink text-sm">
+          <span className="font-display text-sm font-black uppercase">StudentStack</span>
+          <Link href="/directory" className="text-ink-muted hover:text-ink text-sm">
             Browse the directory
           </Link>
         </div>

@@ -12,10 +12,23 @@ create-next-app template) — hero + live category grid + 3-step explainer,
 all funneling to `/directory`. Category tiles link to
 `/directory?category=<slug>`, reusing the existing filter param. Added
 `getCategoriesWithCounts()` / `getResourceCount()` to `src/lib/resources.ts`
-for the real numbers on that page. Homepage-only palette/display font
-(`--color-paper/ink/navy/marigold/sage/line`, `--font-display` → Space Mono)
-added to `globals.css`/`layout.tsx`; `/directory`'s shadcn components are
-untouched and still use the default theme.
+for the real numbers on that page.
+
+Homepage went through a second, `/impeccable`-driven visual pass since then:
+`PRODUCT.md` and `DESIGN.md` now exist at the repo root (register: brand;
+personality: scrappy & resourceful) and should be read before any future
+homepage/marketing work. The visual system moved from an "index card /
+Space Mono" concept to "The Photocopied Flyer" — photocopy-grey + one
+committed safety-orange accent, Big Shoulders (display) + Public Sans
+(body) instead of Space Mono (Space Mono, IBM Plex Mono, and Inter are on
+impeccable's font reflex-reject list). The category grid became a
+ledger/manifest list (dotted-leader rows with real counts) instead of
+identical bordered cards — the previous grid was a textbook "identical card
+grid" tell. Tokens live in `src/app/globals.css` under
+`--color-bg/panel/ink/ink-muted/line/orange/orange-deep`, homepage-scoped
+same as before; `/directory`'s shadcn theme is still untouched.
+`.impeccable/live/config.json` is configured for live-mode iteration
+(`src/app/layout.tsx`, Next.js App Router, no CSP to patch).
 
 ### What's built
 
