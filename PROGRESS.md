@@ -6,8 +6,25 @@ for whatever phase comes next.
 ## Status: Phase 2 (PRD §13) — done
 
 Postgres cutover, admin CRUD, and the link-health cron are all live against
-a real Supabase project (provisioned via `vercel integration add supabase`,
-not manually through the Supabase dashboard).
+a real Supabase project — the user's own (created directly on
+supabase.com), not the Vercel-provisioned one. The app originally ran on a
+`vercel integration add supabase` resource; that was fully migrated off and
+deleted (`vercel integration resource remove supabase-yellow-engine
+--disconnect-all`) once the user's own project had the schema, all 593
+resources, and the admin user recreated on it. All five Supabase/Postgres
+env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+`SUPABASE_SERVICE_ROLE_KEY`, `POSTGRES_URL`, `POSTGRES_URL_NON_POOLING`) are
+now plain Vercel env vars (not integration-managed) across all three
+environments.
+
+**Gotcha hit during the migration:** the project's direct connection host
+(`db.<ref>.supabase.co:5432`) is IPv6-only unless the IPv4 add-on is
+purchased, so `drizzle-kit push` couldn't connect through it. Fixed by
+using the Supavisor pooler host in **session mode** (port 5432,
+`aws-0-<region>.pooler.supabase.com`, username `postgres.<project-ref>`)
+for `POSTGRES_URL_NON_POOLING` instead of the raw direct host — same
+pooler host as `POSTGRES_URL`, just a different port/mode. See
+`.env.example`.
 
 ### What's built (Phase 2)
 
