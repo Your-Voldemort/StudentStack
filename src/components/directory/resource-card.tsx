@@ -1,3 +1,4 @@
+import { Button } from "@/components/animate-ui/components/buttons/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { Resource } from "@/lib/resources";
@@ -57,14 +58,11 @@ export function ResourceCard({
           </div>
 
           {resource.hasStaticClaimUrl && resource.url ? (
-            <a
-              href={resource.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-primary text-primary-foreground rounded-md px-3 py-1.5 text-sm font-medium hover:opacity-90"
-            >
-              Claim
-            </a>
+            <Button asChild size="sm">
+              <a href={resource.url} target="_blank" rel="noopener noreferrer">
+                Claim
+              </a>
+            </Button>
           ) : (
             <span
               title="This offer routes through an in-app redirect or varies by region — no single static link"
