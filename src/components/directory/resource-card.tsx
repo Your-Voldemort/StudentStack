@@ -1,4 +1,4 @@
-import { Button } from "@/components/animate-ui/components/buttons/button";
+import { AnimatedShinyButton } from "@/components/ui/animated-shiny-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { Resource } from "@/lib/resources";
@@ -58,11 +58,9 @@ export function ResourceCard({
           </div>
 
           {resource.hasStaticClaimUrl && resource.url ? (
-            <Button asChild size="sm">
-              <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                Claim
-              </a>
-            </Button>
+            <AnimatedShinyButton url={resource.url} compact>
+              Claim
+            </AnimatedShinyButton>
           ) : (
             <span
               title="This offer routes through an in-app redirect or varies by region — no single static link"

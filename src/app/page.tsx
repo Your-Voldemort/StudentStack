@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { Big_Shoulders, Public_Sans } from "next/font/google";
-import { Button } from "@/components/animate-ui/components/buttons/button";
+import { AnimatedShinyButton } from "@/components/ui/animated-shiny-button";
 import { getCategoriesWithCounts, getResourceCount } from "@/lib/resources";
 
 // See src/app/directory/page.tsx for why this is force-dynamic rather than
@@ -116,12 +116,9 @@ export default async function Home() {
           </form>
 
           <div className="mt-6 flex flex-wrap items-center gap-5">
-            <Button
-              asChild
-              className="bg-orange text-ink hover:bg-orange-deep hover:text-bg h-auto rounded-[3px] px-6 py-3 text-sm font-bold uppercase tracking-wide shadow-none"
-            >
-              <Link href="/directory">Browse the directory</Link>
-            </Button>
+            <AnimatedShinyButton url="/directory">
+              Browse the directory
+            </AnimatedShinyButton>
             <span className="text-ink-muted text-sm">
               {resourceCount} resources · {categories.length} categories
             </span>
