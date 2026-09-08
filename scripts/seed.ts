@@ -9,39 +9,36 @@ async function main() {
     path.join(process.cwd(), "offers.json"),
   );
 
-  db.delete(schema.resources).run();
-  db.delete(schema.categories).run();
+  await db.delete(schema.resources);
+  await db.delete(schema.categories);
 
-  const categoryIdBySlug = new Map<string, number>();
-  for (const c of categories) {
-    const [row] = db.insert(schema.categories).values(c).returning().all();
-    categoryIdBySlug.set(c.slug, row.id);
-  }
+  const insertedCategories = await db.insert(schema.categories).values(categories).returning();
+  const categoryIdBySlug = new Map(insertedCategories.map((c) => [c.slug, c.id]));
 
   const now = new Date();
-  for (const r of resources) {
+  const resourceRows = resources.map((r) => {
     const categoryId = categoryIdBySlug.get(r.categorySlug);
     if (!categoryId) throw new Error(`unknown category slug ${r.categorySlug}`);
-    db.insert(schema.resources)
-      .values({
-        slug: r.slug,
-        name: r.name,
-        tagline: r.tagline,
-        description: r.description,
-        url: r.url,
-        hasStaticClaimUrl: r.hasStaticClaimUrl,
-        categoryId,
-        tags: r.tags,
-        region: r.region,
-        costType: r.costType,
-        status: r.status,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .run();
-  }
+    return {
+      slug: r.slug,
+      name: r.name,
+      tagline: r.tagline,
+      description: r.description,
+      url: r.url,
+      hasStaticClaimUrl: r.hasStaticClaimUrl,
+      categoryId,
+      tags: r.tags,
+      region: r.region,
+      costType: r.costType,
+      status: r.status,
+      createdAt: now,
+      updatedAt: now,
+    };
+  });
+  await db.insert(schema.resources).values(resourceRows);
 
   console.log(`Seeded ${categories.length} categories and ${resources.length} resources.`);
+  process.exit(0);
 }
 
 main();

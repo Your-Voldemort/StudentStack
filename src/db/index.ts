@@ -1,9 +1,10 @@
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import * as schema from "./schema.sqlite";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
+import * as schema from "./schema";
 
-const sqlite = new Database(process.env.SQLITE_PATH ?? "local.db");
-sqlite.pragma("journal_mode = WAL");
+// Pooled (Supavisor transaction mode) connection for app runtime queries.
+// Prepared statements aren't supported in transaction mode, hence `prepare: false`.
+const client = postgres(process.env.POSTGRES_URL!, { prepare: false });
 
-export const db = drizzle(sqlite, { schema });
+export const db = drizzle(client, { schema });
 export { schema };

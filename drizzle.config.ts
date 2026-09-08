@@ -1,13 +1,13 @@
 import { defineConfig } from "drizzle-kit";
 
-// Local dev only — points at SQLite. Once a real Supabase/Neon project
-// exists, switch dialect to "postgresql", schema to "./src/db/schema.ts",
-// and dbCredentials to { url: process.env.DATABASE_URL }.
+// Points at Supabase Postgres (Vercel Marketplace integration). Migrations
+// run against the non-pooled connection; the app itself uses the pooled one
+// (see src/db/index.ts).
 export default defineConfig({
-  dialect: "sqlite",
-  schema: "./src/db/schema.sqlite.ts",
+  dialect: "postgresql",
+  schema: "./src/db/schema.ts",
   out: "./drizzle",
   dbCredentials: {
-    url: process.env.SQLITE_PATH ?? "local.db",
+    url: process.env.POSTGRES_URL_NON_POOLING!,
   },
 });

@@ -9,6 +9,7 @@ export type Resource = {
   description: string;
   url: string | null;
   hasStaticClaimUrl: boolean;
+  categoryId: number;
   categorySlug: string;
   categoryName: string;
   categoryIcon: string;
@@ -20,6 +21,7 @@ export type Resource = {
 };
 
 export type Category = {
+  id: number;
   slug: string;
   name: string;
   icon: string;
@@ -27,8 +29,8 @@ export type Category = {
 
 // Directory is small enough (~600 rows) to load in full server-side and
 // filter/search in memory — no need for a paginated query layer yet.
-export function getAllResources(): Resource[] {
-  const rows = db
+export async function getAllResources(): Promise<Resource[]> {
+  const rows = await db
     .select({
       id: schema.resources.id,
       slug: schema.resources.slug,
@@ -37,6 +39,7 @@ export function getAllResources(): Resource[] {
       description: schema.resources.description,
       url: schema.resources.url,
       hasStaticClaimUrl: schema.resources.hasStaticClaimUrl,
+      categoryId: schema.resources.categoryId,
       tags: schema.resources.tags,
       region: schema.resources.region,
       costType: schema.resources.costType,
@@ -47,33 +50,33 @@ export function getAllResources(): Resource[] {
       categoryIcon: schema.categories.icon,
     })
     .from(schema.resources)
-    .innerJoin(schema.categories, eq(schema.resources.categoryId, schema.categories.id))
-    .all();
+    .innerJoin(schema.categories, eq(schema.resources.categoryId, schema.categories.id));
   return rows.map((r) => ({
     ...r,
     lastVerifiedAt: r.lastVerifiedAt ? r.lastVerifiedAt.getTime() : null,
-  })) as Resource[];
+  }));
 }
 
-export function getCategories(): Category[] {
+export async function getCategories(): Promise<Category[]> {
   return db
     .select({
+      id: schema.categories.id,
       slug: schema.categories.slug,
       name: schema.categories.name,
       icon: schema.categories.icon,
     })
     .from(schema.categories)
-    .orderBy(schema.categories.sortOrder)
-    .all();
+    .orderBy(schema.categories.sortOrder);
 }
 
 export function getAllTags(resources: Resource[]): string[] {
   return [...new Set(resources.flatMap((r) => r.tags))].sort();
 }
 
-export function getCategoriesWithCounts(): (Category & { count: number })[] {
+export async function getCategoriesWithCounts(): Promise<(Category & { count: number })[]> {
   return db
     .select({
+      id: schema.categories.id,
       slug: schema.categories.slug,
       name: schema.categories.name,
       icon: schema.categories.icon,
@@ -82,14 +85,10 @@ export function getCategoriesWithCounts(): (Category & { count: number })[] {
     .from(schema.categories)
     .innerJoin(schema.resources, eq(schema.resources.categoryId, schema.categories.id))
     .groupBy(schema.categories.id)
-    .orderBy(sql`count(${schema.resources.id}) desc`)
-    .all();
+    .orderBy(sql`count(${schema.resources.id}) desc`);
 }
 
-export function getResourceCount(): number {
-  const [row] = db
-    .select({ count: sql<number>`count(*)` })
-    .from(schema.resources)
-    .all();
+export async function getResourceCount(): Promise<number> {
+  const [row] = await db.select({ count: sql<number>`count(*)` }).from(schema.resources);
   return row.count;
 }

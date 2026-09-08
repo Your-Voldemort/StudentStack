@@ -53,9 +53,9 @@ const STEPS = [
   },
 ];
 
-export default function Home() {
-  const categories = getCategoriesWithCounts();
-  const resourceCount = getResourceCount();
+export default async function Home() {
+  const categories = await getCategoriesWithCounts();
+  const resourceCount = await getResourceCount();
   const half = Math.ceil(categories.length / 2);
   const columns = [categories.slice(0, half), categories.slice(half)];
 

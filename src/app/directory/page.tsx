@@ -3,9 +3,9 @@ import { DirectoryClient } from "@/components/directory/directory-client";
 import { DirectorySkeleton } from "@/components/directory/directory-skeleton";
 import { getAllResources, getAllTags, getCategories } from "@/lib/resources";
 
-export default function DirectoryPage() {
-  const resources = getAllResources();
-  const categories = getCategories();
+export default async function DirectoryPage() {
+  const resources = await getAllResources();
+  const categories = await getCategories();
   const allTags = getAllTags(resources);
 
   return (
