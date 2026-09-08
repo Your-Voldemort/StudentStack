@@ -3,6 +3,83 @@
 Read this first at the start of a new session, then the relevant PRD section
 for whatever phase comes next.
 
+## Status: Phase 2 (PRD §13) — done
+
+Postgres cutover, admin CRUD, and the link-health cron are all live against
+a real Supabase project (provisioned via `vercel integration add supabase`,
+not manually through the Supabase dashboard).
+
+### What's built (Phase 2)
+
+- **Real Postgres.** `src/db/index.ts` now uses `postgres-js` +
+  `drizzle-orm/postgres-js` against Supabase's pooled `POSTGRES_URL`
+  (`prepare: false` — Supavisor transaction mode doesn't support prepared
+  statements). `drizzle-kit push`/`db:seed` use `POSTGRES_URL_NON_POOLING`
+  and load `.env.local` via `dotenv-cli` (neither `drizzle-kit` nor `tsx`
+  auto-load it). `src/db/schema.sqlite.ts`, `better-sqlite3`, and
+  `local.db*` are gone — Postgres is the only path now. `src/lib/resources.ts`
+  and both pages that call it are `async` (postgres-js has no
+  `.all()`/`.run()`). Re-seeded all 593 resources with a single bulk insert
+  per table instead of 593 sequential round trips.
+- **Supabase Auth, single-admin gate (§8.5's "auth-gated, single admin
+  role").** `src/lib/supabase/{server,client}.ts` are the standard
+  `@supabase/ssr` clients. `src/proxy.ts` — Next.js 16 renamed
+  `middleware.ts` to `proxy.ts` — refreshes the session and does an
+  optimistic redirect for `/admin/*`. `src/lib/admin/auth.ts`'s
+  `verifyAdmin()` is the real gate: authenticated **and** `email ===
+  process.env.ADMIN_EMAIL`, called in the admin layout and independently in
+  every Server Action (Next.js's own guidance: proxy/layout checks alone
+  aren't sufficient — Server Functions are reachable directly). One admin
+  user exists, bootstrapped via `scripts/create-admin.ts` (service-role
+  key, never client-side).
+- **Admin CRUD (§8.5).** `/admin` (route group `(dashboard)`, kept separate
+  from `/admin/login` so the gated layout doesn't redirect-loop on the
+  login page itself) lists all resources with inline status edit — a
+  status change hits the DB directly and is visible on `/directory` on the
+  very next request, since neither page has any caching (`cacheComponents`
+  is still off; see the judgment call below). `/admin/resources/new` and
+  `/admin/resources/[id]` cover the PRD's required create fields
+  (name/url/category/cost type/description) plus the optional ones
+  (tags/region/deadline). Verified live in a real browser: login → dashboard
+  → status toggle → directory badge appears → create → appears on
+  `/directory` → delete → gone.
+- **Link-health cron (§8.6).** `src/lib/link-health.ts` has the pure
+  classify/concurrency logic (self-checked: `npx tsx src/lib/link-health.ts`)
+  separate from `src/app/api/cron/link-health/route.ts`'s HEAD-check
+  (GET fallback on 405/501), 25-way concurrency pool, and `CRON_SECRET`
+  bearer check. `vercel.json` schedules it weekly (Monday 03:00 UTC — Hobby
+  plan only allows once/day). Ran live against all 593 seeded resources:
+  551 checkable (the other 42 have no static claim URL), completed in
+  ~2m15s against the 270s budget, found 86 genuinely broken links — which
+  immediately show the "⚠ Link may be down" badge on `/directory`.
+
+### Judgment calls (Phase 2)
+
+11. **Admin auth is a single allow-listed email, not full Phase 3
+    accounts.** §8.5 asks for "auth-gated, single admin role" as a Phase 2
+    P0, but real user accounts are Phase 3. Built the minimum that
+    satisfies §8.5 on top of the Supabase Auth infra Phase 3 needs anyway
+    (`src/lib/supabase/`) — Phase 3 extends this rather than starting from
+    scratch. `ADMIN_EMAIL` is the allow-list; `scripts/create-admin.ts`
+    bootstraps that one user.
+- **cacheComponents stays off.** The PRD tech-stack table calls it "a
+    stable default behavior, not an experimental flag," which is true of
+    the *flag naming* (no more `experimental.ppr`) but not of the setting
+    itself — `next.config.ts` still needs `cacheComponents: true`, and it
+    was never set. Left it off: turning it on would force `use cache`
+    boundaries and `<Suspense>`-wrapped auth reads across the app for no
+    concrete Phase 2 requirement. This is also why admin auth could use
+    plain `cookies()` reads instead of the `use cache: private` pattern.
+- **Link-health "admin gets a summary notification" (§8.6) is the
+    dashboard's status-count line, not an email.** No email provider is
+    wired up yet (that's Phase 5's digest email, §8.12); building one just
+    for this would be scope creep. `/admin` already computes
+    active/broken/expired counts and `max(last_verified_at)` from existing
+    columns — no new table needed.
+- **`getCategories()`/`getAllResources()` gained `id`/`categoryId`** so the
+    admin resource form's category `<select>` can use the real numeric FK
+    directly instead of a slug round-trip.
+
 ## Status: Phase 1 (PRD §13) — done, homepage added
 
 `pnpm dev` → `/directory` renders all 593 seeded resources with combinable
@@ -151,6 +228,9 @@ Accounts, bookmarks, admin CRUD, link-health cron, `/deadlines`,
 
 ## Next
 
-**Phase 2** (PRD §13): point at a real Postgres (Supabase or Neon), swap
-`src/db/index.ts` over to `schema.ts`, build `/admin` CRUD (§8.5) and the
-link-health cron (§8.6).
+**Phase 3** (PRD §13): real user accounts on top of the Supabase Auth
+plumbing already in place (`src/lib/supabase/`, `src/proxy.ts`) —
+bookmarks/tracker (§8.7), `/deadlines` (§8.4), personalization (§8.8).
+Phase 3 extends the existing auth setup rather than introducing a new one;
+watch for the single-admin-email check in `verifyAdmin()` needing to become
+a real role check once regular users exist.
