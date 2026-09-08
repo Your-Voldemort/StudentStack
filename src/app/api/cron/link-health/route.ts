@@ -1,4 +1,5 @@
 import { eq, and, isNotNull, ne } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { db, schema } from "@/db";
 import { checkUrl, classifyCheck, runWithConcurrency } from "@/lib/link-health";
 
@@ -38,6 +39,13 @@ export async function GET(request: Request) {
       .set({ status, lastVerifiedAt: now })
       .where(eq(schema.resources.id, target.id));
   });
+
+  // / and /directory are statically prerendered (no dynamic API in either
+  // page) — without this, cron-driven status flips wouldn't show up until
+  // the next deploy. Admin CRUD (src/app/admin/(dashboard)/actions.ts)
+  // does the same after every mutation, for the same reason.
+  revalidatePath("/");
+  revalidatePath("/directory");
 
   const summary = { checked: targets.length, active, broken, checkedAt: now.toISOString() };
   console.log("link-health run:", summary);

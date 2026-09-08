@@ -3,6 +3,10 @@ import Link from "next/link";
 import { Big_Shoulders, Public_Sans } from "next/font/google";
 import { getCategoriesWithCounts, getResourceCount } from "@/lib/resources";
 
+// See src/app/directory/page.tsx for why this is force-dynamic rather than
+// relying on revalidatePath to refresh a statically prerendered page.
+export const dynamic = "force-dynamic";
+
 const bigShoulders = Big_Shoulders({
   variable: "--font-display",
   weight: ["700", "800", "900"],
