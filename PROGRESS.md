@@ -79,6 +79,17 @@ not manually through the Supabase dashboard).
 - **`getCategories()`/`getAllResources()` gained `id`/`categoryId`** so the
     admin resource form's category `<select>` can use the real numeric FK
     directly instead of a slug round-trip.
+- **`/` and `/directory` are `export const dynamic = "force-dynamic"`.**
+    Neither page uses a dynamic API, so `next build` was silently
+    prerendering both as fully static — verified with a real
+    `next build && next start`: `revalidatePath` correctly marked the page
+    stale (confirmed via `x-nextjs-cache: MISS`) and re-rendered it, but the
+    regenerated output still matched the build-time snapshot rather than
+    the live DB (checked by comparing against a same-process debug query
+    that *did* see the current data). `force-dynamic` sidesteps that
+    entirely — the PRD's "reflects within one page load" requirement
+    (§8.5) needs a hard guarantee, not a caching layer whose on-demand
+    invalidation didn't reliably re-run the query in self-hosted mode.
 
 ## Status: Phase 1 (PRD §13) — done, homepage added
 
