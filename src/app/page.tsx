@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import { Search } from "lucide-react";
 import { Big_Shoulders, Public_Sans } from "next/font/google";
 import { getCategoriesWithCounts, getResourceCount } from "@/lib/resources";
 
@@ -74,7 +75,7 @@ export default async function Home() {
           </span>
           <Link
             href="/directory"
-            className="border-ink hover:bg-ink hover:text-bg rounded-[3px] border px-4 py-2 text-sm font-medium transition-colors"
+            className="border-ink hover:bg-ink hover:text-bg inline-flex min-h-11 items-center rounded-[3px] border px-4 py-2 text-sm font-medium transition-colors"
           >
             Browse directory
           </Link>
@@ -90,7 +91,30 @@ export default async function Home() {
             Free software, cloud credits, scholarships, and discounts — one
             directory, filtered to what you can actually use.
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-5">
+
+          <form
+            action="/directory"
+            method="GET"
+            role="search"
+            aria-label="Search the directory"
+            className="border-ink focus-within:ring-orange mt-8 flex max-w-md rounded-[3px] border bg-bg focus-within:ring-2"
+          >
+            <input
+              type="search"
+              name="q"
+              placeholder={`Search ${resourceCount} resources… try "aws" or "certification"`}
+              className="text-ink placeholder:text-ink-muted min-w-0 flex-1 bg-transparent px-4 py-3 text-sm outline-none"
+            />
+            <button
+              type="submit"
+              aria-label="Search"
+              className="border-ink hover:bg-ink hover:text-bg inline-flex min-h-11 shrink-0 cursor-pointer items-center border-l px-4 transition-colors"
+            >
+              <Search className="h-4 w-4" aria-hidden />
+            </button>
+          </form>
+
+          <div className="mt-6 flex flex-wrap items-center gap-5">
             <Link
               href="/directory"
               className="bg-orange text-ink hover:bg-orange-deep hover:text-bg rounded-[3px] px-6 py-3 text-sm font-bold uppercase tracking-wide transition-colors"
@@ -190,7 +214,10 @@ export default async function Home() {
       <footer className="border-line mt-auto border-t">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-10 sm:flex-row sm:items-center sm:justify-between">
           <span className="font-display text-sm font-black uppercase">StudentStack</span>
-          <Link href="/directory" className="text-ink-muted hover:text-ink text-sm">
+          <Link
+            href="/directory"
+            className="text-ink-muted hover:text-ink inline-flex min-h-11 items-center text-sm"
+          >
             Browse the directory
           </Link>
         </div>
