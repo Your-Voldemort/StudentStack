@@ -6,22 +6,11 @@ import Fuse from "fuse.js";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { applyFilters, countByCategory, topTags, type DirectoryFilters } from "@/lib/directory-filters";
 import type { Category, Resource } from "@/lib/resources";
-import { cn } from "@/lib/utils";
+import { FilterPanel } from "./filter-panel";
 import { ResourceCard } from "./resource-card";
-import { TagFilter } from "./tag-filter";
 
-const REGIONS = ["IN", "Global"] as const;
-const COST_TYPES = ["free", "discount", "stipend", "scholarship", "credits", "trial"] as const;
 const PAGE_SIZE = 30;
 
 function parseListParam(param: string | null): string[] {
@@ -119,6 +108,20 @@ export function DirectoryClient({
     syncUrl({ tags: next });
   }
 
+  function toggleCategory(slug: string) {
+    const next = category.includes(slug) ? category.filter((c) => c !== slug) : [...category, slug];
+    setCategory(next);
+    syncUrl({ category: next });
+  }
+
+  function addOrRemoveTag(tag: string) {
+    if (tags.includes(tag)) {
+      removeTag(tag);
+    } else {
+      addTag(tag);
+    }
+  }
+
   function toggleCostType(value: string) {
     const next = costType.includes(value)
       ? costType.filter((c) => c !== value)
@@ -176,149 +179,94 @@ export function DirectoryClient({
   ];
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* z-10: sits above card content but below shadcn's popover/select
-          portals (z-50), so dropdowns never clip behind it. */}
-      <div className="bg-background/95 sticky top-0 z-10 -mx-4 flex flex-col gap-3 border-b px-4 py-4 backdrop-blur-sm sm:flex-row sm:flex-wrap sm:items-center">
-        <Input
-          placeholder="Search resources... (try a typo, e.g. 'gtihub')"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            syncUrl({ search: e.target.value });
-          }}
-          className="sm:max-w-[280px]"
-        />
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-[260px_1fr]">
+      <aside className="hidden md:block">
+        <div className="sticky top-8">
+          <FilterPanel
+            search={search}
+            onSearchChange={(v) => {
+              setSearch(v);
+              syncUrl({ search: v });
+            }}
+            costType={costType}
+            onToggleCostType={toggleCostType}
+            worksInIndia={region === "IN"}
+            onToggleWorksInIndia={() => {
+              const next = region === "IN" ? "all" : "IN";
+              setRegion(next);
+              syncUrl({ region: next });
+            }}
+            categories={categories}
+            categoryCounts={categoryCounts}
+            selectedCategories={category}
+            onToggleCategory={toggleCategory}
+            topTagList={topTagList}
+            selectedTags={tags}
+            onToggleTag={addOrRemoveTag}
+            allTags={allTags}
+            onTagsChange={(next) => {
+              setTags(next);
+              syncUrl({ tags: next });
+            }}
+          />
+        </div>
+      </aside>
 
-        <Select
-          value={category[0] ?? "all"}
-          onValueChange={(v) => {
-            const next = v === "all" ? [] : [v];
-            setCategory(next);
-            syncUrl({ category: next });
-          }}
-        >
-          <SelectTrigger className="sm:w-48">
-            <SelectValue placeholder="Category">
-              {category.length === 0
-                ? "All categories"
-                : categories.find((c) => c.slug === category[0])?.name}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All categories</SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c.slug} value={c.slug}>
-                {c.icon} {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={region}
-          onValueChange={(v) => {
-            setRegion(v);
-            syncUrl({ region: v });
-          }}
-        >
-          <SelectTrigger className="sm:w-28">
-            <SelectValue placeholder="Region">
-              {region === "all" ? "All regions" : region}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All regions</SelectItem>
-            {REGIONS.map((r) => (
-              <SelectItem key={r} value={r}>
-                {r}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Cost type">
-          {COST_TYPES.map((c) => (
-            <button
-              key={c}
-              type="button"
-              aria-pressed={costType.includes(c)}
-              onClick={() => toggleCostType(c)}
-              className={cn(
-                "rounded-full border px-3 py-1.5 text-sm capitalize transition-colors",
-                costType.includes(c)
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "hover:bg-accent",
-              )}
-            >
-              {c}
-            </button>
-          ))}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <p className="text-muted-foreground text-sm">
+            {filtered.length} of {resources.length} resources
+          </p>
+          {filterChips.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {filterChips.map((chip) => (
+                <Badge key={chip.key} variant="secondary" className="gap-1">
+                  {chip.label}
+                  <button
+                    type="button"
+                    aria-label={`Remove ${chip.label} filter`}
+                    onClick={chip.onRemove}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              <button
+                type="button"
+                onClick={clearAll}
+                className="text-muted-foreground text-sm underline underline-offset-2"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
         </div>
 
-        <TagFilter
-          allTags={allTags}
-          selected={tags}
-          onChange={(next) => {
-            setTags(next);
-            syncUrl({ tags: next });
-          }}
-        />
-      </div>
-
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <p className="text-muted-foreground text-sm">
-          {filtered.length} of {resources.length} resources
-        </p>
-        {filterChips.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            {filterChips.map((chip) => (
-              <Badge key={chip.key} variant="secondary" className="gap-1">
-                {chip.label}
-                <button
-                  type="button"
-                  aria-label={`Remove ${chip.label} filter`}
-                  onClick={chip.onRemove}
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed py-16 text-center">
+            <p className="text-muted-foreground">No matches — try removing a filter.</p>
+            {hasActiveFilters && (
+              <Button variant="outline" size="sm" onClick={clearAll}>
+                Clear filters
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.slice(0, visibleCount).map((resource) => (
+              <ResourceCard key={resource.id} resource={resource} onTagClick={addTag} />
             ))}
-            <button
-              type="button"
-              onClick={clearAll}
-              className="text-muted-foreground text-sm underline underline-offset-2"
-            >
-              Clear all
-            </button>
+          </div>
+        )}
+        {visibleCount < filtered.length && (
+          <div className="flex justify-center pt-2">
+            <Button variant="outline" onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
+              Load {Math.min(PAGE_SIZE, filtered.length - visibleCount)} more (
+              {filtered.length - visibleCount} remaining)
+            </Button>
           </div>
         )}
       </div>
-
-      {filtered.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed py-16 text-center">
-          <p className="text-muted-foreground">No matches — try removing a filter.</p>
-          {hasActiveFilters && (
-            <Button variant="outline" size="sm" onClick={clearAll}>
-              Clear filters
-            </Button>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.slice(0, visibleCount).map((resource) => (
-            <ResourceCard key={resource.id} resource={resource} onTagClick={addTag} />
-          ))}
-        </div>
-      )}
-      {visibleCount < filtered.length && (
-        <div className="flex justify-center pt-2">
-          <Button variant="outline" onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
-            Load {Math.min(PAGE_SIZE, filtered.length - visibleCount)} more (
-            {filtered.length - visibleCount} remaining)
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
