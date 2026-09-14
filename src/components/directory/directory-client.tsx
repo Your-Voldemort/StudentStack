@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Fuse from "fuse.js";
 import { X } from "lucide-react";
@@ -14,9 +14,20 @@ import { MobileFilterSheet } from "./mobile-filter-sheet";
 import { ResourceCard } from "./resource-card";
 
 const PAGE_SIZE = 30;
+const STORAGE_KEY = "studentstack:last-filters";
 
 function parseListParam(param: string | null): string[] {
   return param ? param.split(",").filter(Boolean) : [];
+}
+
+function readStoredFilters(): Partial<DirectoryFilters> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Partial<DirectoryFilters>) : {};
+  } catch {
+    return {};
+  }
 }
 
 export function DirectoryClient({
@@ -31,11 +42,25 @@ export function DirectoryClient({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [search, setSearch] = useState(searchParams.get("q") ?? "");
-  const [category, setCategory] = useState<string[]>(parseListParam(searchParams.get("category")));
-  const [region, setRegion] = useState(searchParams.get("region") ?? "all");
-  const [costType, setCostType] = useState<string[]>(parseListParam(searchParams.get("cost")));
-  const [tags, setTags] = useState<string[]>(parseListParam(searchParams.get("tags")));
+  // Only read localStorage when the URL has no filter params of its own —
+  // a shared/bookmarked link always wins over a remembered selection.
+  // Computed once via lazy useState init (not an effect) so hydration is
+  // synchronous on first render, with no flash of empty filters.
+  const [stored] = useState<Partial<DirectoryFilters>>(() =>
+    searchParams.size === 0 ? readStoredFilters() : {},
+  );
+
+  const [search, setSearch] = useState(searchParams.get("q") ?? stored.search ?? "");
+  const [category, setCategory] = useState<string[]>(
+    searchParams.get("category") ? parseListParam(searchParams.get("category")) : (stored.category ?? []),
+  );
+  const [region, setRegion] = useState(searchParams.get("region") ?? stored.region ?? "all");
+  const [costType, setCostType] = useState<string[]>(
+    searchParams.get("cost") ? parseListParam(searchParams.get("cost")) : (stored.costType ?? []),
+  );
+  const [tags, setTags] = useState<string[]>(
+    searchParams.get("tags") ? parseListParam(searchParams.get("tags")) : (stored.tags ?? []),
+  );
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
@@ -75,6 +100,17 @@ export function DirectoryClient({
     () => ({ search: deferredSearch, category, region, costType, tags }),
     [deferredSearch, category, region, costType, tags],
   );
+
+  // Persisting to localStorage is synchronizing with an external system
+  // (not mirroring React state), which is exactly what useEffect is for —
+  // unlike the hydration above, this doesn't call any state setter.
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
+    } catch {
+      // storage unavailable (private browsing, quota) — filters still work, just not remembered
+    }
+  }, [filters]);
 
   const filtered = useMemo(
     () => applyFilters(resources, filters, fuse),
