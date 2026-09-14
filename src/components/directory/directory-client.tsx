@@ -15,13 +15,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Category, Resource } from "@/lib/resources";
+import { cn } from "@/lib/utils";
 import { ResourceCard } from "./resource-card";
 import { TagFilter } from "./tag-filter";
 
 const REGIONS = ["IN", "Global"] as const;
 const COST_TYPES = ["free", "discount", "stipend", "scholarship", "credits", "trial"] as const;
+const PAGE_SIZE = 30;
 
-function parseTags(param: string | null): string[] {
+function parseListParam(param: string | null): string[] {
   return param ? param.split(",").filter(Boolean) : [];
 }
 
@@ -40,8 +42,9 @@ export function DirectoryClient({
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const [category, setCategory] = useState(searchParams.get("category") ?? "all");
   const [region, setRegion] = useState(searchParams.get("region") ?? "all");
-  const [costType, setCostType] = useState(searchParams.get("cost") ?? "all");
-  const [tags, setTags] = useState<string[]>(parseTags(searchParams.get("tags")));
+  const [costType, setCostType] = useState<string[]>(parseListParam(searchParams.get("cost")));
+  const [tags, setTags] = useState<string[]>(parseListParam(searchParams.get("tags")));
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const deferredSearch = useDeferredValue(search);
 
@@ -49,7 +52,7 @@ export function DirectoryClient({
     search?: string;
     category?: string;
     region?: string;
-    costType?: string;
+    costType?: string[];
     tags?: string[];
   }) {
     const params = new URLSearchParams();
@@ -61,7 +64,7 @@ export function DirectoryClient({
     if (s) params.set("q", s);
     if (c !== "all") params.set("category", c);
     if (r !== "all") params.set("region", r);
-    if (ct !== "all") params.set("cost", ct);
+    if (ct.length) params.set("cost", ct.join(","));
     if (t.length) params.set("tags", t.join(","));
     router.replace(`/directory${params.size ? `?${params}` : ""}`, { scroll: false });
   }
@@ -79,7 +82,7 @@ export function DirectoryClient({
     let list = resources;
     if (category !== "all") list = list.filter((r) => r.categorySlug === category);
     if (region !== "all") list = list.filter((r) => r.region === region);
-    if (costType !== "all") list = list.filter((r) => r.costType === costType);
+    if (costType.length) list = list.filter((r) => costType.includes(r.costType));
     if (tags.length) list = list.filter((r) => tags.every((tag) => r.tags.includes(tag)));
 
     if (deferredSearch.trim()) {
@@ -88,6 +91,17 @@ export function DirectoryClient({
     }
     return list;
   }, [resources, category, region, costType, tags, deferredSearch, fuse]);
+
+  // Reset pagination when the active filters change. Adjusting state during
+  // render (React's documented pattern for this) instead of in a useEffect —
+  // an effect here would call setState synchronously on every filter change,
+  // which react-hooks/set-state-in-effect flags as a cascading-render risk.
+  const filterKey = JSON.stringify([category, region, costType, tags, deferredSearch]);
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey);
+    setVisibleCount(PAGE_SIZE);
+  }
 
   function addTag(tag: string) {
     const next = tags.includes(tag) ? tags : [...tags, tag];
@@ -101,17 +115,25 @@ export function DirectoryClient({
     syncUrl({ tags: next });
   }
 
+  function toggleCostType(value: string) {
+    const next = costType.includes(value)
+      ? costType.filter((c) => c !== value)
+      : [...costType, value];
+    setCostType(next);
+    syncUrl({ costType: next });
+  }
+
   function clearAll() {
     setSearch("");
     setCategory("all");
     setRegion("all");
-    setCostType("all");
+    setCostType([]);
     setTags([]);
     router.replace("/directory", { scroll: false });
   }
 
   const hasActiveFilters =
-    search || category !== "all" || region !== "all" || costType !== "all" || tags.length > 0;
+    search || category !== "all" || region !== "all" || costType.length > 0 || tags.length > 0;
 
   // Every active facet filter becomes a removable chip, so the current
   // selection is always visible at a glance, not just implied by the count.
@@ -140,18 +162,15 @@ export function DirectoryClient({
           },
         ]
       : []),
-    ...(costType !== "all"
-      ? [
-          {
-            key: "cost",
-            label: `Cost: ${costType[0].toUpperCase()}${costType.slice(1)}`,
-            onRemove: () => {
-              setCostType("all");
-              syncUrl({ costType: "all" });
-            },
-          },
-        ]
-      : []),
+    ...costType.map((c) => ({
+      key: `cost-${c}`,
+      label: `Cost: ${c[0].toUpperCase()}${c.slice(1)}`,
+      onRemove: () => {
+        const next = costType.filter((x) => x !== c);
+        setCostType(next);
+        syncUrl({ costType: next });
+      },
+    })),
     ...tags.map((tag) => ({ key: `tag-${tag}`, label: tag, onRemove: () => removeTag(tag) })),
   ];
 
@@ -216,27 +235,24 @@ export function DirectoryClient({
           </SelectContent>
         </Select>
 
-        <Select
-          value={costType}
-          onValueChange={(v) => {
-            setCostType(v);
-            syncUrl({ costType: v });
-          }}
-        >
-          <SelectTrigger className="sm:w-32">
-            <SelectValue placeholder="Cost type">
-              {costType === "all" ? "All cost types" : costType[0].toUpperCase() + costType.slice(1)}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All cost types</SelectItem>
-            {COST_TYPES.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c[0].toUpperCase() + c.slice(1)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Cost type">
+          {COST_TYPES.map((c) => (
+            <button
+              key={c}
+              type="button"
+              aria-pressed={costType.includes(c)}
+              onClick={() => toggleCostType(c)}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-sm capitalize transition-colors",
+                costType.includes(c)
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "hover:bg-accent",
+              )}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
 
         <TagFilter
           allTags={allTags}
@@ -288,9 +304,17 @@ export function DirectoryClient({
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((resource) => (
+          {filtered.slice(0, visibleCount).map((resource) => (
             <ResourceCard key={resource.id} resource={resource} onTagClick={addTag} />
           ))}
+        </div>
+      )}
+      {visibleCount < filtered.length && (
+        <div className="flex justify-center pt-2">
+          <Button variant="outline" onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
+            Load {Math.min(PAGE_SIZE, filtered.length - visibleCount)} more (
+            {filtered.length - visibleCount} remaining)
+          </Button>
         </div>
       )}
     </div>
