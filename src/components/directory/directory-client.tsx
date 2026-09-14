@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { applyFilters, countByCategory, topTags, type DirectoryFilters } from "@/lib/directory-filters";
 import type { Category, Resource } from "@/lib/resources";
 import { cn } from "@/lib/utils";
 import { ResourceCard } from "./resource-card";
@@ -40,7 +41,7 @@ export function DirectoryClient({
   const searchParams = useSearchParams();
 
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
-  const [category, setCategory] = useState(searchParams.get("category") ?? "all");
+  const [category, setCategory] = useState<string[]>(parseListParam(searchParams.get("category")));
   const [region, setRegion] = useState(searchParams.get("region") ?? "all");
   const [costType, setCostType] = useState<string[]>(parseListParam(searchParams.get("cost")));
   const [tags, setTags] = useState<string[]>(parseListParam(searchParams.get("tags")));
@@ -50,7 +51,7 @@ export function DirectoryClient({
 
   function syncUrl(next: {
     search?: string;
-    category?: string;
+    category?: string[];
     region?: string;
     costType?: string[];
     tags?: string[];
@@ -62,7 +63,7 @@ export function DirectoryClient({
     const ct = next.costType ?? costType;
     const t = next.tags ?? tags;
     if (s) params.set("q", s);
-    if (c !== "all") params.set("category", c);
+    if (c.length) params.set("category", c.join(","));
     if (r !== "all") params.set("region", r);
     if (ct.length) params.set("cost", ct.join(","));
     if (t.length) params.set("tags", t.join(","));
@@ -78,19 +79,22 @@ export function DirectoryClient({
     [resources],
   );
 
-  const filtered = useMemo(() => {
-    let list = resources;
-    if (category !== "all") list = list.filter((r) => r.categorySlug === category);
-    if (region !== "all") list = list.filter((r) => r.region === region);
-    if (costType.length) list = list.filter((r) => costType.includes(r.costType));
-    if (tags.length) list = list.filter((r) => tags.every((tag) => r.tags.includes(tag)));
+  const filters: DirectoryFilters = useMemo(
+    () => ({ search: deferredSearch, category, region, costType, tags }),
+    [deferredSearch, category, region, costType, tags],
+  );
 
-    if (deferredSearch.trim()) {
-      const matchIds = new Set(fuse.search(deferredSearch).map((m) => m.item.id));
-      list = list.filter((r) => matchIds.has(r.id));
-    }
-    return list;
-  }, [resources, category, region, costType, tags, deferredSearch, fuse]);
+  const filtered = useMemo(
+    () => applyFilters(resources, filters, fuse),
+    [resources, filters, fuse],
+  );
+
+  const categoryCounts = useMemo(
+    () => countByCategory(applyFilters(resources, filters, fuse, "category")),
+    [resources, filters, fuse],
+  );
+
+  const topTagList = useMemo(() => topTags(resources, 8), [resources]);
 
   // Reset pagination when the active filters change. Adjusting state during
   // render (React's documented pattern for this) instead of in a useEffect —
@@ -125,7 +129,7 @@ export function DirectoryClient({
 
   function clearAll() {
     setSearch("");
-    setCategory("all");
+    setCategory([]);
     setRegion("all");
     setCostType([]);
     setTags([]);
@@ -133,23 +137,20 @@ export function DirectoryClient({
   }
 
   const hasActiveFilters =
-    search || category !== "all" || region !== "all" || costType.length > 0 || tags.length > 0;
+    search || category.length > 0 || region !== "all" || costType.length > 0 || tags.length > 0;
 
   // Every active facet filter becomes a removable chip, so the current
   // selection is always visible at a glance, not just implied by the count.
   const filterChips: { key: string; label: string; onRemove: () => void }[] = [
-    ...(category !== "all"
-      ? [
-          {
-            key: "category",
-            label: categories.find((c) => c.slug === category)?.name ?? category,
-            onRemove: () => {
-              setCategory("all");
-              syncUrl({ category: "all" });
-            },
-          },
-        ]
-      : []),
+    ...category.map((slug) => ({
+      key: `category-${slug}`,
+      label: categories.find((c) => c.slug === slug)?.name ?? slug,
+      onRemove: () => {
+        const next = category.filter((s) => s !== slug);
+        setCategory(next);
+        syncUrl({ category: next });
+      },
+    })),
     ...(region !== "all"
       ? [
           {
@@ -190,17 +191,18 @@ export function DirectoryClient({
         />
 
         <Select
-          value={category}
+          value={category[0] ?? "all"}
           onValueChange={(v) => {
-            setCategory(v);
-            syncUrl({ category: v });
+            const next = v === "all" ? [] : [v];
+            setCategory(next);
+            syncUrl({ category: next });
           }}
         >
           <SelectTrigger className="sm:w-48">
             <SelectValue placeholder="Category">
-              {category === "all"
+              {category.length === 0
                 ? "All categories"
-                : categories.find((c) => c.slug === category)?.name}
+                : categories.find((c) => c.slug === category[0])?.name}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
