@@ -34,6 +34,24 @@ export async function createResource(formData: FormData) {
     tags: parseTags(formData.get("tags")),
     region: (formData.get("region") as "IN" | "Global") ?? "Global",
     costType: formData.get("costType") as (typeof schema.resources.$inferInsert)["costType"],
+    verificationNeeded: (String(formData.get("verificationNeeded") ?? "") || null) as
+      | "none"
+      | "edu_email"
+      | "github_student_pack"
+      | "student_id"
+      | null,
+    creditCardRequired:
+      formData.get("creditCardRequired") === "true"
+        ? true
+        : formData.get("creditCardRequired") === "false"
+          ? false
+          : null,
+    duration: (String(formData.get("duration") ?? "") || null) as
+      | "one_time"
+      | "one_year"
+      | "while_student"
+      | "lifetime"
+      | null,
     deadline: deadlineRaw ? new Date(deadlineRaw) : null,
     status: "active",
   });
@@ -61,6 +79,24 @@ export async function updateResource(id: number, formData: FormData) {
       tags: parseTags(formData.get("tags")),
       region: (formData.get("region") as "IN" | "Global") ?? "Global",
       costType: formData.get("costType") as (typeof schema.resources.$inferInsert)["costType"],
+      verificationNeeded: (String(formData.get("verificationNeeded") ?? "") || null) as
+        | "none"
+        | "edu_email"
+        | "github_student_pack"
+        | "student_id"
+        | null,
+      creditCardRequired:
+        formData.get("creditCardRequired") === "true"
+          ? true
+          : formData.get("creditCardRequired") === "false"
+            ? false
+            : null,
+      duration: (String(formData.get("duration") ?? "") || null) as
+        | "one_time"
+        | "one_year"
+        | "while_student"
+        | "lifetime"
+        | null,
       deadline: deadlineRaw ? new Date(deadlineRaw) : null,
       status: formData.get("status") as (typeof schema.resources.$inferInsert)["status"],
       updatedAt: new Date(),

@@ -40,6 +40,13 @@ export const resources = pgTable("resources", {
   costType: text("cost_type", {
     enum: ["free", "discount", "stipend", "scholarship", "credits", "trial"],
   }).notNull(),
+  verificationNeeded: text("verification_needed", {
+    enum: ["none", "edu_email", "github_student_pack", "student_id"],
+  }),
+  creditCardRequired: boolean("credit_card_required"),
+  duration: text("duration", {
+    enum: ["one_time", "one_year", "while_student", "lifetime"],
+  }),
   deadline: timestamp("deadline"),
   status: text("status", { enum: ["active", "expired", "broken"] })
     .notNull()

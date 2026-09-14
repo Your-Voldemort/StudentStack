@@ -2,6 +2,18 @@ import type { Category, Resource } from "@/lib/resources";
 
 const COST_TYPES = ["free", "discount", "stipend", "scholarship", "credits", "trial"] as const;
 const STATUS_OPTIONS = ["active", "expired", "broken"] as const;
+const VERIFICATION_OPTIONS = [
+  ["none", "No verification"],
+  ["edu_email", ".edu email"],
+  ["github_student_pack", "GitHub Student Pack"],
+  ["student_id", "Student ID upload"],
+] as const;
+const DURATION_OPTIONS = [
+  ["one_time", "One-time"],
+  ["one_year", "1 year"],
+  ["while_student", "While student"],
+  ["lifetime", "Lifetime"],
+] as const;
 
 export function ResourceForm({
   categories,
@@ -67,6 +79,54 @@ export function ResourceForm({
         <select name="region" defaultValue={resource?.region ?? "Global"} className="border-line rounded border px-3 py-2">
           <option value="Global">Global</option>
           <option value="IN">India</option>
+        </select>
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        Verification needed
+        <select
+          name="verificationNeeded"
+          defaultValue={resource?.verificationNeeded ?? ""}
+          className="border-line rounded border px-3 py-2"
+        >
+          <option value="">— Not reviewed —</option>
+          {VERIFICATION_OPTIONS.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        Credit card required
+        <select
+          name="creditCardRequired"
+          defaultValue={
+            resource?.creditCardRequired === true
+              ? "true"
+              : resource?.creditCardRequired === false
+                ? "false"
+                : ""
+          }
+          className="border-line rounded border px-3 py-2"
+        >
+          <option value="">— Not reviewed —</option>
+          <option value="false">No</option>
+          <option value="true">Yes</option>
+        </select>
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        Duration
+        <select
+          name="duration"
+          defaultValue={resource?.duration ?? ""}
+          className="border-line rounded border px-3 py-2"
+        >
+          <option value="">— Not reviewed —</option>
+          {DURATION_OPTIONS.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
         </select>
       </label>
       <label className="flex flex-col gap-1 text-sm">

@@ -16,6 +16,9 @@ export type Resource = {
   tags: string[];
   region: "IN" | "Global";
   costType: "free" | "discount" | "stipend" | "scholarship" | "credits" | "trial";
+  verificationNeeded: "none" | "edu_email" | "github_student_pack" | "student_id" | null;
+  creditCardRequired: boolean | null;
+  duration: "one_time" | "one_year" | "while_student" | "lifetime" | null;
   status: "active" | "expired" | "broken";
   lastVerifiedAt: number | null;
 };
@@ -43,6 +46,9 @@ export async function getAllResources(): Promise<Resource[]> {
       tags: schema.resources.tags,
       region: schema.resources.region,
       costType: schema.resources.costType,
+      verificationNeeded: schema.resources.verificationNeeded,
+      creditCardRequired: schema.resources.creditCardRequired,
+      duration: schema.resources.duration,
       status: schema.resources.status,
       lastVerifiedAt: schema.resources.lastVerifiedAt,
       categorySlug: schema.categories.slug,

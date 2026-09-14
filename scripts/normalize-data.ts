@@ -23,6 +23,11 @@ export type NormalizedResource = {
   tags: string[];
   region: "IN" | "Global";
   costType: "free" | "discount" | "stipend" | "scholarship" | "credits" | "trial";
+  // Intentionally never populated by normalization — no source data exists
+  // for these; they're filled in by hand through /admin. See P2 plan.
+  verificationNeeded?: "none" | "edu_email" | "github_student_pack" | "student_id";
+  creditCardRequired?: boolean;
+  duration?: "one_time" | "one_year" | "while_student" | "lifetime";
   status: "active" | "expired" | "broken";
 };
 
