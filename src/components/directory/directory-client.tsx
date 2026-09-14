@@ -48,43 +48,61 @@ export function DirectoryClient({
   resources,
   categories,
   allTags,
+  initialFilters,
 }: {
   resources: Resource[];
   categories: Category[];
   allTags: string[];
+  initialFilters?: Partial<DirectoryFilters>;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Only read localStorage when the URL has no filter params of its own —
-  // a shared/bookmarked link always wins over a remembered selection.
-  // Computed once via lazy useState init (not an effect) so hydration is
-  // synchronous on first render, with no flash of empty filters.
+  // Only read localStorage when there's no preset seeding this page and
+  // the URL has no filter params of its own — a shared/bookmarked link (or
+  // a preset landing page's curated filter combo) always wins over a
+  // remembered selection. Computed once via lazy useState init (not an
+  // effect) so hydration is synchronous on first render, with no flash of
+  // empty filters.
   const [stored] = useState<Partial<DirectoryFilters>>(() =>
-    searchParams.size === 0 ? readStoredFilters() : {},
+    !initialFilters && searchParams.size === 0 ? readStoredFilters() : {},
   );
 
-  const [search, setSearch] = useState(searchParams.get("q") ?? stored.search ?? "");
-  const [category, setCategory] = useState<string[]>(
-    searchParams.get("category") ? parseListParam(searchParams.get("category")) : (stored.category ?? []),
+  const [search, setSearch] = useState(
+    searchParams.get("q") ?? initialFilters?.search ?? stored.search ?? "",
   );
-  const [region, setRegion] = useState(searchParams.get("region") ?? stored.region ?? "all");
+  const [category, setCategory] = useState<string[]>(
+    searchParams.get("category")
+      ? parseListParam(searchParams.get("category"))
+      : (initialFilters?.category ?? stored.category ?? []),
+  );
+  const [region, setRegion] = useState(
+    searchParams.get("region") ?? initialFilters?.region ?? stored.region ?? "all",
+  );
   const [costType, setCostType] = useState<string[]>(
-    searchParams.get("cost") ? parseListParam(searchParams.get("cost")) : (stored.costType ?? []),
+    searchParams.get("cost")
+      ? parseListParam(searchParams.get("cost"))
+      : (initialFilters?.costType ?? stored.costType ?? []),
   );
   const [tags, setTags] = useState<string[]>(
-    searchParams.get("tags") ? parseListParam(searchParams.get("tags")) : (stored.tags ?? []),
+    searchParams.get("tags")
+      ? parseListParam(searchParams.get("tags"))
+      : (initialFilters?.tags ?? stored.tags ?? []),
   );
   const [verificationNeeded, setVerificationNeeded] = useState<string[]>(
     searchParams.get("verification")
       ? parseListParam(searchParams.get("verification"))
-      : (stored.verificationNeeded ?? []),
+      : (initialFilters?.verificationNeeded ?? stored.verificationNeeded ?? []),
   );
   const [creditCardRequired, setCreditCardRequired] = useState<string[]>(
-    searchParams.get("card") ? parseListParam(searchParams.get("card")) : (stored.creditCardRequired ?? []),
+    searchParams.get("card")
+      ? parseListParam(searchParams.get("card"))
+      : (initialFilters?.creditCardRequired ?? stored.creditCardRequired ?? []),
   );
   const [duration, setDuration] = useState<string[]>(
-    searchParams.get("duration") ? parseListParam(searchParams.get("duration")) : (stored.duration ?? []),
+    searchParams.get("duration")
+      ? parseListParam(searchParams.get("duration"))
+      : (initialFilters?.duration ?? stored.duration ?? []),
   );
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);

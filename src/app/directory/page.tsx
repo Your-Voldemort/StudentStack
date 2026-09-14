@@ -1,7 +1,9 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { DirectoryClient } from "@/components/directory/directory-client";
 import { DirectorySkeleton } from "@/components/directory/directory-skeleton";
 import { getAllResources, getAllTags, getCategories } from "@/lib/resources";
+import { PRESETS } from "@/lib/presets";
 
 // Resources change via admin CRUD and the link-health cron; without this,
 // Next statically prerenders the page at build time and revalidatePath's
@@ -21,6 +23,17 @@ export default async function DirectoryPage() {
       <p className="text-muted-foreground mb-6">
         {resources.length}+ free tools, discounts, and opportunities for students.
       </p>
+      <div className="mb-6 flex flex-wrap gap-2">
+        {PRESETS.map((p) => (
+          <Link
+            key={p.slug}
+            href={`/${p.slug}`}
+            className="flex min-h-11 items-center rounded-full border px-3 py-1.5 text-sm hover:bg-accent"
+          >
+            {p.label}
+          </Link>
+        ))}
+      </div>
       <Suspense fallback={<DirectorySkeleton />}>
         <DirectoryClient resources={resources} categories={categories} allTags={allTags} />
       </Suspense>
