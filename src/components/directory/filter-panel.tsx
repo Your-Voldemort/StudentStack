@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import type { Category } from "@/lib/resources";
 
 const COST_TYPES = ["free", "discount", "stipend", "scholarship", "credits", "trial"] as const;
+const PLATFORM_TAGS = ["Web", "macOS", "Windows", "iOS", "Android"];
 
 export function FilterPanel({
   search,
@@ -116,6 +117,30 @@ export function FilterPanel({
           ))}
         </div>
       </details>
+
+      {PLATFORM_TAGS.some((p) => allTags.includes(p)) && (
+        <details>
+          <summary className="mb-2 cursor-pointer text-sm font-semibold">Platform</summary>
+          <div className="flex flex-wrap gap-1.5">
+            {PLATFORM_TAGS.filter((p) => allTags.includes(p)).map((platform) => (
+              <button
+                key={platform}
+                type="button"
+                aria-pressed={selectedTags.includes(platform)}
+                onClick={() => onToggleTag(platform)}
+                className={cn(
+                  "min-h-11 rounded-full border px-3 py-1.5 text-sm transition-colors",
+                  selectedTags.includes(platform)
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "hover:bg-accent",
+                )}
+              >
+                {platform}
+              </button>
+            ))}
+          </div>
+        </details>
+      )}
 
       <details>
         <summary className="mb-2 cursor-pointer text-sm font-semibold">Tags</summary>
