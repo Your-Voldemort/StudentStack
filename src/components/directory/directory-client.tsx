@@ -6,9 +6,11 @@ import Fuse from "fuse.js";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { applyFilters, countByCategory, topTags, type DirectoryFilters } from "@/lib/directory-filters";
 import type { Category, Resource } from "@/lib/resources";
 import { FilterPanel } from "./filter-panel";
+import { MobileFilterSheet } from "./mobile-filter-sheet";
 import { ResourceCard } from "./resource-card";
 
 const PAGE_SIZE = 30;
@@ -35,6 +37,7 @@ export function DirectoryClient({
   const [costType, setCostType] = useState<string[]>(parseListParam(searchParams.get("cost")));
   const [tags, setTags] = useState<string[]>(parseListParam(searchParams.get("tags")));
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   const deferredSearch = useDeferredValue(search);
 
@@ -142,6 +145,9 @@ export function DirectoryClient({
   const hasActiveFilters =
     search || category.length > 0 || region !== "all" || costType.length > 0 || tags.length > 0;
 
+  const activeFilterCount =
+    category.length + costType.length + tags.length + (region !== "all" ? 1 : 0) + (search ? 1 : 0);
+
   // Every active facet filter becomes a removable chip, so the current
   // selection is always visible at a glance, not just implied by the count.
   const filterChips: { key: string; label: string; onRemove: () => void }[] = [
@@ -179,6 +185,53 @@ export function DirectoryClient({
   ];
 
   return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2 md:hidden">
+        <Input
+          placeholder="Search resources..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            syncUrl({ search: e.target.value });
+          }}
+          className="flex-1"
+        />
+        <Button variant="outline" className="min-h-11" onClick={() => setFilterSheetOpen(true)}>
+          Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+        </Button>
+      </div>
+
+      <MobileFilterSheet
+        open={filterSheetOpen}
+        onOpenChange={setFilterSheetOpen}
+        resultCount={filtered.length}
+        search={search}
+        onSearchChange={(v) => {
+          setSearch(v);
+          syncUrl({ search: v });
+        }}
+        costType={costType}
+        onToggleCostType={toggleCostType}
+        worksInIndia={region === "IN"}
+        onToggleWorksInIndia={() => {
+          const next = region === "IN" ? "all" : "IN";
+          setRegion(next);
+          syncUrl({ region: next });
+        }}
+        categories={categories}
+        categoryCounts={categoryCounts}
+        selectedCategories={category}
+        onToggleCategory={toggleCategory}
+        topTagList={topTagList}
+        selectedTags={tags}
+        onToggleTag={addOrRemoveTag}
+        allTags={allTags}
+        onTagsChange={(next) => {
+          setTags(next);
+          syncUrl({ tags: next });
+        }}
+      />
+
     <div className="grid grid-cols-1 gap-6 md:grid-cols-[260px_1fr]">
       <aside className="hidden md:block">
         <div className="sticky top-8">
@@ -267,6 +320,7 @@ export function DirectoryClient({
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }
