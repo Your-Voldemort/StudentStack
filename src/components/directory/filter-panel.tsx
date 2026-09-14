@@ -24,6 +24,12 @@ export function FilterPanel({
   onToggleTag,
   allTags,
   onTagsChange,
+  verificationNeeded,
+  onToggleVerificationNeeded,
+  creditCardRequired,
+  onToggleCreditCardRequired,
+  duration,
+  onToggleDuration,
 }: {
   search: string;
   onSearchChange: (v: string) => void;
@@ -40,6 +46,12 @@ export function FilterPanel({
   onToggleTag: (tag: string) => void;
   allTags: string[];
   onTagsChange: (tags: string[]) => void;
+  verificationNeeded: string[];
+  onToggleVerificationNeeded: (v: string) => void;
+  creditCardRequired: string[];
+  onToggleCreditCardRequired: (v: string) => void;
+  duration: string[];
+  onToggleDuration: (v: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-5">
@@ -125,6 +137,71 @@ export function FilterPanel({
             </button>
           ))}
           <TagFilter allTags={allTags} selected={selectedTags} onChange={onTagsChange} />
+        </div>
+      </details>
+
+      <details>
+        <summary className="mb-2 cursor-pointer text-sm font-semibold">Verification needed</summary>
+        <div className="flex flex-col gap-1.5">
+          {(
+            [
+              ["none", "No verification"],
+              ["edu_email", ".edu email"],
+              ["github_student_pack", "GitHub Student Pack"],
+              ["student_id", "Student ID upload"],
+            ] as const
+          ).map(([value, label]) => (
+            <label
+              key={value}
+              className="flex min-h-11 items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-accent"
+            >
+              <Checkbox
+                checked={verificationNeeded.includes(value)}
+                onCheckedChange={() => onToggleVerificationNeeded(value)}
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+      </details>
+
+      <details>
+        <summary className="mb-2 cursor-pointer text-sm font-semibold">Credit card required</summary>
+        <div className="flex flex-col gap-1.5">
+          {(["no", "yes"] as const).map((value) => (
+            <label
+              key={value}
+              className="flex min-h-11 items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-accent"
+            >
+              <Checkbox
+                checked={creditCardRequired.includes(value)}
+                onCheckedChange={() => onToggleCreditCardRequired(value)}
+              />
+              {value === "no" ? "No" : "Yes"}
+            </label>
+          ))}
+        </div>
+      </details>
+
+      <details>
+        <summary className="mb-2 cursor-pointer text-sm font-semibold">Duration</summary>
+        <div className="flex flex-col gap-1.5">
+          {(
+            [
+              ["one_time", "One-time"],
+              ["one_year", "1 year"],
+              ["while_student", "While student"],
+              ["lifetime", "Lifetime"],
+            ] as const
+          ).map(([value, label]) => (
+            <label
+              key={value}
+              className="flex min-h-11 items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-accent"
+            >
+              <Checkbox checked={duration.includes(value)} onCheckedChange={() => onToggleDuration(value)} />
+              {label}
+            </label>
+          ))}
         </div>
       </details>
     </div>

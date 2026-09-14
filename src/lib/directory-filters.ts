@@ -7,6 +7,9 @@ export type DirectoryFilters = {
   region: string; // "all" | "IN"
   costType: string[];
   tags: string[];
+  verificationNeeded: string[];
+  creditCardRequired: string[]; // "yes" | "no"
+  duration: string[];
 };
 
 // `skip` excludes one dimension from filtering — used to compute faceted
@@ -31,6 +34,20 @@ export function applyFilters(
   if (skip !== "tags" && filters.tags.length) {
     list = list.filter((r) => filters.tags.every((tag) => r.tags.includes(tag)));
   }
+  if (skip !== "verificationNeeded" && filters.verificationNeeded.length) {
+    list = list.filter(
+      (r) => r.verificationNeeded && filters.verificationNeeded.includes(r.verificationNeeded),
+    );
+  }
+  if (skip !== "creditCardRequired" && filters.creditCardRequired.length) {
+    list = list.filter((r) => {
+      if (r.creditCardRequired === null) return false;
+      return filters.creditCardRequired.includes(r.creditCardRequired ? "yes" : "no");
+    });
+  }
+  if (skip !== "duration" && filters.duration.length) {
+    list = list.filter((r) => r.duration && filters.duration.includes(r.duration));
+  }
   if (skip !== "search" && filters.search.trim()) {
     const matchIds = new Set(fuse.search(filters.search).map((m) => m.item.id));
     list = list.filter((r) => matchIds.has(r.id));
@@ -54,12 +71,21 @@ export function topTags(resources: Resource[], limit: number): string[] {
 
 if (process.argv[1] && process.argv[1].endsWith("directory-filters.ts")) {
   const fixture: Resource[] = [
-    { id: 1, slug: "a", name: "A", tagline: null, description: "", url: null, hasStaticClaimUrl: false, categoryId: 1, categorySlug: "ai", categoryName: "AI", categoryIcon: "🤖", tags: ["Web"], region: "IN", costType: "free", status: "active", lastVerifiedAt: null },
-    { id: 2, slug: "b", name: "B", tagline: null, description: "", url: null, hasStaticClaimUrl: false, categoryId: 2, categorySlug: "dev", categoryName: "Dev", categoryIcon: "🛠️", tags: ["Web"], region: "Global", costType: "discount", status: "active", lastVerifiedAt: null },
-    { id: 3, slug: "c", name: "C", tagline: null, description: "", url: null, hasStaticClaimUrl: false, categoryId: 1, categorySlug: "ai", categoryName: "AI", categoryIcon: "🤖", tags: ["iOS"], region: "IN", costType: "free", status: "active", lastVerifiedAt: null },
+    { id: 1, slug: "a", name: "A", tagline: null, description: "", url: null, hasStaticClaimUrl: false, categoryId: 1, categorySlug: "ai", categoryName: "AI", categoryIcon: "🤖", tags: ["Web"], region: "IN", costType: "free", verificationNeeded: null, creditCardRequired: null, duration: null, status: "active", lastVerifiedAt: null },
+    { id: 2, slug: "b", name: "B", tagline: null, description: "", url: null, hasStaticClaimUrl: false, categoryId: 2, categorySlug: "dev", categoryName: "Dev", categoryIcon: "🛠️", tags: ["Web"], region: "Global", costType: "discount", verificationNeeded: null, creditCardRequired: null, duration: null, status: "active", lastVerifiedAt: null },
+    { id: 3, slug: "c", name: "C", tagline: null, description: "", url: null, hasStaticClaimUrl: false, categoryId: 1, categorySlug: "ai", categoryName: "AI", categoryIcon: "🤖", tags: ["iOS"], region: "IN", costType: "free", verificationNeeded: null, creditCardRequired: null, duration: null, status: "active", lastVerifiedAt: null },
   ];
   const dummyFuse = { search: () => [] } as unknown as Fuse<Resource>;
-  const noFilters: DirectoryFilters = { search: "", category: [], region: "all", costType: [], tags: [] };
+  const noFilters: DirectoryFilters = {
+    search: "",
+    category: [],
+    region: "all",
+    costType: [],
+    tags: [],
+    verificationNeeded: [],
+    creditCardRequired: [],
+    duration: [],
+  };
 
   console.assert(applyFilters(fixture, noFilters, dummyFuse).length === 3, "no filters should return everything");
 
@@ -78,6 +104,12 @@ if (process.argv[1] && process.argv[1].endsWith("directory-filters.ts")) {
   console.assert(
     JSON.stringify(topTags(fixture, 1)) === JSON.stringify(["Web"]),
     "Web appears twice, should be the top tag",
+  );
+
+  const withVerification: DirectoryFilters = { ...noFilters, verificationNeeded: ["edu_email"] };
+  console.assert(
+    applyFilters(fixture, withVerification, dummyFuse).length === 0,
+    "fixture resources have no verificationNeeded set, so this should match nothing",
   );
 
   console.log("OK: directory-filters.ts self-check passed");

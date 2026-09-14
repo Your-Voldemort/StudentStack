@@ -16,6 +16,20 @@ import { ResourceCard } from "./resource-card";
 const PAGE_SIZE = 30;
 const STORAGE_KEY = "studentstack:last-filters";
 
+const VERIFICATION_LABELS: Record<string, string> = {
+  none: "No verification",
+  edu_email: ".edu email",
+  github_student_pack: "GitHub Student Pack",
+  student_id: "Student ID upload",
+};
+
+const DURATION_LABELS: Record<string, string> = {
+  one_time: "One-time",
+  one_year: "1 year",
+  while_student: "While student",
+  lifetime: "Lifetime",
+};
+
 function parseListParam(param: string | null): string[] {
   return param ? param.split(",").filter(Boolean) : [];
 }
@@ -61,6 +75,17 @@ export function DirectoryClient({
   const [tags, setTags] = useState<string[]>(
     searchParams.get("tags") ? parseListParam(searchParams.get("tags")) : (stored.tags ?? []),
   );
+  const [verificationNeeded, setVerificationNeeded] = useState<string[]>(
+    searchParams.get("verification")
+      ? parseListParam(searchParams.get("verification"))
+      : (stored.verificationNeeded ?? []),
+  );
+  const [creditCardRequired, setCreditCardRequired] = useState<string[]>(
+    searchParams.get("card") ? parseListParam(searchParams.get("card")) : (stored.creditCardRequired ?? []),
+  );
+  const [duration, setDuration] = useState<string[]>(
+    searchParams.get("duration") ? parseListParam(searchParams.get("duration")) : (stored.duration ?? []),
+  );
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
@@ -72,6 +97,9 @@ export function DirectoryClient({
     region?: string;
     costType?: string[];
     tags?: string[];
+    verificationNeeded?: string[];
+    creditCardRequired?: string[];
+    duration?: string[];
   }) {
     const params = new URLSearchParams();
     const s = next.search ?? search;
@@ -79,11 +107,17 @@ export function DirectoryClient({
     const r = next.region ?? region;
     const ct = next.costType ?? costType;
     const t = next.tags ?? tags;
+    const v = next.verificationNeeded ?? verificationNeeded;
+    const cc = next.creditCardRequired ?? creditCardRequired;
+    const d = next.duration ?? duration;
     if (s) params.set("q", s);
     if (c.length) params.set("category", c.join(","));
     if (r !== "all") params.set("region", r);
     if (ct.length) params.set("cost", ct.join(","));
     if (t.length) params.set("tags", t.join(","));
+    if (v.length) params.set("verification", v.join(","));
+    if (cc.length) params.set("card", cc.join(","));
+    if (d.length) params.set("duration", d.join(","));
     router.replace(`/directory${params.size ? `?${params}` : ""}`, { scroll: false });
   }
 
@@ -97,8 +131,17 @@ export function DirectoryClient({
   );
 
   const filters: DirectoryFilters = useMemo(
-    () => ({ search: deferredSearch, category, region, costType, tags }),
-    [deferredSearch, category, region, costType, tags],
+    () => ({
+      search: deferredSearch,
+      category,
+      region,
+      costType,
+      tags,
+      verificationNeeded,
+      creditCardRequired,
+      duration,
+    }),
+    [deferredSearch, category, region, costType, tags, verificationNeeded, creditCardRequired, duration],
   );
 
   // Persisting to localStorage is synchronizing with an external system
@@ -128,7 +171,16 @@ export function DirectoryClient({
   // render (React's documented pattern for this) instead of in a useEffect —
   // an effect here would call setState synchronously on every filter change,
   // which react-hooks/set-state-in-effect flags as a cascading-render risk.
-  const filterKey = JSON.stringify([category, region, costType, tags, deferredSearch]);
+  const filterKey = JSON.stringify([
+    category,
+    region,
+    costType,
+    tags,
+    verificationNeeded,
+    creditCardRequired,
+    duration,
+    deferredSearch,
+  ]);
   const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
   if (filterKey !== prevFilterKey) {
     setPrevFilterKey(filterKey);
@@ -169,20 +221,59 @@ export function DirectoryClient({
     syncUrl({ costType: next });
   }
 
+  function toggleVerificationNeeded(value: string) {
+    const next = verificationNeeded.includes(value)
+      ? verificationNeeded.filter((v) => v !== value)
+      : [...verificationNeeded, value];
+    setVerificationNeeded(next);
+    syncUrl({ verificationNeeded: next });
+  }
+
+  function toggleCreditCardRequired(value: string) {
+    const next = creditCardRequired.includes(value)
+      ? creditCardRequired.filter((v) => v !== value)
+      : [...creditCardRequired, value];
+    setCreditCardRequired(next);
+    syncUrl({ creditCardRequired: next });
+  }
+
+  function toggleDuration(value: string) {
+    const next = duration.includes(value) ? duration.filter((v) => v !== value) : [...duration, value];
+    setDuration(next);
+    syncUrl({ duration: next });
+  }
+
   function clearAll() {
     setSearch("");
     setCategory([]);
     setRegion("all");
     setCostType([]);
     setTags([]);
+    setVerificationNeeded([]);
+    setCreditCardRequired([]);
+    setDuration([]);
     router.replace("/directory", { scroll: false });
   }
 
   const hasActiveFilters =
-    search || category.length > 0 || region !== "all" || costType.length > 0 || tags.length > 0;
+    search ||
+    category.length > 0 ||
+    region !== "all" ||
+    costType.length > 0 ||
+    tags.length > 0 ||
+    verificationNeeded.length > 0 ||
+    creditCardRequired.length > 0 ||
+    duration.length > 0;
 
   const activeFilterCount =
-    category.length + costType.length + tags.length + (region !== "all" ? 1 : 0) + (search ? 1 : 0);
+    category.length +
+    costType.length +
+    tags.length +
+    verificationNeeded.length +
+    creditCardRequired.length +
+    duration.length +
+    (region !== "all" ? 1 : 0) +
+    (search ? 1 : 0);
 
   // Every active facet filter becomes a removable chip, so the current
   // selection is always visible at a glance, not just implied by the count.
@@ -218,6 +309,21 @@ export function DirectoryClient({
       },
     })),
     ...tags.map((tag) => ({ key: `tag-${tag}`, label: tag, onRemove: () => removeTag(tag) })),
+    ...verificationNeeded.map((v) => ({
+      key: `verification-${v}`,
+      label: `Verification: ${VERIFICATION_LABELS[v] ?? v}`,
+      onRemove: () => toggleVerificationNeeded(v),
+    })),
+    ...creditCardRequired.map((v) => ({
+      key: `card-${v}`,
+      label: `Card required: ${v === "yes" ? "Yes" : "No"}`,
+      onRemove: () => toggleCreditCardRequired(v),
+    })),
+    ...duration.map((v) => ({
+      key: `duration-${v}`,
+      label: `Duration: ${DURATION_LABELS[v] ?? v}`,
+      onRemove: () => toggleDuration(v),
+    })),
   ];
 
   return (
@@ -266,6 +372,12 @@ export function DirectoryClient({
           setTags(next);
           syncUrl({ tags: next });
         }}
+        verificationNeeded={verificationNeeded}
+        onToggleVerificationNeeded={toggleVerificationNeeded}
+        creditCardRequired={creditCardRequired}
+        onToggleCreditCardRequired={toggleCreditCardRequired}
+        duration={duration}
+        onToggleDuration={toggleDuration}
       />
 
     <div className="grid grid-cols-1 gap-6 md:grid-cols-[260px_1fr]">
@@ -297,6 +409,12 @@ export function DirectoryClient({
               setTags(next);
               syncUrl({ tags: next });
             }}
+            verificationNeeded={verificationNeeded}
+            onToggleVerificationNeeded={toggleVerificationNeeded}
+            creditCardRequired={creditCardRequired}
+            onToggleCreditCardRequired={toggleCreditCardRequired}
+            duration={duration}
+            onToggleDuration={toggleDuration}
           />
         </div>
       </aside>
