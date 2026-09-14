@@ -51,7 +51,11 @@ export function ResourceCard({
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{relativeTime(resource.lastVerifiedAt)}</span>
+            {relativeTime(resource.lastVerifiedAt) && (
+              <span className="text-green-700 dark:text-green-500">
+                ✓ {relativeTime(resource.lastVerifiedAt)}
+              </span>
+            )}
             {resource.status === "broken" && (
               <Badge variant="destructive">⚠ Link may be down</Badge>
             )}
