@@ -58,51 +58,43 @@ export function DirectoryClient({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Only read localStorage when there's no preset seeding this page and
-  // the URL has no filter params of its own — a shared/bookmarked link (or
-  // a preset landing page's curated filter combo) always wins over a
-  // remembered selection. Computed once via lazy useState init (not an
-  // effect) so hydration is synchronous on first render, with no flash of
-  // empty filters.
-  const [stored] = useState<Partial<DirectoryFilters>>(() =>
-    !initialFilters && searchParams.size === 0 ? readStoredFilters() : {},
-  );
-
-  const [search, setSearch] = useState(
-    searchParams.get("q") ?? initialFilters?.search ?? stored.search ?? "",
-  );
+  // Deliberately NOT reading localStorage here. This component is
+  // server-rendered for the initial HTML, and `localStorage` doesn't exist
+  // on the server — computing these initial values from it would make the
+  // client's first render (before hydration) disagree with the server-
+  // rendered markup, a real hydration-mismatch bug (verified: it cascades
+  // into React discarding and regenerating this whole subtree). Every
+  // field below matches exactly what the server rendered — URL params or
+  // `initialFilters` (a plain prop, identical on server and client), never
+  // browser-only state. The stored-filter restore happens in a `useEffect`
+  // below instead, strictly after hydration completes.
+  const [search, setSearch] = useState(searchParams.get("q") ?? initialFilters?.search ?? "");
   const [category, setCategory] = useState<string[]>(
     searchParams.get("category")
       ? parseListParam(searchParams.get("category"))
-      : (initialFilters?.category ?? stored.category ?? []),
+      : (initialFilters?.category ?? []),
   );
-  const [region, setRegion] = useState(
-    searchParams.get("region") ?? initialFilters?.region ?? stored.region ?? "all",
-  );
+  const [region, setRegion] = useState(searchParams.get("region") ?? initialFilters?.region ?? "all");
   const [costType, setCostType] = useState<string[]>(
-    searchParams.get("cost")
-      ? parseListParam(searchParams.get("cost"))
-      : (initialFilters?.costType ?? stored.costType ?? []),
+    searchParams.get("cost") ? parseListParam(searchParams.get("cost")) : (initialFilters?.costType ?? []),
   );
   const [tags, setTags] = useState<string[]>(
-    searchParams.get("tags")
-      ? parseListParam(searchParams.get("tags"))
-      : (initialFilters?.tags ?? stored.tags ?? []),
+    searchParams.get("tags") ? parseListParam(searchParams.get("tags")) : (initialFilters?.tags ?? []),
   );
   const [verificationNeeded, setVerificationNeeded] = useState<string[]>(
     searchParams.get("verification")
       ? parseListParam(searchParams.get("verification"))
-      : (initialFilters?.verificationNeeded ?? stored.verificationNeeded ?? []),
+      : (initialFilters?.verificationNeeded ?? []),
   );
   const [creditCardRequired, setCreditCardRequired] = useState<string[]>(
     searchParams.get("card")
       ? parseListParam(searchParams.get("card"))
-      : (initialFilters?.creditCardRequired ?? stored.creditCardRequired ?? []),
+      : (initialFilters?.creditCardRequired ?? []),
   );
   const [duration, setDuration] = useState<string[]>(
     searchParams.get("duration")
       ? parseListParam(searchParams.get("duration"))
-      : (initialFilters?.duration ?? stored.duration ?? []),
+      : (initialFilters?.duration ?? []),
   );
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
@@ -162,9 +154,37 @@ export function DirectoryClient({
     [deferredSearch, category, region, costType, tags, verificationNeeded, creditCardRequired, duration],
   );
 
+  // Restore remembered filters after mount, only on a bare /directory visit
+  // (no preset, no URL params of its own — either always wins over a
+  // remembered selection). Must run in an effect, strictly after hydration
+  // completes: reading localStorage during the initial render (this
+  // component's first pass, before mount) would make that render disagree
+  // with the server-rendered markup — the same hydration-mismatch class of
+  // bug as ThemeToggle, and for the same reason.
+  useEffect(() => {
+    if (initialFilters || searchParams.size > 0) return;
+    const saved = readStoredFilters();
+    if (!saved.search && !saved.category?.length && !saved.region && !saved.costType?.length &&
+        !saved.tags?.length && !saved.verificationNeeded?.length && !saved.creditCardRequired?.length &&
+        !saved.duration?.length) {
+      return;
+    }
+    /* eslint-disable react-hooks/set-state-in-effect -- see comment above: must run strictly post-hydration */
+    if (saved.search) setSearch(saved.search);
+    if (saved.category?.length) setCategory(saved.category);
+    if (saved.region && saved.region !== "all") setRegion(saved.region);
+    if (saved.costType?.length) setCostType(saved.costType);
+    if (saved.tags?.length) setTags(saved.tags);
+    if (saved.verificationNeeded?.length) setVerificationNeeded(saved.verificationNeeded);
+    if (saved.creditCardRequired?.length) setCreditCardRequired(saved.creditCardRequired);
+    if (saved.duration?.length) setDuration(saved.duration);
+    /* eslint-enable react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional one-time restore on mount
+  }, []);
+
   // Persisting to localStorage is synchronizing with an external system
   // (not mirroring React state), which is exactly what useEffect is for —
-  // unlike the hydration above, this doesn't call any state setter.
+  // unlike the restore above, this doesn't call any state setter.
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
