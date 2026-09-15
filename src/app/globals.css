@@ -18,6 +18,26 @@
   --color-orange-deep: #ad3300;
 }
 
+/* Dark counterpart of the palette above, switched by the .dark class that
+   ThemeToggle sets. Roles are swapped, no new hues. Contrast on #111418:
+   ink 16.7:1, ink-muted 8.3:1 (7.3:1 on panel), orange-deep 7.1:1; the line
+   hairline is 2.2:1, matching light mode's 2.0:1. Bright orange is left
+   alone. Text on it stays dark in page.tsx (light text is only 3.3:1). */
+.dark {
+  --color-bg: #111418;
+  --color-panel: #1d2127;
+  --color-ink: #f1f4f6;
+  --color-ink-muted: #abaeb2;
+  --color-line: #4a4d53;
+  --color-orange-deep: #ff7a33;
+}
+
+/* The homepage puts ThemeToggle in its own header; hide layout.tsx's
+   floating one there so it doesn't sit on top of the header's link. */
+body:has([data-has-theme-toggle]) [data-floating-theme-toggle] {
+  display: none;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -187,6 +207,11 @@
 @media (prefers-reduced-motion: reduce) {
   .hero-in {
     animation: none;
+  }
+  /* StarsBackground drifts forever via motion's JS loop, which CSS can't
+     pause — hide the layers instead of leaving endless movement. */
+  [data-slot="star-layer"] {
+    display: none;
   }
   .fan-card {
     animation: none;

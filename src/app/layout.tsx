@@ -42,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <div className="fixed top-4 right-4 z-20">
+        <div data-floating-theme-toggle className="fixed top-4 right-4 z-20">
           <ThemeToggle />
         </div>
         {children}

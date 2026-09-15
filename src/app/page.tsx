@@ -2,6 +2,8 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { Big_Shoulders, Public_Sans } from "next/font/google";
+import { StarsBackground } from "@/components/animate-ui/components/backgrounds/stars";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { AnimatedShinyButton } from "@/components/ui/animated-shiny-button";
 import { getCategoriesWithCounts, getResourceCount } from "@/lib/resources";
 
@@ -74,89 +76,94 @@ export default async function Home() {
           <span className="font-display text-xl font-black tracking-tight uppercase">
             StudentStack
           </span>
-          <Link
-            href="/directory"
-            className="border-ink hover:bg-ink hover:text-bg inline-flex min-h-11 items-center rounded-[3px] border px-4 py-2 text-sm font-medium transition-colors"
-          >
-            Browse directory
-          </Link>
+          <div data-has-theme-toggle className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link
+              href="/directory"
+              className="border-ink hover:bg-ink hover:text-bg inline-flex min-h-11 items-center rounded-[3px] border px-4 py-2 text-sm font-medium transition-colors"
+            >
+              Browse directory
+            </Link>
+          </div>
         </div>
       </header>
 
-      <section className="mx-auto grid w-full max-w-6xl gap-16 px-6 pt-16 pb-24 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pt-24 lg:pb-32">
-        <div className="hero-in">
-          <h1 className="font-display text-balance text-[2.75rem] leading-[1.05] tracking-tight uppercase sm:text-6xl">
-            What being a student is actually worth.
-          </h1>
-          <p className="text-ink-muted mt-6 max-w-[42ch] text-lg leading-relaxed text-pretty">
-            Free software, cloud credits, scholarships, and discounts — one
-            directory, filtered to what you can actually use.
-          </p>
+      <StarsBackground starColor="var(--color-ink)" className="h-auto bg-none">
+        <section className="relative mx-auto grid w-full max-w-6xl gap-16 px-6 pt-16 pb-24 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pt-24 lg:pb-32">
+          <div className="hero-in">
+            <h1 className="font-display text-balance text-[2.75rem] leading-[1.05] tracking-tight uppercase sm:text-6xl">
+              What being a student is actually worth.
+            </h1>
+            <p className="text-ink-muted mt-6 max-w-[42ch] text-lg leading-relaxed text-pretty">
+              Free software, cloud credits, scholarships, and discounts — one
+              directory, filtered to what you can actually use.
+            </p>
 
-          <form
-            action="/directory"
-            method="GET"
-            role="search"
-            aria-label="Search the directory"
-            className="border-ink focus-within:ring-orange mt-8 flex max-w-md rounded-[3px] border bg-bg focus-within:ring-2"
-          >
-            <input
-              type="search"
-              name="q"
-              placeholder={`Search ${resourceCount} resources… try "aws" or "certification"`}
-              className="text-ink placeholder:text-ink-muted min-w-0 flex-1 bg-transparent px-4 py-3 text-sm outline-none"
-            />
-            <button
-              type="submit"
-              aria-label="Search"
-              className="border-ink hover:bg-ink hover:text-bg inline-flex min-h-11 shrink-0 cursor-pointer items-center border-l px-4 transition-colors"
+            <form
+              action="/directory"
+              method="GET"
+              role="search"
+              aria-label="Search the directory"
+              className="border-ink focus-within:ring-orange mt-8 flex max-w-md rounded-[3px] border bg-bg focus-within:ring-2"
             >
-              <Search className="h-4 w-4" aria-hidden />
-            </button>
-          </form>
-
-          <div className="mt-6 flex flex-wrap items-center gap-5">
-            <AnimatedShinyButton url="/directory">
-              Browse the directory
-            </AnimatedShinyButton>
-            <span className="text-ink-muted text-sm">
-              {resourceCount} resources · {categories.length} categories
-            </span>
-          </div>
-        </div>
-
-        <div className="relative h-[280px] overflow-hidden sm:h-[320px] sm:overflow-visible" aria-hidden>
-          {HERO_CARDS.map((card, i) => {
-            const style = HERO_CARD_STYLE[i];
-            return (
-              <div
-                key={card.name}
-                style={
-                  {
-                    zIndex: i,
-                    "--rot": style.rot,
-                    "--tx": style.tx,
-                    "--ty": style.ty,
-                    animationDelay: `${300 + i * 90}ms`,
-                  } as CSSProperties
-                }
-                className="fan-card border-ink bg-bg absolute top-1/2 left-1/2 w-56 rounded-[4px] border p-4 shadow-[6px_6px_0_#111418]"
+              <input
+                type="search"
+                name="q"
+                placeholder={`Search ${resourceCount} resources… try "aws" or "certification"`}
+                className="text-ink placeholder:text-ink-muted min-w-0 flex-1 bg-transparent px-4 py-3 text-sm outline-none"
+              />
+              <button
+                type="submit"
+                aria-label="Search"
+                className="border-ink hover:bg-ink hover:text-bg inline-flex min-h-11 shrink-0 cursor-pointer items-center border-l px-4 transition-colors"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-xl">{card.icon}</span>
-                  <span className="font-display text-ink-muted text-[10px] font-bold tracking-wide uppercase">
-                    {card.tag}
-                  </span>
+                <Search className="h-4 w-4" aria-hidden />
+              </button>
+            </form>
+
+            <div className="mt-6 flex flex-wrap items-center gap-5">
+              <AnimatedShinyButton url="/directory">
+                Browse the directory
+              </AnimatedShinyButton>
+              <span className="text-ink-muted text-sm">
+                {resourceCount} resources · {categories.length} categories
+              </span>
+            </div>
+          </div>
+
+          <div className="relative h-[280px] overflow-hidden sm:h-[320px] sm:overflow-visible" aria-hidden>
+            {HERO_CARDS.map((card, i) => {
+              const style = HERO_CARD_STYLE[i];
+              return (
+                <div
+                  key={card.name}
+                  style={
+                    {
+                      zIndex: i,
+                      "--rot": style.rot,
+                      "--tx": style.tx,
+                      "--ty": style.ty,
+                      animationDelay: `${300 + i * 90}ms`,
+                    } as CSSProperties
+                  }
+                  className="fan-card border-ink bg-bg absolute top-1/2 left-1/2 w-56 rounded-[4px] border p-4 shadow-[6px_6px_0_var(--color-ink)]"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xl">{card.icon}</span>
+                    <span className="font-display text-ink-muted text-[10px] font-bold tracking-wide uppercase">
+                      {card.tag}
+                    </span>
+                  </div>
+                  <p className="font-display mt-3 text-base font-bold tracking-tight uppercase">
+                    {card.name}
+                  </p>
+                  <p className="text-ink-muted mt-1 text-xs leading-snug">{card.tagline}</p>
                 </div>
-                <p className="font-display mt-3 text-base font-bold tracking-tight uppercase">
-                  {card.name}
-                </p>
-                <p className="text-ink-muted mt-1 text-xs leading-snug">{card.tagline}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+              );
+            })}
+          </div>
+        </section>
+      </StarsBackground>
 
       <section className="border-line border-t">
         <div className="mx-auto max-w-6xl px-6 py-16">
@@ -192,7 +199,8 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="bg-orange">
+      {/* Ink stays dark on orange in both themes: light text on it is only 3.3:1. */}
+      <section className="bg-orange text-[#111418]">
         <div className="mx-auto max-w-6xl px-6 py-16">
           <h2 className="font-display text-balance text-3xl tracking-tight uppercase">
             How to actually use this
