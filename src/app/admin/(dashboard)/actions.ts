@@ -1,5 +1,5 @@
 "use server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db, schema } from "@/db";
@@ -125,4 +125,24 @@ export async function deleteResource(id: number) {
   await verifyAdmin();
   await db.delete(schema.resources).where(eq(schema.resources.id, id));
   refreshPublicPages();
+}
+
+// Both only touch unapproved rows, so a stale review form can never unpublish
+// or delete an offer that's already live.
+export async function approveSubmission(id: number) {
+  await verifyAdmin();
+  await db
+    .update(schema.resources)
+    .set({ approved: true, updatedAt: new Date() })
+    .where(and(eq(schema.resources.id, id), eq(schema.resources.approved, false)));
+  refreshPublicPages();
+  revalidatePath("/admin");
+}
+
+export async function rejectSubmission(id: number) {
+  await verifyAdmin();
+  await db
+    .delete(schema.resources)
+    .where(and(eq(schema.resources.id, id), eq(schema.resources.approved, false)));
+  revalidatePath("/admin");
 }

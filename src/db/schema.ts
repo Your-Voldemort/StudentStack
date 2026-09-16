@@ -14,13 +14,17 @@ import {
   primaryKey,
 } from "drizzle-orm/pg-core";
 
+// Row-level security is on for every table, with no policies. The app reads
+// and writes as the table owner over a direct Postgres connection, so it is
+// unaffected; the policies-free RLS keeps these tables unreachable through
+// Supabase's Data API with the public (publishable) key.
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
   icon: text("icon").notNull(),
   sortOrder: integer("sort_order").notNull().default(0),
-});
+}).enableRLS();
 
 export const resources = pgTable("resources", {
   id: serial("id").primaryKey(),
@@ -57,7 +61,7 @@ export const resources = pgTable("resources", {
   approved: boolean("approved").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}).enableRLS();
 
 export const bookmarks = pgTable(
   "bookmarks",
@@ -74,7 +78,7 @@ export const bookmarks = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.resourceId] })],
-);
+).enableRLS();
 
 export const reviews = pgTable("reviews", {
   id: serial("id").primaryKey(),
@@ -85,7 +89,7 @@ export const reviews = pgTable("reviews", {
   rating: integer("rating").notNull(),
   comment: text("comment"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}).enableRLS();
 
 export const clickEvents = pgTable("click_events", {
   id: serial("id").primaryKey(),
@@ -94,4 +98,4 @@ export const clickEvents = pgTable("click_events", {
     .references(() => resources.id),
   userId: uuid("user_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}).enableRLS();

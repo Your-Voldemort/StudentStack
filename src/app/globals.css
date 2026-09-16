@@ -4,10 +4,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Homepage-only palette — riso-print zine on photocopy grey, one safety-
-   orange spot ink. Scoped by naming, not CSS nesting, so it's additive to
-   the shadcn tokens below that /directory's components rely on. Values
-   verified for contrast in PRODUCT.md's revamp pass; see DESIGN.md. */
+/* Original "photocopied flyer" palette. The homepage and /submit now use the
+   student-pass system in src/components/home/brand.module.css; these tokens
+   remain for the admin pages (border-line, bg-orange) and the directory's
+   AnimatedShinyButton. Scoped by naming, additive to the shadcn tokens below. */
 @theme {
   --color-bg: #f1f4f6;
   --color-panel: #e3e7ea;
@@ -32,8 +32,8 @@
   --color-orange-deep: #ff7a33;
 }
 
-/* The homepage puts ThemeToggle in its own header; hide layout.tsx's
-   floating one there so it doesn't sit on top of the header's link. */
+/* Pages with their own header (homepage, /submit) put ThemeToggle there; hide
+   layout.tsx's floating one so it doesn't sit on top of the header's links. */
 body:has([data-has-theme-toggle]) [data-floating-theme-toggle] {
   display: none;
 }
@@ -168,55 +168,6 @@ body:has([data-has-theme-toggle]) [data-floating-theme-toggle] {
   }
   html {
     @apply font-sans;
-  }
-}
-
-/* Homepage entrance: one orchestrated moment on load — hero copy settles,
-   then the stamped card stack fans out. Both collapse to their resting
-   state instantly under reduced motion. */
-@keyframes hero-in {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fan-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) translate(0, 28px) rotate(0deg) scale(0.94);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(1);
-  }
-}
-
-.hero-in {
-  animation: hero-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.fan-card {
-  animation: fan-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-in {
-    animation: none;
-  }
-  /* StarsBackground drifts forever via motion's JS loop, which CSS can't
-     pause — hide the layers instead of leaving endless movement. */
-  [data-slot="star-layer"] {
-    display: none;
-  }
-  .fan-card {
-    animation: none;
-    opacity: 1;
-    transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) rotate(var(--rot));
   }
 }
 

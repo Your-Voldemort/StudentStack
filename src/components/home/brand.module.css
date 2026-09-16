@@ -1,0 +1,879 @@
+/* Student-pass design system (homepage + /submit). One committed amber for
+   the card and calls to action; three extra pass colors appear only in the
+   category wallet. Light is pure white, dark is neutral near-black, switched
+   by the .dark class ThemeToggle sets. Contrast: muted text 6.8:1 on white /
+   7.8:1 on near-black; ink on amber 8.3:1; white on cobalt 6.5:1. */
+.root {
+  --ground: #ffffff;
+  --surface: oklch(0.972 0.005 65);
+  --ink: oklch(0.21 0.012 65);
+  --muted: oklch(0.47 0.014 65);
+  --line: oklch(0.89 0.008 65);
+  --amber: oklch(0.774 0.174 65.1);
+  --amber-hover: oklch(0.72 0.17 62);
+  --amber-deep: oklch(0.52 0.12 58);
+  --on-amber: oklch(0.23 0.045 58);
+  --focus: oklch(0.52 0.16 262);
+  --danger: oklch(0.5 0.17 27);
+  --pass-cobalt: oklch(0.48 0.16 262);
+  --pass-mint: oklch(0.84 0.12 165);
+  --pass-lilac: oklch(0.8 0.09 300);
+  --pass-ink: oklch(0.2 0.02 260);
+  --display: var(--font-pass-display), "Arial Narrow", system-ui, sans-serif;
+  --body: var(--font-pass-body), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: var(--font-pass-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+:global(.dark) .root {
+  --ground: oklch(0.14 0 0);
+  --surface: oklch(0.19 0.004 65);
+  --ink: oklch(0.95 0.006 65);
+  --muted: oklch(0.74 0.012 65);
+  --line: oklch(0.31 0.006 65);
+  --amber-deep: oklch(0.8 0.13 68);
+  --focus: oklch(0.76 0.12 262);
+  --danger: oklch(0.76 0.14 30);
+  line-height: 1.65;
+}
+
+.root :focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 1180px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 48px);
+}
+
+/* ---------- header / footer ---------- */
+.bar {
+  border-bottom: 1px solid var(--line);
+}
+.barInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 20px;
+  padding-block: 8px;
+}
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: inherit;
+  font-family: var(--display);
+  font-stretch: 150%;
+  font-weight: 900;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 0.9375rem;
+}
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 10px;
+  color: var(--ink);
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+.navLink:hover {
+  text-decoration: underline;
+}
+.pillLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 18px;
+  border-radius: 999px;
+  background: var(--amber);
+  color: var(--on-amber);
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 150ms ease-out;
+}
+.pillLink:hover {
+  background: var(--amber-hover);
+}
+.footer {
+  margin-top: auto;
+  border-top: 1px solid var(--line);
+}
+.footerInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 20px;
+  padding-block: 16px;
+}
+
+/* ---------- hero ---------- */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: center;
+  gap: clamp(40px, 5vw, 72px);
+  padding-block: clamp(40px, 7vw, 96px);
+}
+.headline {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(2.1rem, 2.6vw + 1rem, 3.4rem);
+  line-height: 1.03;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.num {
+  color: var(--amber-deep);
+  font-stretch: 62%;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+.lede {
+  margin-top: 20px;
+  max-width: 46ch;
+  color: var(--muted);
+  font-size: 1.125rem;
+  text-wrap: pretty;
+}
+.search {
+  display: flex;
+  max-width: 480px;
+  margin-top: 28px;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--ground);
+}
+.search:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.search input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 20px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
+.search input:focus-visible {
+  outline: none;
+}
+.search input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+.search button {
+  padding-inline: 22px;
+  border: 0;
+  background: var(--ink);
+  color: var(--ground);
+  font-family: var(--display);
+  font-stretch: 120%;
+  font-weight: 800;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+.search button:hover {
+  background: var(--amber);
+  color: var(--on-amber);
+}
+.meta {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- the student pass card ---------- */
+.cardStage {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  perspective: 1600px;
+}
+.cardTilt {
+  --tilt: -4deg;
+  width: min(100%, 440px);
+  transform: rotate(var(--tilt));
+  animation: settle 700ms var(--ease-out) both;
+}
+@keyframes settle {
+  from {
+    transform: translateY(18px) rotate(calc(var(--tilt) - 7deg));
+  }
+  to {
+    transform: rotate(var(--tilt));
+  }
+}
+/* ID-1 card proportions (85.60 × 53.98 mm), the size of a real student ID. */
+.idCard {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 85.6 / 54;
+  container-type: inline-size;
+  transform-style: preserve-3d;
+  transition: transform 700ms var(--ease-out);
+  cursor: pointer;
+}
+.isFlipped {
+  transform: rotateY(180deg);
+}
+.face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 5% 6%;
+  border-radius: 14px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.35),
+    0 22px 40px -22px oklch(0.25 0.06 60 / 0.6);
+}
+.front {
+  background: var(--amber);
+  color: var(--on-amber);
+}
+.back {
+  background: var(--on-amber);
+  color: var(--amber);
+  transform: rotateY(180deg);
+}
+.cardTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 3cqi;
+  padding-bottom: 2.4cqi;
+  border-bottom: max(1px, 0.4cqi) solid currentColor;
+}
+.issuer {
+  font-family: var(--display);
+  font-stretch: 150%;
+  font-weight: 900;
+  font-size: max(12px, 5cqi);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+.cardType {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: max(9px, 2.6cqi);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.cardBody {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4.5cqi;
+  padding-block: 1.6cqi;
+}
+.photo {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 18cqi;
+  aspect-ratio: 3 / 4;
+  border-radius: 1.8cqi;
+  background: var(--on-amber);
+  color: var(--amber);
+  font-family: var(--display);
+  font-stretch: 55%;
+  font-weight: 900;
+  font-size: 13cqi;
+  line-height: 1;
+}
+.fields {
+  display: grid;
+  gap: 1.4cqi;
+}
+.fields div {
+  display: grid;
+}
+.fields dt {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: max(8px, 2.3cqi);
+  line-height: 1.3;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.fields dd {
+  font-family: var(--display);
+  font-stretch: 104%;
+  font-weight: 800;
+  font-size: max(12px, 4.5cqi);
+  line-height: 1.05;
+}
+.barcodeRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 4cqi;
+}
+.barcode {
+  display: block;
+  width: 48cqi;
+  height: 7cqi;
+}
+.serial {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: max(8px, 2.4cqi);
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.mrz {
+  margin-top: 1.6cqi;
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: max(8px, 2.6cqi);
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+.backTitle {
+  padding-bottom: 2.4cqi;
+  border-bottom: max(1px, 0.4cqi) solid currentColor;
+  font-family: var(--display);
+  font-stretch: 150%;
+  font-weight: 900;
+  font-size: max(12px, 4.4cqi);
+  line-height: 1;
+  text-transform: uppercase;
+}
+.zones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.4cqi 5cqi;
+  margin-top: 3cqi;
+  font-size: max(10px, 3.1cqi);
+  line-height: 1.25;
+}
+.zones li {
+  display: flex;
+  justify-content: space-between;
+  gap: 2cqi;
+}
+.zoneCount {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.backFoot {
+  margin-top: auto;
+  font-family: var(--mono);
+  font-size: max(8px, 2.5cqi);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.flip {
+  min-height: 44px;
+  padding-inline: 18px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--ground);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.flip:hover {
+  border-color: var(--ink);
+}
+
+/* ---------- sections ---------- */
+.section {
+  padding-block: clamp(44px, 6vw, 80px);
+  border-top: 1px solid var(--line);
+}
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  gap: 20px 56px;
+}
+.sectionTitle {
+  font-family: var(--display);
+  font-stretch: 115%;
+  font-weight: 800;
+  font-size: clamp(1.5rem, 1vw + 1.1rem, 2rem);
+  line-height: 1.1;
+  text-wrap: balance;
+}
+.sectionLede {
+  max-width: 40ch;
+  margin-top: 10px;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 8px;
+  color: var(--ink);
+  font-weight: 700;
+  text-underline-offset: 4px;
+}
+
+.offers {
+  display: grid;
+}
+.offerRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 16px;
+  padding-block: 14px;
+  border-bottom: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+.offers li:first-child .offerRow {
+  padding-top: 0;
+}
+.offerName {
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+.offerRow:hover .offerName {
+  text-decoration: underline;
+}
+.offerTag {
+  grid-column: 1;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+.cost {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  padding: 3px 10px;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.costFree {
+  border-color: var(--amber);
+  background: var(--amber);
+  color: var(--on-amber);
+}
+
+/* ---------- category wallet ---------- */
+.stacks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  align-items: start;
+  gap: 28px 36px;
+  margin-top: 32px;
+}
+.stack {
+  display: grid;
+}
+.pass {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 132px;
+  padding: 14px 18px 16px;
+  border-radius: 16px;
+  color: inherit;
+  text-decoration: none;
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.28),
+    0 -8px 20px -12px oklch(0 0 0 / 0.45);
+  transition: transform 280ms var(--ease-out);
+}
+/* Each pass tucks under the next, leaving its top 60px (name + count) as the
+   tap target, like cards stacked in a phone wallet. */
+.pass + .pass {
+  margin-top: -72px;
+}
+.pass:not(:last-child):hover,
+.pass:not(:last-child):focus-visible {
+  transform: translateY(-10px);
+}
+.passTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.passName {
+  font-family: var(--display);
+  font-stretch: 108%;
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1.15;
+}
+.passCount {
+  font-family: var(--display);
+  font-stretch: 54%;
+  font-weight: 900;
+  font-size: 2.25rem;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+.passFoot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.amber {
+  background: var(--amber);
+  color: var(--on-amber);
+}
+.cobalt {
+  background: var(--pass-cobalt);
+  color: #ffffff;
+}
+.mint {
+  background: var(--pass-mint);
+  color: var(--pass-ink);
+}
+.lilac {
+  background: var(--pass-lilac);
+  color: var(--pass-ink);
+}
+
+/* ---------- contribute ---------- */
+.contribute {
+  background: var(--surface);
+}
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 28px;
+  counter-reset: step;
+}
+.steps li {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  counter-increment: step;
+  text-wrap: pretty;
+}
+.steps li::before {
+  content: counter(step);
+  color: var(--amber-deep);
+  font-family: var(--display);
+  font-stretch: 58%;
+  font-weight: 900;
+  font-size: 2.6rem;
+  line-height: 1;
+}
+.cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  margin-top: 22px;
+  padding-inline: 24px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--amber);
+  color: var(--on-amber);
+  font-family: var(--display);
+  font-stretch: 120%;
+  font-weight: 800;
+  font-size: 1rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms ease-out;
+}
+.cta:hover {
+  background: var(--amber-hover);
+}
+
+/* ---------- /submit ---------- */
+.formPage {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  align-items: start;
+  gap: clamp(32px, 5vw, 72px);
+  padding-block: clamp(36px, 6vw, 80px);
+}
+.pageTitle {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(2.1rem, 2vw + 1.2rem, 3rem);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.checklistTitle {
+  margin-top: 32px;
+  font-weight: 700;
+}
+.checklist {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+.checklist li {
+  position: relative;
+  padding-left: 24px;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+.checklist li::before {
+  content: "";
+  position: absolute;
+  top: 0.5em;
+  left: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  background: var(--amber);
+}
+.formPanel {
+  display: grid;
+  gap: 20px;
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--ground);
+}
+.panelTitle {
+  font-family: var(--display);
+  font-stretch: 112%;
+  font-weight: 800;
+  font-size: 1.375rem;
+  line-height: 1.15;
+}
+.panelStack,
+.fieldStack {
+  display: grid;
+  gap: 20px;
+}
+.notice {
+  display: grid;
+  gap: 8px;
+}
+.field {
+  display: grid;
+  gap: 6px;
+}
+.fieldRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  gap: 20px;
+}
+.label {
+  font-weight: 700;
+}
+.hint {
+  color: var(--muted);
+  font-size: 0.9375rem;
+  text-wrap: pretty;
+}
+.input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--ground);
+  color: var(--ink);
+  font: inherit;
+  transition: border-color 150ms ease-out;
+}
+.input:hover {
+  border-color: var(--muted);
+}
+.input:focus-visible {
+  border-color: var(--focus);
+  outline-offset: 1px;
+}
+.input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+.textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+.fieldError {
+  color: var(--danger);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+.formError {
+  padding: 12px 14px;
+  border: 1.5px solid var(--danger);
+  border-radius: 10px;
+  color: var(--danger);
+  font-weight: 700;
+  text-wrap: pretty;
+}
+.googleButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--ground);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+.googleButton:hover {
+  background: var(--ink);
+  color: var(--ground);
+}
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+.cta:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+.signedIn {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.9375rem;
+  overflow-wrap: anywhere;
+}
+.signedIn strong {
+  color: var(--ink);
+}
+.linkButton {
+  min-height: 44px;
+  padding-inline: 4px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.submissions {
+  display: grid;
+}
+.submissionRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 16px;
+  padding-block: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.submissionMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.submissionDate {
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+.status {
+  padding: 3px 10px;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.statusLive {
+  border-color: var(--amber);
+  background: var(--amber);
+  color: var(--on-amber);
+}
+
+@media (max-width: 860px) {
+  .hero,
+  .split,
+  .formPage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cardTilt {
+    --tilt: -2deg;
+  }
+}
+@media (max-width: 560px) {
+  .steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cardTilt {
+    animation: none;
+  }
+  .idCard,
+  .pass,
+  .pillLink,
+  .cta,
+  .search button {
+    transition: none;
+  }
+}

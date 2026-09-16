@@ -1,10 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Next.js 16 renamed `middleware.ts` to `proxy.ts`. This only does the
-// optimistic redirect + session-token refresh; every admin Server Action
-// still re-checks independently (see src/lib/admin/auth.ts) since Proxy
-// alone is not a sufficient security boundary.
+// Next.js 16 renamed `middleware.ts` to `proxy.ts`. This refreshes the Supabase
+// session cookie on admin routes and /submit, and does the optimistic admin
+// redirect. It is not the security boundary: admin Server Actions re-check
+// with verifyAdmin() and submission actions re-check the signed-in user.
 export default async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -33,8 +33,9 @@ export default async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isLoginRoute = request.nextUrl.pathname === "/admin/login";
-  if (!user && !isLoginRoute) {
+  const { pathname } = request.nextUrl;
+  const isAdminRoute = pathname.startsWith("/admin") && pathname !== "/admin/login";
+  if (isAdminRoute && !user) {
     return NextResponse.redirect(new URL("/admin/login", request.url));
   }
 
@@ -42,5 +43,5 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/submit"],
 };

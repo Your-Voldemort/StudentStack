@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getAllResources, getCategories } from "@/lib/resources";
+import { getCategories, getResourceById } from "@/lib/resources";
 import { ResourceForm } from "@/components/admin/resource-form";
 import { updateResource } from "../../actions";
 
@@ -7,8 +7,9 @@ export default async function EditResourcePage({ params }: { params: Promise<{ i
   const { id } = await params;
   const resourceId = Number(id);
 
-  const [categories, resources] = await Promise.all([getCategories(), getAllResources()]);
-  const resource = resources.find((r) => r.id === resourceId);
+  // getResourceById (not getAllResources) so pending submissions can be edited
+  // before they're approved.
+  const [categories, resource] = await Promise.all([getCategories(), getResourceById(resourceId)]);
   if (!resource) notFound();
 
   return (
