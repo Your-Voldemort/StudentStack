@@ -18,27 +18,41 @@ const DURATION_OPTIONS = [
 export function ResourceForm({
   categories,
   resource,
+  defaults,
+  candidateId,
   action,
 }: {
   categories: Category[];
   resource?: Resource;
+  defaults?: {
+    name?: string;
+    tagline?: string | null;
+    description?: string;
+    url?: string | null;
+    categoryId?: number;
+    costType?: string;
+    region?: "IN" | "Global";
+    tags?: string[];
+  };
+  candidateId?: number;
   action: (formData: FormData) => void;
 }) {
   return (
     <form action={action} className="flex max-w-lg flex-col gap-4">
+      {candidateId && <input type="hidden" name="candidateId" value={candidateId} />}
       <label className="flex flex-col gap-1 text-sm">
         Name *
-        <input name="name" defaultValue={resource?.name} required className="border-line rounded border px-3 py-2" />
+        <input name="name" defaultValue={resource?.name ?? defaults?.name} required className="border-line rounded border px-3 py-2" />
       </label>
       <label className="flex flex-col gap-1 text-sm">
         Tagline
-        <input name="tagline" defaultValue={resource?.tagline ?? ""} className="border-line rounded border px-3 py-2" />
+        <input name="tagline" defaultValue={resource?.tagline ?? defaults?.tagline ?? ""} className="border-line rounded border px-3 py-2" />
       </label>
       <label className="flex flex-col gap-1 text-sm">
         Description *
         <textarea
           name="description"
-          defaultValue={resource?.description}
+          defaultValue={resource?.description ?? defaults?.description}
           required
           rows={4}
           className="border-line rounded border px-3 py-2"
@@ -49,14 +63,14 @@ export function ResourceForm({
         <input
           name="url"
           type="url"
-          defaultValue={resource?.url ?? ""}
+          defaultValue={resource?.url ?? defaults?.url ?? ""}
           required={!resource}
           className="border-line rounded border px-3 py-2"
         />
       </label>
       <label className="flex flex-col gap-1 text-sm">
         Category *
-        <select name="categoryId" defaultValue={resource?.categoryId} required className="border-line rounded border px-3 py-2">
+        <select name="categoryId" defaultValue={resource?.categoryId ?? defaults?.categoryId} required className="border-line rounded border px-3 py-2">
           {categories.map((c) => (
             <option key={c.slug} value={c.id}>
               {c.name}
@@ -66,7 +80,7 @@ export function ResourceForm({
       </label>
       <label className="flex flex-col gap-1 text-sm">
         Cost type *
-        <select name="costType" defaultValue={resource?.costType} required className="border-line rounded border px-3 py-2">
+        <select name="costType" defaultValue={resource?.costType ?? defaults?.costType} required className="border-line rounded border px-3 py-2">
           {COST_TYPES.map((c) => (
             <option key={c} value={c}>
               {c}
@@ -76,7 +90,7 @@ export function ResourceForm({
       </label>
       <label className="flex flex-col gap-1 text-sm">
         Region
-        <select name="region" defaultValue={resource?.region ?? "Global"} className="border-line rounded border px-3 py-2">
+        <select name="region" defaultValue={resource?.region ?? defaults?.region ?? "Global"} className="border-line rounded border px-3 py-2">
           <option value="Global">Global</option>
           <option value="IN">India</option>
         </select>
@@ -131,7 +145,7 @@ export function ResourceForm({
       </label>
       <label className="flex flex-col gap-1 text-sm">
         Tags (comma-separated)
-        <input name="tags" defaultValue={resource?.tags.join(", ")} className="border-line rounded border px-3 py-2" />
+        <input name="tags" defaultValue={resource?.tags.join(", ") ?? defaults?.tags?.join(", ")} className="border-line rounded border px-3 py-2" />
       </label>
       <label className="flex flex-col gap-1 text-sm">
         Deadline

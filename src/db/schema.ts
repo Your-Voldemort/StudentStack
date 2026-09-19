@@ -99,3 +99,27 @@ export const clickEvents = pgTable("click_events", {
   userId: uuid("user_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }).enableRLS();
+
+export const ingestionCandidates = pgTable("ingestion_candidates", {
+  id: serial("id").primaryKey(),
+  sourceName: text("source_name").notNull(),
+  externalId: text("external_id"),
+  name: text("name").notNull(),
+  tagline: text("tagline"),
+  description: text("description").notNull(),
+  url: text("url"),
+  categorySlug: text("category_slug"),
+  tags: text("tags").array().notNull().default([]),
+  region: text("region", { enum: ["IN", "Global"] }),
+  costType: text("cost_type", {
+    enum: ["free", "discount", "stipend", "scholarship", "credits", "trial"],
+  }),
+  matchType: text("match_type", { enum: ["new", "possible_duplicate"] }).notNull(),
+  matchedResourceId: integer("matched_resource_id").references(() => resources.id),
+  status: text("status", { enum: ["pending", "approved", "rejected"] })
+    .notNull()
+    .default("pending"),
+  rawPayload: text("raw_payload"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+});

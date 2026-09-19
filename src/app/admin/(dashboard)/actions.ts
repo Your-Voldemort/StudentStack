@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db, schema } from "@/db";
 import { verifyAdmin } from "@/lib/admin/auth";
+import { markCandidateReviewed } from "@/lib/ingestion/queries";
 
 function parseTags(raw: FormDataEntryValue | null): string[] {
   return String(raw ?? "")
@@ -55,6 +56,11 @@ export async function createResource(formData: FormData) {
     deadline: deadlineRaw ? new Date(deadlineRaw) : null,
     status: "active",
   });
+
+  const candidateId = formData.get("candidateId");
+  if (candidateId) {
+    await markCandidateReviewed(Number(candidateId), "approved");
+  }
 
   refreshPublicPages();
   redirect("/admin");

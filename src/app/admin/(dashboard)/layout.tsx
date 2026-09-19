@@ -12,6 +12,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </Link>
         <div className="flex items-center gap-4 text-sm">
           <span className="text-muted-foreground">{email}</span>
+          <Link href="/admin/ingestion">Ingestion</Link>
           <Link href="/directory">View site</Link>
         </div>
       </header>
