@@ -1,17 +1,15 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { TagFilter } from "./tag-filter";
-import { cn } from "@/lib/utils";
 import type { Category } from "@/lib/resources";
+import { ChevronRight } from "lucide-react";
+import styles from "./directory.module.css";
 
-const COST_TYPES = ["free", "discount", "stipend", "scholarship", "credits", "trial"] as const;
+const COST_TYPES = ["free", "discount", "credits", "scholarship"] as const;
+const COST_EXTRA = ["stipend", "trial"] as const;
 const PLATFORM_TAGS = ["Web", "macOS", "Windows", "iOS", "Android"];
 
 export function FilterPanel({
-  search,
-  onSearchChange,
   costType,
   onToggleCostType,
   worksInIndia,
@@ -20,7 +18,6 @@ export function FilterPanel({
   categoryCounts,
   selectedCategories,
   onToggleCategory,
-  topTagList,
   selectedTags,
   onToggleTag,
   allTags,
@@ -55,178 +52,114 @@ export function FilterPanel({
   onToggleDuration: (v: string) => void;
 }) {
   return (
-    <div className="flex flex-col gap-5">
-      <Input
-        placeholder="Search resources... (try a typo, e.g. 'gtihub')"
-        value={search}
-        onChange={(e) => onSearchChange(e.target.value)}
-      />
-
-      <details open>
-        <summary className="mb-2 cursor-pointer text-sm font-semibold">Cost type</summary>
-        <div className="flex flex-wrap gap-1.5">
-          {COST_TYPES.map((c) => (
-            <button
-              key={c}
-              type="button"
-              aria-pressed={costType.includes(c)}
-              onClick={() => onToggleCostType(c)}
-              className={cn(
-                "min-h-11 rounded-full border px-3 py-1.5 text-sm capitalize transition-colors",
-                costType.includes(c)
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "hover:bg-accent",
-              )}
-            >
-              {c}
-            </button>
+    <div>
+      <details open className={styles.group}>
+        <summary className={styles.groupTitle}>
+          <span>Cost type</span>
+          <ChevronRight className={styles.chevronIcon} />
+        </summary>
+        <div className={styles.checkList}>
+          {[...COST_TYPES, ...COST_EXTRA].map((c) => (
+            <label key={c} className={styles.check}>
+              <input
+                type="checkbox"
+                checked={costType.includes(c)}
+                onChange={() => onToggleCostType(c)}
+              />
+              <span style={{ textTransform: "capitalize" }}>{c}</span>
+            </label>
           ))}
         </div>
       </details>
 
-      <details open>
-        <summary className="mb-2 cursor-pointer text-sm font-semibold">Region</summary>
-        <label className="flex min-h-11 items-center justify-between rounded-md border px-3 py-2 text-sm">
-          <span>🇮🇳 Works in India</span>
-          <input
-            type="checkbox"
-            checked={worksInIndia}
-            onChange={onToggleWorksInIndia}
-            className="size-5"
-          />
-        </label>
+      <details className={styles.group}>
+        <summary className={styles.groupTitle}>
+          <span>Region</span>
+          <ChevronRight className={styles.chevronIcon} />
+        </summary>
+        <div className={styles.checkList}>
+          <label className={styles.check}>
+            <input type="checkbox" checked={worksInIndia} onChange={onToggleWorksInIndia} />
+            <span>Works in India</span>
+          </label>
+        </div>
       </details>
 
-      <details>
-        <summary className="mb-2 cursor-pointer text-sm font-semibold">Category</summary>
-        <div className="flex flex-col gap-1.5">
+      <details className={styles.group}>
+        <summary className={styles.groupTitle}>
+          <span>Category</span>
+          <ChevronRight className={styles.chevronIcon} />
+        </summary>
+        <div className={styles.checkList}>
           {categories.map((c) => (
-            <label
-              key={c.slug}
-              className="flex min-h-11 items-center justify-between gap-2 rounded-md px-1 py-1 text-sm hover:bg-accent"
-            >
-              <span className="flex items-center gap-2">
-                <Checkbox
+            <label key={c.slug} className={styles.check} style={{ justifyContent: "space-between" }}>
+              <span style={{ display: "flex", gap: 9, alignItems: "center" }}>
+                <input
+                  type="checkbox"
                   checked={selectedCategories.includes(c.slug)}
-                  onCheckedChange={() => onToggleCategory(c.slug)}
+                  onChange={() => onToggleCategory(c.slug)}
                 />
-                {c.icon} {c.name}
+                {c.name}
               </span>
-              <span className="text-muted-foreground text-xs">{categoryCounts[c.slug] ?? 0}</span>
+              <span style={{ color: "var(--d-muted)", fontSize: "0.75rem", fontVariantNumeric: "tabular-nums" }}>
+                {categoryCounts[c.slug] ?? 0}
+              </span>
             </label>
           ))}
         </div>
       </details>
 
-      {PLATFORM_TAGS.some((p) => allTags.includes(p)) && (
-        <details>
-          <summary className="mb-2 cursor-pointer text-sm font-semibold">Platform</summary>
-          <div className="flex flex-wrap gap-1.5">
-            {PLATFORM_TAGS.filter((p) => allTags.includes(p)).map((platform) => (
-              <button
-                key={platform}
-                type="button"
-                aria-pressed={selectedTags.includes(platform)}
-                onClick={() => onToggleTag(platform)}
-                className={cn(
-                  "min-h-11 rounded-full border px-3 py-1.5 text-sm transition-colors",
-                  selectedTags.includes(platform)
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "hover:bg-accent",
-                )}
-              >
-                {platform}
-              </button>
-            ))}
-          </div>
-        </details>
-      )}
-
-      <details>
-        <summary className="mb-2 cursor-pointer text-sm font-semibold">Tags</summary>
-        <div className="flex flex-wrap items-center gap-1.5">
-          {topTagList.map((tag) => (
+      <details className={styles.group}>
+        <summary className={styles.groupTitle}>
+          <span>Platform</span>
+          <ChevronRight className={styles.chevronIcon} />
+        </summary>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+          {PLATFORM_TAGS.filter((p) => allTags.includes(p)).map((platform) => (
             <button
-              key={tag}
+              key={platform}
               type="button"
-              aria-pressed={selectedTags.includes(tag)}
-              onClick={() => onToggleTag(tag)}
-              className={cn(
-                "min-h-11 rounded-full border px-3 py-1.5 text-sm transition-colors",
-                selectedTags.includes(tag)
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "hover:bg-accent",
-              )}
+              aria-pressed={selectedTags.includes(platform)}
+              onClick={() => onToggleTag(platform)}
+              className={`${styles.preset} ${selectedTags.includes(platform) ? styles.presetActive : ""}`}
+              style={{ minHeight: 28, fontSize: "0.75rem", padding: "0 10px" }}
             >
-              {tag}
+              {platform}
             </button>
           ))}
+        </div>
+      </details>
+
+      <details className={styles.group}>
+        <summary className={styles.groupTitle}>
+          <span>More filters</span>
+          <ChevronRight className={styles.chevronIcon} />
+        </summary>
+        <p style={{ color: "var(--d-muted)", fontSize: "0.75rem", margin: "6px 0 8px" }}>
+          Verification, credit card & duration
+        </p>
+        <div className={styles.checkList}>
+          {([["none", "No verification"], ["edu_email", ".edu email"], ["student_id", "Student ID"]] as const).map(([v, label]) => (
+            <label key={v} className={styles.check}>
+              <input type="checkbox" checked={verificationNeeded.includes(v)} onChange={() => onToggleVerificationNeeded(v)} />
+              {label}
+            </label>
+          ))}
+          {(["no", "yes"] as const).map((v) => (
+            <label key={v} className={styles.check}>
+              <input type="checkbox" checked={creditCardRequired.includes(v)} onChange={() => onToggleCreditCardRequired(v)} />
+              Card required: {v === "yes" ? "Yes" : "No"}
+            </label>
+          ))}
+          {(["one_time", "one_year", "while_student", "lifetime"] as const).map((v) => (
+            <label key={v} className={styles.check}>
+              <input type="checkbox" checked={duration.includes(v)} onChange={() => onToggleDuration(v)} />
+              {v.replace("_", " ")}
+            </label>
+          ))}
+        </div>
+        <div style={{ marginTop: 8 }}>
           <TagFilter allTags={allTags} selected={selectedTags} onChange={onTagsChange} />
-        </div>
-      </details>
-
-      <details>
-        <summary className="mb-2 cursor-pointer text-sm font-semibold">Verification needed</summary>
-        <div className="flex flex-col gap-1.5">
-          {(
-            [
-              ["none", "No verification"],
-              ["edu_email", ".edu email"],
-              ["github_student_pack", "GitHub Student Pack"],
-              ["student_id", "Student ID upload"],
-            ] as const
-          ).map(([value, label]) => (
-            <label
-              key={value}
-              className="flex min-h-11 items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-accent"
-            >
-              <Checkbox
-                checked={verificationNeeded.includes(value)}
-                onCheckedChange={() => onToggleVerificationNeeded(value)}
-              />
-              {label}
-            </label>
-          ))}
-        </div>
-      </details>
-
-      <details>
-        <summary className="mb-2 cursor-pointer text-sm font-semibold">Credit card required</summary>
-        <div className="flex flex-col gap-1.5">
-          {(["no", "yes"] as const).map((value) => (
-            <label
-              key={value}
-              className="flex min-h-11 items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-accent"
-            >
-              <Checkbox
-                checked={creditCardRequired.includes(value)}
-                onCheckedChange={() => onToggleCreditCardRequired(value)}
-              />
-              {value === "no" ? "No" : "Yes"}
-            </label>
-          ))}
-        </div>
-      </details>
-
-      <details>
-        <summary className="mb-2 cursor-pointer text-sm font-semibold">Duration</summary>
-        <div className="flex flex-col gap-1.5">
-          {(
-            [
-              ["one_time", "One-time"],
-              ["one_year", "1 year"],
-              ["while_student", "While student"],
-              ["lifetime", "Lifetime"],
-            ] as const
-          ).map(([value, label]) => (
-            <label
-              key={value}
-              className="flex min-h-11 items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-accent"
-            >
-              <Checkbox checked={duration.includes(value)} onCheckedChange={() => onToggleDuration(value)} />
-              {label}
-            </label>
-          ))}
         </div>
       </details>
     </div>

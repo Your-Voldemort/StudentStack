@@ -1,7 +1,4 @@
 import { useState } from "react";
-import { AnimatedShinyButton } from "@/components/ui/animated-shiny-button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import type { Resource } from "@/lib/resources";
 import { relativeTime } from "@/lib/format";
+import { GraduationCap, CheckCircle2, ArrowUpRight, Bookmark } from "lucide-react";
+import styles from "./directory.module.css";
 
 const COST_LABEL: Record<Resource["costType"], string> = {
   free: "Free",
@@ -36,23 +35,34 @@ function ResourceIcon({ resource }: { resource: Resource }) {
   const [failed, setFailed] = useState(false);
   const src = faviconUrl(resource.url);
   if (!src || failed) {
-    return (
-      <span className="text-2xl leading-none" aria-hidden>
-        {resource.categoryIcon}
-      </span>
-    );
+    return <span>{resource.name.slice(0, 1).toUpperCase()}</span>;
   }
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- external favicon, not an optimizable local asset
-    <img
-      src={src}
-      alt=""
-      width={24}
-      height={24}
-      className="size-6 rounded"
-      onError={() => setFailed(true)}
-    />
+    // eslint-disable-next-line @next/next/no-img-element -- external favicon
+    <img src={src} alt="" width={38} height={38} onError={() => setFailed(true)} />
   );
+}
+
+function costClass(cost: Resource["costType"]): string {
+  if (cost === "free") return styles.costFree;
+  if (cost === "credits") return styles.costCredits;
+  if (cost === "discount") return styles.costDiscount;
+  return styles.costOther;
+}
+
+function catClass(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes("develop") || n.includes("media") || n.includes("cloud") || n.includes("host")) return styles.catBlue;
+  if (n.includes("design") || n.includes("health") || n.includes("well")) return styles.catMint;
+  return styles.catLav;
+}
+
+function verificationText(r: Resource): string {
+  if (r.verificationNeeded === "edu_email") return "Education eligibility required";
+  if (r.verificationNeeded === "github_student_pack") return "Student verification required";
+  if (r.verificationNeeded === "student_id") return "Student verification required";
+  if (r.verificationNeeded === "none") return "Check offer eligibility";
+  return "Check offer eligibility";
 }
 
 export function ResourceCard({
@@ -62,79 +72,73 @@ export function ResourceCard({
   resource: Resource;
   onTagClick: (tag: string) => void;
 }) {
+  const verified = relativeTime(resource.lastVerifiedAt);
+  const title = resource.tagline || resource.name;
+
   return (
-    <Card className="flex h-full flex-col">
-      <CardHeader className="flex flex-row items-start gap-3 space-y-0">
-        <ResourceIcon resource={resource} />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="truncate font-semibold">{resource.name}</h3>
-            <Badge variant="outline">{COST_LABEL[resource.costType]}</Badge>
+    <article className={styles.card}>
+      <div className={styles.cardTop}>
+        <span className={styles.logo}>
+          <ResourceIcon resource={resource} />
+        </span>
+        <div className={styles.cardHeaderInfo}>
+          <p className={styles.cardName}>{resource.name}</p>
+          <span className={`${styles.costPill} ${costClass(resource.costType)}`}>
+            {COST_LABEL[resource.costType]}
+          </span>
+        </div>
+        <button type="button" className={styles.bookmark} aria-label={`Save ${resource.name}`}>
+          <Bookmark className="size-4" />
+        </button>
+      </div>
+
+      <h3 className={styles.offerTitle}>{title}</h3>
+
+      <Dialog>
+        <DialogTrigger asChild>
+          <button type="button" style={{ textAlign: "left", background: "none", border: 0, padding: 0, cursor: "pointer" }}>
+            <p className={styles.offerDesc}>{resource.description}</p>
+          </button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{resource.name}</DialogTitle>
+            <DialogDescription className="whitespace-pre-line">{resource.description}</DialogDescription>
+          </DialogHeader>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+            {resource.tags.map((t) => (
+              <button key={t} type="button" onClick={() => onTagClick(t)} style={{ textDecoration: "underline" }}>{t}</button>
+            ))}
           </div>
-          {resource.tagline && (
-            <p className="text-muted-foreground text-sm">{resource.tagline}</p>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-3">
-        <Dialog>
-          <DialogTrigger asChild>
-            <button type="button" className="text-left">
-              <p className="line-clamp-3 text-sm whitespace-pre-line">{resource.description}</p>
-              {resource.description.length > 160 && (
-                <span className="text-muted-foreground text-xs underline underline-offset-2">
-                  Read more
-                </span>
-              )}
-            </button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{resource.name}</DialogTitle>
-              <DialogDescription className="text-foreground whitespace-pre-line">
-                {resource.description}
-              </DialogDescription>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
+        </DialogContent>
+      </Dialog>
 
-        <div className="flex flex-wrap items-center gap-1.5">
-          {resource.tags.slice(0, 2).map((tag) => (
-            <button key={tag} type="button" onClick={() => onTagClick(tag)}>
-              <Badge variant="secondary" className="cursor-pointer hover:opacity-80">
-                {tag}
-              </Badge>
-            </button>
-          ))}
-          {resource.tags.length > 2 && <Badge variant="outline">+{resource.tags.length - 2}</Badge>}
-        </div>
+      <span className={`${styles.catPill} ${catClass(resource.categoryName)}`}>
+        {resource.categoryName}
+      </span>
 
-        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            {relativeTime(resource.lastVerifiedAt) && (
-              <span className="text-green-700 dark:text-green-500">
-                ✓ {relativeTime(resource.lastVerifiedAt)}
-              </span>
-            )}
-            {resource.status === "broken" && (
-              <Badge variant="destructive">⚠ Link may be down</Badge>
-            )}
-          </div>
+      <p className={styles.verifyRow}>
+        <GraduationCap className={styles.verifyIcon} aria-hidden />
+        <span>{verificationText(resource)}</span>
+      </p>
 
-          {resource.hasStaticClaimUrl && resource.url ? (
-            <AnimatedShinyButton url={resource.url} compact>
-              Claim
-            </AnimatedShinyButton>
-          ) : (
-            <span
-              title="This offer routes through an in-app redirect or varies by region — no single static link"
-              className="text-muted-foreground rounded-md border px-3 py-1.5 text-sm"
-            >
-              Varies by region
-            </span>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+      <div className={styles.cardFoot}>
+        <span className={styles.verified}>
+          <CheckCircle2 className="size-3.5" aria-hidden />
+          <span>{verified ? "Verified" : "Verified"}</span>
+        </span>
+        {resource.hasStaticClaimUrl && resource.url ? (
+          <a href={resource.url} target="_blank" rel="noopener noreferrer" className={styles.viewOffer}>
+            <span>View offer</span>
+            <ArrowUpRight className="size-3.5" aria-hidden />
+          </a>
+        ) : (
+          <span className={styles.viewOffer} title="Varies by region">
+            <span>View offer</span>
+            <ArrowUpRight className="size-3.5" aria-hidden />
+          </span>
+        )}
+      </div>
+    </article>
   );
 }

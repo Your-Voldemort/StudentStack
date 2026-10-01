@@ -3,15 +3,14 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Fuse from "fuse.js";
-import { X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { X, LayoutGrid, List, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { applyFilters, countByCategory, topTags, type DirectoryFilters } from "@/lib/directory-filters";
 import type { Category, Resource } from "@/lib/resources";
 import { FilterPanel } from "./filter-panel";
 import { MobileFilterSheet } from "./mobile-filter-sheet";
 import { ResourceCard } from "./resource-card";
+import styles from "./directory.module.css";
 
 const PAGE_SIZE = 30;
 const STORAGE_KEY = "studentstack:last-filters";
@@ -98,6 +97,8 @@ export function DirectoryClient({
   );
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [sort, setSort] = useState<"recommended" | "name" | "recent">("recommended");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const deferredSearch = useDeferredValue(search);
 
@@ -193,10 +194,20 @@ export function DirectoryClient({
     }
   }, [filters]);
 
-  const filtered = useMemo(
-    () => applyFilters(resources, filters, fuse),
-    [resources, filters, fuse],
-  );
+  const filtered = useMemo(() => {
+    const result = applyFilters(resources, filters, fuse);
+    if (sort === "name") {
+      return [...result].sort((a, b) => a.name.localeCompare(b.name));
+    }
+    if (sort === "recent") {
+      return [...result].sort((a, b) => {
+        const aTime = a.lastVerifiedAt ?? 0;
+        const bTime = b.lastVerifiedAt ?? 0;
+        return bTime - aTime;
+      });
+    }
+    return result;
+  }, [resources, filters, fuse, sort]);
 
   const categoryCounts = useMemo(
     () => countByCategory(applyFilters(resources, filters, fuse, "category")),
@@ -365,20 +376,28 @@ export function DirectoryClient({
   ];
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2 md:hidden">
-        <Input
-          placeholder="Search resources..."
+    <div className={styles.layout}>
+      <div className={styles.mobileBar}>
+        <input
+          placeholder="Search offers..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
             syncUrl({ search: e.target.value });
           }}
-          className="flex-1"
+          className={styles.mobileSearch}
+          aria-label="Search offers"
         />
-        <Button variant="outline" className="min-h-11" onClick={() => setFilterSheetOpen(true)}>
-          Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
-        </Button>
+        <button
+          type="button"
+          className={styles.filterBtn}
+          onClick={() => setFilterSheetOpen(true)}
+          aria-label="Open filter options"
+        >
+          <SlidersHorizontal className="size-3.5" aria-hidden />
+          <span>Filters</span>
+          {activeFilterCount > 0 && <span className={styles.filterBadge}>{activeFilterCount}</span>}
+        </button>
       </div>
 
       <MobileFilterSheet
@@ -418,9 +437,15 @@ export function DirectoryClient({
         onToggleDuration={toggleDuration}
       />
 
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-[260px_1fr]">
-      <aside className="hidden md:block">
-        <div className="sticky top-8">
+    <div style={{ display: "contents" }}>
+      <aside className={styles.sidebar}>
+        <div>
+          <div className={styles.sideHead}>
+            <h2 className={styles.sideTitle}>Filters</h2>
+            <button type="button" onClick={clearAll} className={styles.resetBtn}>
+              Reset
+            </button>
+          </div>
           <FilterPanel
             search={search}
             onSearchChange={(v) => {
@@ -457,58 +482,92 @@ export function DirectoryClient({
         </div>
       </aside>
 
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <p className="text-muted-foreground text-sm">
-            {filtered.length} of {resources.length} resources
-          </p>
-          {filterChips.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              {filterChips.map((chip) => (
-                <Badge key={chip.key} variant="secondary" className="gap-1">
-                  {chip.label}
-                  <button
-                    type="button"
-                    aria-label={`Remove ${chip.label} filter`}
-                    onClick={chip.onRemove}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
+      <div style={{ minWidth: 0 }}>
+        <div className={styles.resultsHead}>
+          <div className={styles.count}>
+            {filtered.length} offers
+          </div>
+          <div className={styles.controls}>
+            <label htmlFor="sort-select" style={{ color: "var(--d-muted)", fontSize: "0.88rem" }}>Sort:</label>
+            <select
+              id="sort-select"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as "recommended" | "name" | "recent")}
+              aria-label="Sort offers"
+              className={styles.sort}
+            >
+              <option value="recommended">Recommended</option>
+              <option value="name">Name A-Z</option>
+              <option value="recent">Recently verified</option>
+            </select>
+            <div className={styles.viewToggle}>
               <button
                 type="button"
-                onClick={clearAll}
-                className="text-muted-foreground text-sm underline underline-offset-2"
+                className={`${styles.viewBtn} ${viewMode === "grid" ? styles.viewBtnActive : ""}`}
+                aria-pressed={viewMode === "grid"}
+                aria-label="Grid view"
+                onClick={() => setViewMode("grid")}
               >
-                Clear all
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                className={`${styles.viewBtn} ${viewMode === "list" ? styles.viewBtnActive : ""}`}
+                aria-pressed={viewMode === "list"}
+                aria-label="List view"
+                onClick={() => setViewMode("list")}
+              >
+                <List className="h-4 w-4" />
               </button>
             </div>
-          )}
+          </div>
         </div>
 
+        {filterChips.length > 0 && (
+          <div className={styles.chips}>
+            {filterChips.map((chip) => (
+              <span key={chip.key} className={styles.chip}>
+                {chip.label}
+                <button
+                  type="button"
+                  aria-label={`Remove ${chip.label} filter`}
+                  onClick={chip.onRemove}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+            <button
+              type="button"
+              onClick={clearAll}
+              className={styles.resetBtn}
+            >
+              Clear all
+            </button>
+          </div>
+        )}
+
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed py-16 text-center">
-            <p className="text-muted-foreground">No matches — try removing a filter.</p>
+          <div className={styles.empty}>
+            <p>No matches found. Try clearing your filters.</p>
             {hasActiveFilters && (
-              <Button variant="outline" size="sm" onClick={clearAll}>
+              <Button variant="outline" size="sm" onClick={clearAll} style={{ marginTop: 12 }}>
                 Clear filters
               </Button>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className={`${styles.grid} ${viewMode === "list" ? styles.gridList : ""}`}>
             {filtered.slice(0, visibleCount).map((resource) => (
               <ResourceCard key={resource.id} resource={resource} onTagClick={addTag} />
             ))}
           </div>
         )}
         {visibleCount < filtered.length && (
-          <div className="flex justify-center pt-2">
-            <Button variant="outline" onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
-              Load {Math.min(PAGE_SIZE, filtered.length - visibleCount)} more (
-              {filtered.length - visibleCount} remaining)
-            </Button>
+          <div className={styles.loadMoreWrap}>
+            <button type="button" className={styles.loadMore} onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
+              Load more offers
+            </button>
           </div>
         )}
       </div>

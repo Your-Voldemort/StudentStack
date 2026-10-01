@@ -20,7 +20,11 @@ export const metadata: Metadata = {
   description: "Free tools, discounts, credits, and scholarships for students — filtered to what you can actually use.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html
       lang="en"
@@ -35,13 +39,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script
+          type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html:
               "(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()",
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <div data-floating-theme-toggle className="fixed top-4 right-4 z-20">
           <ThemeToggle />
         </div>
