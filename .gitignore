@@ -49,3 +49,5 @@ offers.json
 docs/
 .agents/
 skills-lock.json
+.kilo/
+.last30days/
