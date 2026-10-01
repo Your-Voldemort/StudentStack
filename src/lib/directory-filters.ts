@@ -69,6 +69,52 @@ export function topTags(resources: Resource[], limit: number): string[] {
   return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([tag]) => tag);
 }
 
+export function countByCostType(resources: Resource[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const r of resources) counts[r.costType] = (counts[r.costType] ?? 0) + 1;
+  return counts;
+}
+
+export function countByRegion(resources: Resource[]): { in: number; global: number } {
+  let inCount = 0;
+  let globalCount = 0;
+  for (const r of resources) {
+    if (r.region === "IN") inCount++;
+    else globalCount++;
+  }
+  return { in: inCount, global: globalCount };
+}
+
+export type SortOption = "relevance" | "verified" | "name-asc" | "name-desc" | "free-first";
+
+export function sortResources(
+  resources: Resource[],
+  sort: SortOption,
+  hasSearchQuery: boolean,
+): Resource[] {
+  if (sort === "relevance" && hasSearchQuery) {
+    // Keep search relevance order
+    return resources;
+  }
+  const copy = [...resources];
+  switch (sort) {
+    case "verified":
+      return copy.sort((a, b) => (b.lastVerifiedAt ?? 0) - (a.lastVerifiedAt ?? 0));
+    case "name-asc":
+      return copy.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+    case "name-desc":
+      return copy.sort((a, b) => b.name.localeCompare(a.name, undefined, { sensitivity: "base" }));
+    case "free-first":
+      return copy.sort((a, b) => {
+        if (a.costType === "free" && b.costType !== "free") return -1;
+        if (a.costType !== "free" && b.costType === "free") return 1;
+        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+      });
+    default:
+      return copy;
+  }
+}
+
 if (process.argv[1] && process.argv[1].endsWith("directory-filters.ts")) {
   const fixture: Resource[] = [
     { id: 1, slug: "a", name: "A", tagline: null, description: "", url: null, hasStaticClaimUrl: false, categoryId: 1, categorySlug: "ai", categoryName: "AI", categoryIcon: "🤖", tags: ["Web"], region: "IN", costType: "free", verificationNeeded: null, creditCardRequired: null, duration: null, status: "active", lastVerifiedAt: null },
