@@ -3,3 +3,14 @@ allowBuilds:
   esbuild: true
   sharp: false
   unrs-resolver: false
+
+overrides:
+  "brace-expansion@<2": "1.1.21"
+  "brace-expansion@>=2": "5.0.12"
+  "esbuild": ">=0.24.3"
+  "fast-uri": ">=3.1.8"
+  "ip-address": ">=10.7.1"
+  "vite": "6.4.3"
+  "vitest": ">=4.1.11"
+  "@vitest/coverage-v8": ">=4.1.11"
+  "@vitest/mocker": ">=4.1.11"
