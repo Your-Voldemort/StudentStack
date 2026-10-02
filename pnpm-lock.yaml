@@ -38,8 +38,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       cn:
-        specifier: ^0.2.5
-        version: 0.2.5
+        specifier: ^0.4.0
+        version: 0.4.0
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/better-sqlite3@9.6.0)(better-sqlite3@13.0.3)(postgres@3.4.9)
@@ -97,7 +97,7 @@ importers:
         version: 4.7.0(vite@6.4.3(@types/node@20.19.43)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.13))
       '@vitest/coverage-v8':
         specifier: '>=4.1.11'
-        version: 5.0.3(vitest@5.0.3)
+        version: 5.0.2(vitest@5.0.2)
       dotenv-cli:
         specifier: ^11.0.0
         version: 11.0.0
@@ -124,7 +124,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: '>=4.1.11'
-        version: 5.0.3(@types/node@20.19.43)(@vitest/coverage-v8@5.0.3)(jsdom@25.0.1)(vite@6.4.3(@types/node@20.19.43)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.13))
+        version: 5.0.2(@types/node@20.19.43)(@vitest/coverage-v8@5.0.2)(jsdom@25.0.1)(vite@6.4.3(@types/node@20.19.43)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.13))
 
 packages:
 
@@ -2315,10 +2315,10 @@ packages:
     peerDependencies:
       vite: 6.4.3
 
-  '@vitest/coverage-v8@5.0.3':
-    resolution: {integrity: sha512-+klsyz7BvT1vCU28Zkfzms1Ia78XD0V41U3FUtRaa3S+vOr/EXvK1O6BvVD7l1RzEjm6SONR2aybOvDDf9u0mQ==}
+  '@vitest/coverage-v8@5.0.2':
+    resolution: {integrity: sha512-3ffHBEi8DOOBLwIGBhOBZbRfYFYWjMUuxZicONdhuFEFEG5AVsMOSrVeuROskqnqpbOmEJwxM2eTVZ9N3a1t+A==}
     peerDependencies:
-      '@vitest/browser': 5.0.3
+      '@vitest/browser': 5.0.2
       vitest: '>=4.1.11'
     peerDependenciesMeta:
       '@vitest/browser':
@@ -2591,8 +2591,13 @@ packages:
       react: ^18 || ^19 || ^19.0.0-rc
       react-dom: ^18 || ^19 || ^19.0.0-rc
 
-  cn@0.2.5:
-    resolution: {integrity: sha512-OCjZtMeQfXbI4Es1+EIjkd77gvWzaE689gD8KhfexlqjClC06qR1MQBR+Z35ZMSPNEBWyHiItW1Soy0UvwNv9w==}
+  cn@0.2.6:
+    resolution: {integrity: sha512-+i4L0zUGgRcEnhsxueVrP7iBGxBx5iD0WOTYg1MwFEu2ZyCmH5Ov2V1cul2Ht5UchRQQgftCf4be/RxspuW6QQ==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  cn@0.4.0:
+    resolution: {integrity: sha512-qOAeUhPwPzBxx6jaeQdo646XIKliKHc2j1ZF7Ngb1o0pJZKH5gq8FkA0aVdUdPFUDXNXyUCXpCtoJISo6dhizg==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -4800,20 +4805,20 @@ packages:
       yaml:
         optional: true
 
-  vitest@5.0.3:
-    resolution: {integrity: sha512-xMw97S3rjdtj5dkVat7jCsqWBpvchs3RlpQctUqwJD0KkERk40vz2fJ77lDwW/Vzh/pk18eItYAzkodhSes3jQ==}
+  vitest@5.0.2:
+    resolution: {integrity: sha512-7MQrx9pDv5aHiUcovIb/70Ys3tgtkUVgCtledvKdCmEO+/1Dicq5ZqoSxOW034m03oqC+oHOKui2dM6qtMLoJg==}
     engines: {node: ^22.12.0 || ^24.0.0 || >=26.0.0}
     hasBin: true
     peerDependencies:
       '@edge-runtime/vm': '*'
       '@opentelemetry/api': ^1.9.0
       '@types/node': ^22.0.0 || >=24.0.0
-      '@vitest/browser-playwright': 5.0.3
-      '@vitest/browser-preview': 5.0.3
+      '@vitest/browser-playwright': 5.0.2
+      '@vitest/browser-preview': 5.0.2
       '@vitest/browser-webdriverio': ^5.0.0-beta.5 || >=5.0.0
-      '@vitest/coverage-istanbul': 5.0.3
+      '@vitest/coverage-istanbul': 5.0.2
       '@vitest/coverage-v8': '>=4.1.11'
-      '@vitest/ui': 5.0.3
+      '@vitest/ui': 5.0.2
       happy-dom: '*'
       jsdom: '*'
       vite: 6.4.3
@@ -6916,7 +6921,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-v8@5.0.3(vitest@5.0.3)':
+  '@vitest/coverage-v8@5.0.2(vitest@5.0.2)':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
       '@vitest/istanbul-lib-coverage': 1.0.2
@@ -6926,7 +6931,7 @@ snapshots:
       obug: 2.2.1
       std-env: 4.3.0
       tinyrainbow: 3.2.0
-      vitest: 5.0.3(@types/node@20.19.43)(@vitest/coverage-v8@5.0.3)(jsdom@25.0.1)(vite@6.4.3(@types/node@20.19.43)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.13))
+      vitest: 5.0.2(@types/node@20.19.43)(@vitest/coverage-v8@5.0.2)(jsdom@25.0.1)(vite@6.4.3(@types/node@20.19.43)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.13))
 
   '@vitest/istanbul-lib-coverage@1.0.2': {}
 
@@ -7209,7 +7214,9 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  cn@0.2.5: {}
+  cn@0.2.6: {}
+
+  cn@0.4.0: {}
 
   code-block-writer@13.0.3: {}
 
@@ -9199,7 +9206,7 @@ snapshots:
       '@modelcontextprotocol/sdk': 1.30.0(zod@3.25.76)
       '@types/validate-npm-package-name': 4.0.2
       browserslist: 4.28.9
-      cn: 0.2.5
+      cn: 0.2.6
       commander: 14.0.3
       cosmiconfig: 9.0.2(typescript@5.9.3)
       dedent: 1.7.2
@@ -9648,7 +9655,7 @@ snapshots:
       lightningcss: 1.32.0
       tsx: 4.23.13
 
-  vitest@5.0.3(@types/node@20.19.43)(@vitest/coverage-v8@5.0.3)(jsdom@25.0.1)(vite@6.4.3(@types/node@20.19.43)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.13)):
+  vitest@5.0.2(@types/node@20.19.43)(@vitest/coverage-v8@5.0.2)(jsdom@25.0.1)(vite@6.4.3(@types/node@20.19.43)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.13)):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/mocker': 5.0.3(vite@6.4.3(@types/node@20.19.43)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.13))
@@ -9666,7 +9673,7 @@ snapshots:
       why-is-node-running: 3.2.1
     optionalDependencies:
       '@types/node': 20.19.43
-      '@vitest/coverage-v8': 5.0.3(vitest@5.0.3)
+      '@vitest/coverage-v8': 5.0.2(vitest@5.0.2)
       jsdom: 25.0.1
     transitivePeerDependencies:
       - msw
