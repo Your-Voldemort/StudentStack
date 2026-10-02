@@ -97,12 +97,12 @@ export function DirectoryClient({
       ? parseListParam(searchParams.get("duration"))
       : (initialFilters?.duration ?? []),
   );
+const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 const [sort, setSort] = useState<"recommended" | "name" | "recent">("recommended");
 const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 const [shortcutsOpen, setShortcutsOpen] = useState(false);
 const searchInputRef = useRef<HTMLInputElement>(null);
-  const [sort, setSort] = useState<"recommended" | "name" | "recent">("recommended");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const deferredSearch = useDeferredValue(search);
 
