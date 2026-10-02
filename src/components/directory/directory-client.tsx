@@ -326,9 +326,74 @@ const searchInputRef = useRef<HTMLInputElement>(null);
     creditCardRequired.length +
     duration.length +
     (region !== "all" ? 1 : 0) +
-    (search ? 1 : 0);
+  (search ? 1 : 0);
 
-  // Every active facet filter becomes a removable chip, so the current
+function moveCardFocus(direction: 1 | -1) {
+  const cards = Array.from(document.querySelectorAll<HTMLElement>("[data-resource-card]"));
+  if (cards.length === 0) return;
+  const active = document.activeElement as HTMLElement | null;
+  const index = active ? cards.indexOf(active) : -1;
+  const next =
+    index === -1
+      ? direction === 1
+        ? 0
+        : cards.length - 1
+      : (index + direction + cards.length) % cards.length;
+  cards[next].focus();
+}
+
+useKeyboardShortcuts({
+  "/": (e) => {
+    e.preventDefault();
+    searchInputRef.current?.focus();
+  },
+  f: (e) => {
+    e.preventDefault();
+    if (window.matchMedia("(max-width: 900px)").matches) {
+      setFilterSheetOpen(true);
+    } else {
+      document.getElementById("directory-filter-panel")?.focus();
+    }
+  },
+  c: (e) => {
+    if (!hasActiveFilters) return;
+    e.preventDefault();
+    clearAll();
+  },
+  escape: (e) => {
+    // Radix dialogs (filter sheet, card details) handle Escape natively.
+    if (document.querySelector('[role="dialog"]')) return;
+    e.preventDefault();
+    if (search) {
+      setSearch("");
+      syncUrl({ search: "" });
+    }
+  },
+  arrowright: (e) => {
+    e.preventDefault();
+    moveCardFocus(1);
+  },
+  arrowleft: (e) => {
+    e.preventDefault();
+    moveCardFocus(-1);
+  },
+  enter: (e) => {
+    const active = document.activeElement as HTMLElement | null;
+    if (active?.hasAttribute("data-resource-card")) {
+      const link = active.querySelector<HTMLAnchorElement>("a[href]");
+      if (link) {
+        e.preventDefault();
+        link.click();
+      }
+    }
+  },
+  "?": (e) => {
+    e.preventDefault();
+    setShortcutsOpen(true);
+  },
+});
+
+// Every active facet filter becomes a removable chip, so the current
   // selection is always visible at a glance, not just implied by the count.
   const filterChips: { key: string; label: string; onRemove: () => void }[] = [
     ...category.map((slug) => ({
@@ -543,9 +608,18 @@ const searchInputRef = useRef<HTMLInputElement>(null);
                 onClick={() => setViewMode("list")}
               >
                 <List className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+      </button>
+  </div>
+  <button
+    type="button"
+    className={styles.viewBtn}
+    aria-label="Keyboard shortcuts"
+    title="Keyboard shortcuts (?)"
+    onClick={() => setShortcutsOpen(true)}
+  >
+    ?
+  </button>
+</div>
         </div>
 
         {filterChips.length > 0 && (
@@ -596,7 +670,8 @@ const searchInputRef = useRef<HTMLInputElement>(null);
           </div>
         )}
       </div>
-    </div>
+      </div>
+      <ShortcutsHelp open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </div>
   );
 }
