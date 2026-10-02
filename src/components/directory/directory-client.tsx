@@ -343,10 +343,16 @@ function moveCardFocus(direction: 1 | -1) {
 }
 
 useKeyboardShortcuts({
-  "/": (e) => {
-    e.preventDefault();
-    searchInputRef.current?.focus();
-  },
+ "/": (e) => {
+  e.preventDefault();
+  const mobile = searchInputRef.current;
+  if (mobile && mobile.offsetParent !== null) {
+    mobile.focus();
+  } else {
+    // Desktop: the visible search lives in the server-rendered hero.
+    document.getElementById("dir-search")?.focus();
+  }
+},
   f: (e) => {
     e.preventDefault();
     if (window.matchMedia("(max-width: 900px)").matches) {
@@ -361,14 +367,27 @@ useKeyboardShortcuts({
     clearAll();
   },
   escape: (e) => {
-    // Radix dialogs (filter sheet, card details) handle Escape natively.
-    if (document.querySelector('[role="dialog"]')) return;
+  // Radix dialogs (filter sheet, card details, shortcuts help) handle Escape natively.
+  if (document.querySelector('[role="dialog"]')) return;
+  const active = document.activeElement as HTMLInputElement | null;
+  const heroSearch = document.getElementById("dir-search");
+  if (active && (active === searchInputRef.current || active === heroSearch)) {
+    // Clear the focused search field, even while typing in it.
     e.preventDefault();
-    if (search) {
+    if (active === searchInputRef.current) {
       setSearch("");
       syncUrl({ search: "" });
+    } else {
+      active.value = "";
     }
-  },
+    return;
+  }
+  e.preventDefault();
+  if (search) {
+    setSearch("");
+    syncUrl({ search: "" });
+  }
+},
   arrowright: (e) => {
     e.preventDefault();
     moveCardFocus(1);
