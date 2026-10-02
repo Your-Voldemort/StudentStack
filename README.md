@@ -172,6 +172,11 @@ The directory currently loads the full dataset server-side and filters in memory
 | `pnpm db:push` | Push the Drizzle schema to Postgres |
 | `pnpm db:seed` | Reload categories and resources from `offers.json` |
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, database precautions,
+verification commands, and the pull request workflow.
+
 ## Current scope
 
 The current implementation focuses on fast discovery, trustworthy resource metadata, and low-effort admin curation. The schema already includes tables for bookmarks, reviews, and click events, but those flows aren't exposed in the UI yet — they're planned for a future phase that extends the existing Supabase Auth setup to real user accounts. Students can now add resources at `/submit` (Google or email-link sign-in via Supabase Auth); submissions stay hidden until approved from the review queue in `/admin`. Multi-admin roles remain out of scope for now.
