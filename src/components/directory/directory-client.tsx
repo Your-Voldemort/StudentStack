@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Fuse from "fuse.js";
 import { X, LayoutGrid, List, SlidersHorizontal } from "lucide-react";
@@ -10,6 +10,8 @@ import type { Category, Resource } from "@/lib/resources";
 import { FilterPanel } from "./filter-panel";
 import { MobileFilterSheet } from "./mobile-filter-sheet";
 import { ResourceCard } from "./resource-card";
+import { ShortcutsHelp } from "./shortcuts-help";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import styles from "./directory.module.css";
 
 const PAGE_SIZE = 30;
@@ -95,8 +97,10 @@ export function DirectoryClient({
       ? parseListParam(searchParams.get("duration"))
       : (initialFilters?.duration ?? []),
   );
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+const [sort, setSort] = useState<"recommended" | "name" | "recent">("recommended");
+const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+const [shortcutsOpen, setShortcutsOpen] = useState(false);
+const searchInputRef = useRef<HTMLInputElement>(null);
   const [sort, setSort] = useState<"recommended" | "name" | "recent">("recommended");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
@@ -378,8 +382,9 @@ export function DirectoryClient({
   return (
     <div className={styles.layout}>
       <div className={styles.mobileBar}>
-        <input
-          placeholder="Search offers..."
+       <input
+  ref={searchInputRef}
+  placeholder="Search offers..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -458,7 +463,7 @@ export function DirectoryClient({
       />
 
     <div style={{ display: "contents" }}>
-      <aside className={styles.sidebar}>
+      <aside className={styles.sidebar} id="directory-filter-panel" tabIndex={-1}>
         <div>
           <div className={styles.sideHead}>
             <h2 className={styles.sideTitle}>Filters</h2>
