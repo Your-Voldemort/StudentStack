@@ -410,31 +410,51 @@ export function DirectoryClient({
           syncUrl({ search: v });
         }}
         costType={costType}
-        onToggleCostType={toggleCostType}
+        onToggleCostType={(v) => {
+          toggleCostType(v);
+          setFilterSheetOpen(false);
+        }}
         worksInIndia={region === "IN"}
         onToggleWorksInIndia={() => {
           const next = region === "IN" ? "all" : "IN";
           setRegion(next);
           syncUrl({ region: next });
+          setFilterSheetOpen(false);
         }}
         categories={categories}
         categoryCounts={categoryCounts}
         selectedCategories={category}
-        onToggleCategory={toggleCategory}
+        onToggleCategory={(slug) => {
+          toggleCategory(slug);
+          setFilterSheetOpen(false);
+        }}
         topTagList={topTagList}
         selectedTags={tags}
-        onToggleTag={addOrRemoveTag}
+        onToggleTag={(tag) => {
+          addOrRemoveTag(tag);
+          setFilterSheetOpen(false);
+        }}
         allTags={allTags}
         onTagsChange={(next) => {
           setTags(next);
           syncUrl({ tags: next });
+          setFilterSheetOpen(false);
         }}
         verificationNeeded={verificationNeeded}
-        onToggleVerificationNeeded={toggleVerificationNeeded}
+        onToggleVerificationNeeded={(v) => {
+          toggleVerificationNeeded(v);
+          setFilterSheetOpen(false);
+        }}
         creditCardRequired={creditCardRequired}
-        onToggleCreditCardRequired={toggleCreditCardRequired}
+        onToggleCreditCardRequired={(v) => {
+          toggleCreditCardRequired(v);
+          setFilterSheetOpen(false);
+        }}
         duration={duration}
-        onToggleDuration={toggleDuration}
+        onToggleDuration={(v) => {
+          toggleDuration(v);
+          setFilterSheetOpen(false);
+        }}
       />
 
     <div style={{ display: "contents" }}>
