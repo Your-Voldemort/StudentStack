@@ -522,8 +522,65 @@ details[open] > summary .chevronIcon {
   color: var(--d-ink-secondary);
 }
 
-.bookmark {
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   margin-left: auto;
+}
+
+.copyContainer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copyButton {
+  background: none;
+  border: 0;
+  color: var(--d-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  transition: color 120ms ease, background-color 120ms ease;
+}
+
+.copyButton:hover {
+  color: var(--d-ink);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.copyButton:focus-visible {
+  outline: 2px solid var(--d-purple);
+  outline-offset: 2px;
+}
+
+.copySuccess {
+  color: #4ade80;
+}
+
+.copyToast {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--d-purple, #9333ea);
+  color: #ffffff;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.bookmark {
+  margin-left: 0;
   background: none;
   border: 0;
   color: var(--d-muted);
