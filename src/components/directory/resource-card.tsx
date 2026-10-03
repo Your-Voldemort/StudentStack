@@ -1,4 +1,6 @@
-import { useState } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import type { Resource } from "@/lib/resources";
 import { relativeTime } from "@/lib/format";
-import { GraduationCap, CheckCircle2, ArrowUpRight, Bookmark } from "lucide-react";
+import { GraduationCap, CheckCircle2, ArrowUpRight, Bookmark, Link as LinkIcon, Check } from "lucide-react";
 import styles from "./directory.module.css";
 
 const COST_LABEL: Record<Resource["costType"], string> = {
@@ -65,6 +67,12 @@ function verificationText(r: Resource): string {
   return "Check offer eligibility";
 }
 
+function getResourceShareUrl(resource: Resource): string {
+  const query = encodeURIComponent(resource.name);
+  const origin = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "";
+  return `${origin}/directory?q=${query}`;
+}
+
 export function ResourceCard({
   resource,
   onTagClick,
@@ -72,8 +80,40 @@ export function ResourceCard({
   resource: Resource;
   onTagClick: (tag: string) => void;
 }) {
+  const [copied, setCopied] = useState(false);
   const verified = relativeTime(resource.lastVerifiedAt);
   const title = resource.tagline || resource.name;
+
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
+  const handleCopyLink = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    const shareUrl = getResourceShareUrl(resource);
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else if (typeof document !== "undefined") {
+        const textarea = document.createElement("textarea");
+        textarea.value = shareUrl;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopied(true);
+    } catch {
+      // Fallback if clipboard writing fails
+    }
+  };
 
   return (
     <article className={styles.card} data-resource-card tabIndex={0}>
@@ -87,9 +127,34 @@ export function ResourceCard({
             {COST_LABEL[resource.costType]}
           </span>
         </div>
-        <button type="button" className={styles.bookmark} aria-label={`Save ${resource.name}`}>
-          <Bookmark className="size-4" />
-        </button>
+        <div className={styles.cardActions}>
+          <button
+            type="button"
+            className={`${styles.copyLinkBtn} ${copied ? styles.copyLinkBtnCopied : ""}`}
+            onClick={handleCopyLink}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.stopPropagation();
+              }
+            }}
+            aria-label={copied ? `Link copied for ${resource.name}` : `Copy link for ${resource.name}`}
+            title={copied ? "Link copied!" : "Copy link"}
+          >
+            {copied ? (
+              <Check className="size-4" aria-hidden="true" />
+            ) : (
+              <LinkIcon className="size-4" aria-hidden="true" />
+            )}
+          </button>
+          {copied && (
+            <span role="status" aria-live="polite" className={styles.copiedToast}>
+              Link copied!
+            </span>
+          )}
+          <button type="button" className={styles.bookmark} aria-label={`Save ${resource.name}`}>
+            <Bookmark className="size-4" />
+          </button>
+        </div>
       </div>
 
       <h3 className={styles.offerTitle}>{title}</h3>
