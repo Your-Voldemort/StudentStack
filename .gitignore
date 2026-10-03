@@ -51,3 +51,4 @@ docs/
 skills-lock.json
 .kilo/
 .last30days/
+.opencode/opencode.json
