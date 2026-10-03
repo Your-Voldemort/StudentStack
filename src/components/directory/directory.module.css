@@ -522,8 +522,61 @@ details[open] > summary .chevronIcon {
   color: var(--d-ink-secondary);
 }
 
-.bookmark {
+.cardActions {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  position: relative;
+}
+
+.copyLinkBtn {
+  background: none;
+  border: 0;
+  color: var(--d-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  transition: color 120ms ease, background-color 120ms ease;
+}
+
+.copyLinkBtn:hover {
+  color: var(--d-ink);
+}
+
+.copyLinkBtn:focus-visible {
+  outline: 2px solid var(--d-purple);
+  outline-offset: 1px;
+}
+
+.copyLinkBtnCopied {
+  color: var(--d-green);
+}
+
+.copyLinkBtnCopied:hover {
+  color: var(--d-green);
+}
+
+.copiedToast {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--d-surface-hover);
+  color: var(--d-ink);
+  border: 1px solid var(--d-line);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  z-index: 20;
+}
+
+.bookmark {
   background: none;
   border: 0;
   color: var(--d-muted);
@@ -537,6 +590,11 @@ details[open] > summary .chevronIcon {
 
 .bookmark:hover {
   color: var(--d-ink);
+}
+
+.bookmark:focus-visible {
+  outline: 2px solid var(--d-purple);
+  outline-offset: 1px;
 }
 
 .offerTitle {

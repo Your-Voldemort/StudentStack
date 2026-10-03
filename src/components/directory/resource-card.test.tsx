@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { ResourceCard } from "./resource-card";
 import type { Resource } from "@/lib/resources";
 
@@ -61,6 +61,155 @@ describe("ResourceCard verification status", () => {
 
     const verifiedEl = screen.queryByText(/^Verified/);
     expect(verifiedEl).toBeNull();
+  });
+});
+
+describe("ResourceCard copy link", () => {
+  const originalClipboard = navigator.clipboard;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: originalClipboard,
+      configurable: true,
+      writable: true,
+    });
+    vi.useRealTimers();
+  });
+
+  it("renders the copy link button with accessible label", () => {
+    render(<ResourceCard resource={mockResource} onTagClick={vi.fn()} />);
+
+    const copyBtn = screen.getByRole("button", {
+      name: `Copy link for ${mockResource.name}`,
+    });
+    expect(copyBtn).not.toBeNull();
+    expect(copyBtn.getAttribute("title")).toBe("Copy link");
+  });
+
+  it("copies shareable link to clipboard on click and displays confirmation toast", async () => {
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: writeTextMock },
+      configurable: true,
+      writable: true,
+    });
+
+    render(<ResourceCard resource={mockResource} onTagClick={vi.fn()} />);
+
+    const copyBtn = screen.getByRole("button", {
+      name: `Copy link for ${mockResource.name}`,
+    });
+
+    await act(async () => {
+      fireEvent.click(copyBtn);
+    });
+
+    const expectedQuery = encodeURIComponent(mockResource.name);
+    expect(writeTextMock).toHaveBeenCalledTimes(1);
+    expect(writeTextMock).toHaveBeenCalledWith(
+      expect.stringContaining(`/directory?q=${expectedQuery}`)
+    );
+
+    const toast = screen.getByRole("status");
+    expect(toast).not.toBeNull();
+    expect(toast.textContent).toContain("Link copied!");
+    expect(copyBtn.getAttribute("aria-label")).toBe(
+      `Link copied for ${mockResource.name}`
+    );
+  });
+
+  it("reverts copied status after timeout", async () => {
+    vi.useFakeTimers();
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: writeTextMock },
+      configurable: true,
+      writable: true,
+    });
+
+    render(<ResourceCard resource={mockResource} onTagClick={vi.fn()} />);
+
+    const copyBtn = screen.getByRole("button", {
+      name: `Copy link for ${mockResource.name}`,
+    });
+
+    await act(async () => {
+      fireEvent.click(copyBtn);
+    });
+
+    expect(screen.getByRole("status").textContent).toContain("Link copied!");
+
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(copyBtn.getAttribute("aria-label")).toBe(
+      `Copy link for ${mockResource.name}`
+    );
+  });
+
+  it("falls back to document.execCommand when navigator.clipboard is unavailable", async () => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: undefined,
+      configurable: true,
+      writable: true,
+    });
+
+    const execCommandMock = vi.fn().mockReturnValue(true);
+    document.execCommand = execCommandMock;
+
+    render(<ResourceCard resource={mockResource} onTagClick={vi.fn()} />);
+
+    const copyBtn = screen.getByRole("button", {
+      name: `Copy link for ${mockResource.name}`,
+    });
+
+    await act(async () => {
+      fireEvent.click(copyBtn);
+    });
+
+    expect(execCommandMock).toHaveBeenCalledWith("copy");
+    expect(screen.getByRole("status").textContent).toContain("Link copied!");
+  });
+
+  it("stops propagation on click and keyboard activation", async () => {
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: writeTextMock },
+      configurable: true,
+      writable: true,
+    });
+
+    const parentClick = vi.fn();
+
+    render(
+      <div onClick={parentClick}>
+        <ResourceCard resource={mockResource} onTagClick={vi.fn()} />
+      </div>
+    );
+
+    const copyBtn = screen.getByRole("button", {
+      name: `Copy link for ${mockResource.name}`,
+    });
+
+    await act(async () => {
+      fireEvent.click(copyBtn);
+    });
+
+    expect(parentClick).not.toHaveBeenCalled();
+
+    const keyDownEvent = new KeyboardEvent("keydown", {
+      key: "Enter",
+      bubbles: true,
+    });
+    const stopPropagationSpy = vi.spyOn(keyDownEvent, "stopPropagation");
+    copyBtn.dispatchEvent(keyDownEvent);
+    expect(stopPropagationSpy).toHaveBeenCalled();
   });
 });
 
