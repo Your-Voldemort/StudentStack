@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Fuse from "fuse.js";
 import { X, LayoutGrid, List, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { applyFilters, countByCategory, topTags, type DirectoryFilters } from "@/lib/directory-filters";
+import { applyFilters, countByCategory, countByRegion, topTags, type DirectoryFilters, type RegionFilter } from "@/lib/directory-filters";
 import type { Category, Resource } from "@/lib/resources";
 import { FilterPanel } from "./filter-panel";
 import { MobileFilterSheet } from "./mobile-filter-sheet";
@@ -75,7 +75,12 @@ export function DirectoryClient({
       ? parseListParam(searchParams.get("category"))
       : (initialFilters?.category ?? []),
   );
-  const [region, setRegion] = useState(searchParams.get("region") ?? initialFilters?.region ?? "all");
+  const [region, setRegion] = useState<RegionFilter>(() => {
+    const param = searchParams.get("region");
+    if (param === "IN" || param === "Global") return param;
+    if (initialFilters?.region === "IN" || initialFilters?.region === "Global") return initialFilters.region;
+    return "all";
+  });
   const [costType, setCostType] = useState<string[]>(
     searchParams.get("cost") ? parseListParam(searchParams.get("cost")) : (initialFilters?.costType ?? []),
   );
@@ -109,7 +114,7 @@ const searchInputRef = useRef<HTMLInputElement>(null);
   function syncUrl(next: {
     search?: string;
     category?: string[];
-    region?: string;
+    region?: RegionFilter;
     costType?: string[];
     tags?: string[];
     verificationNeeded?: string[];
@@ -177,7 +182,7 @@ const searchInputRef = useRef<HTMLInputElement>(null);
     /* eslint-disable react-hooks/set-state-in-effect -- see comment above: must run strictly post-hydration */
     if (saved.search) setSearch(saved.search);
     if (saved.category?.length) setCategory(saved.category);
-    if (saved.region && saved.region !== "all") setRegion(saved.region);
+    if (saved.region && (saved.region === "IN" || saved.region === "Global")) setRegion(saved.region);
     if (saved.costType?.length) setCostType(saved.costType);
     if (saved.tags?.length) setTags(saved.tags);
     if (saved.verificationNeeded?.length) setVerificationNeeded(saved.verificationNeeded);
@@ -215,6 +220,11 @@ const searchInputRef = useRef<HTMLInputElement>(null);
 
   const categoryCounts = useMemo(
     () => countByCategory(applyFilters(resources, filters, fuse, "category")),
+    [resources, filters, fuse],
+  );
+
+  const regionCounts = useMemo(
+    () => countByRegion(applyFilters(resources, filters, fuse, "region")),
     [resources, filters, fuse],
   );
 
@@ -428,7 +438,7 @@ useKeyboardShortcuts({
       ? [
           {
             key: "region",
-            label: `Region: ${region}`,
+            label: `Region: ${region === "IN" ? "India (IN)" : "Global"}`,
             onRemove: () => {
               setRegion("all");
               syncUrl({ region: "all" });
@@ -503,13 +513,13 @@ useKeyboardShortcuts({
           toggleCostType(v);
           setFilterSheetOpen(false);
         }}
-        worksInIndia={region === "IN"}
-        onToggleWorksInIndia={() => {
-          const next = region === "IN" ? "all" : "IN";
+        region={region}
+        onRegionChange={(next) => {
           setRegion(next);
           syncUrl({ region: next });
           setFilterSheetOpen(false);
         }}
+        regionCounts={regionCounts}
         categories={categories}
         categoryCounts={categoryCounts}
         selectedCategories={category}
@@ -563,12 +573,12 @@ useKeyboardShortcuts({
             }}
             costType={costType}
             onToggleCostType={toggleCostType}
-            worksInIndia={region === "IN"}
-            onToggleWorksInIndia={() => {
-              const next = region === "IN" ? "all" : "IN";
+            region={region}
+            onRegionChange={(next) => {
               setRegion(next);
               syncUrl({ region: next });
             }}
+            regionCounts={regionCounts}
             categories={categories}
             categoryCounts={categoryCounts}
             selectedCategories={category}
