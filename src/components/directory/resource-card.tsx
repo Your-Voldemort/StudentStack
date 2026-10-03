@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import type { Resource } from "@/lib/resources";
 import { relativeTime } from "@/lib/format";
-import { GraduationCap, CheckCircle2, ArrowUpRight, Bookmark } from "lucide-react";
+import { GraduationCap, CheckCircle2, ArrowUpRight, Bookmark, Link, Check } from "lucide-react";
 import styles from "./directory.module.css";
 
 const COST_LABEL: Record<Resource["costType"], string> = {
@@ -74,6 +74,30 @@ export function ResourceCard({
 }) {
   const verified = relativeTime(resource.lastVerifiedAt);
   const title = resource.tagline || resource.name;
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    const shareUrl = `/directory?q=${encodeURIComponent(resource.name)}`;
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = shareUrl;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Graceful fallback
+    }
+  };
 
   return (
     <article className={styles.card} data-resource-card tabIndex={0}>
@@ -87,9 +111,31 @@ export function ResourceCard({
             {COST_LABEL[resource.costType]}
           </span>
         </div>
-        <button type="button" className={styles.bookmark} aria-label={`Save ${resource.name}`}>
-          <Bookmark className="size-4" />
-        </button>
+        <div className={styles.cardActions}>
+          <div className={styles.copyContainer}>
+            <button
+              type="button"
+              className={styles.copyButton}
+              onClick={handleCopyLink}
+              aria-label={copied ? "Link copied" : `Copy link to ${resource.name}`}
+              title={copied ? "Copied!" : "Copy link"}
+            >
+              {copied ? (
+                <Check className={`size-4 ${styles.copySuccess}`} aria-hidden />
+              ) : (
+                <Link className="size-4" aria-hidden />
+              )}
+            </button>
+            {copied && (
+              <span className={styles.copyToast} role="status" aria-live="polite">
+                Copied!
+              </span>
+            )}
+          </div>
+          <button type="button" className={styles.bookmark} aria-label={`Save ${resource.name}`}>
+            <Bookmark className="size-4" />
+          </button>
+        </div>
       </div>
 
       <h3 className={styles.offerTitle}>{title}</h3>
