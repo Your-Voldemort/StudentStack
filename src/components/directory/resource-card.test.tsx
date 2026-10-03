@@ -22,8 +22,47 @@ const mockResource: Resource = {
   creditCardRequired: false,
   duration: "while_student",
   status: "active",
-  lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24,
+  lastVerifiedAt: Date.now() - 2 * 86_400_000,
 };
+
+describe("ResourceCard verification status", () => {
+  it("displays actual relative verification time when lastVerifiedAt is present", () => {
+    const twoDaysAgo = Date.now() - 2 * 86_400_000;
+    render(
+      <ResourceCard
+        resource={{ ...mockResource, lastVerifiedAt: twoDaysAgo }}
+        onTagClick={vi.fn()}
+      />
+    );
+
+    const verifiedEl = screen.getByText("Verified 2 days ago");
+    expect(verifiedEl).not.toBeNull();
+  });
+
+  it("displays 'Verified today' when verified on the current day", () => {
+    render(
+      <ResourceCard
+        resource={{ ...mockResource, lastVerifiedAt: Date.now() }}
+        onTagClick={vi.fn()}
+      />
+    );
+
+    const verifiedEl = screen.getByText("Verified today");
+    expect(verifiedEl).not.toBeNull();
+  });
+
+  it("does not render verified badge when lastVerifiedAt is null", () => {
+    render(
+      <ResourceCard
+        resource={{ ...mockResource, lastVerifiedAt: null }}
+        onTagClick={vi.fn()}
+      />
+    );
+
+    const verifiedEl = screen.queryByText(/^Verified/);
+    expect(verifiedEl).toBeNull();
+  });
+});
 
 describe("ResourceCard copy link", () => {
   const originalClipboard = navigator.clipboard;

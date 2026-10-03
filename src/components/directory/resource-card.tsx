@@ -188,10 +188,12 @@ export function ResourceCard({
       </p>
 
       <div className={styles.cardFoot}>
-        <span className={styles.verified}>
-          <CheckCircle2 className="size-3.5" aria-hidden />
-          <span>{verified ? "Verified" : "Verified"}</span>
-        </span>
+        {verified ? (
+          <span className={styles.verified}>
+            <CheckCircle2 className="size-3.5" aria-hidden />
+            <span>{verified}</span>
+          </span>
+        ) : null}
         {resource.hasStaticClaimUrl && resource.url ? (
           <a href={resource.url} target="_blank" rel="noopener noreferrer" className={styles.viewOffer}>
             <span>View offer</span>

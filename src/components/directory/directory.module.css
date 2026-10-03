@@ -682,6 +682,7 @@ details[open] > summary .chevronIcon {
   text-decoration: none;
   cursor: pointer;
   transition: color 120ms ease;
+  margin-left: auto;
 }
 
 .viewOffer:hover {
