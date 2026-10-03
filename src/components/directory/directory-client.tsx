@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Fuse from "fuse.js";
 import { X, LayoutGrid, List, SlidersHorizontal } from "lucide-react";
@@ -10,6 +10,8 @@ import type { Category, Resource } from "@/lib/resources";
 import { FilterPanel } from "./filter-panel";
 import { MobileFilterSheet } from "./mobile-filter-sheet";
 import { ResourceCard } from "./resource-card";
+import { ShortcutsHelp } from "./shortcuts-help";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import styles from "./directory.module.css";
 
 const PAGE_SIZE = 30;
@@ -95,10 +97,12 @@ export function DirectoryClient({
       ? parseListParam(searchParams.get("duration"))
       : (initialFilters?.duration ?? []),
   );
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
-  const [sort, setSort] = useState<"recommended" | "name" | "recent">("recommended");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+const [sort, setSort] = useState<"recommended" | "name" | "recent">("recommended");
+const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+const [shortcutsOpen, setShortcutsOpen] = useState(false);
+const searchInputRef = useRef<HTMLInputElement>(null);
 
   const deferredSearch = useDeferredValue(search);
 
@@ -322,9 +326,93 @@ export function DirectoryClient({
     creditCardRequired.length +
     duration.length +
     (region !== "all" ? 1 : 0) +
-    (search ? 1 : 0);
+  (search ? 1 : 0);
 
-  // Every active facet filter becomes a removable chip, so the current
+function moveCardFocus(direction: 1 | -1) {
+  const cards = Array.from(document.querySelectorAll<HTMLElement>("[data-resource-card]"));
+  if (cards.length === 0) return;
+  const active = document.activeElement as HTMLElement | null;
+  const index = active ? cards.indexOf(active) : -1;
+  const next =
+    index === -1
+      ? direction === 1
+        ? 0
+        : cards.length - 1
+      : (index + direction + cards.length) % cards.length;
+  cards[next].focus();
+}
+
+useKeyboardShortcuts({
+ "/": (e) => {
+  e.preventDefault();
+  const mobile = searchInputRef.current;
+  if (mobile && mobile.offsetParent !== null) {
+    mobile.focus();
+  } else {
+    // Desktop: the visible search lives in the server-rendered hero.
+    document.getElementById("dir-search")?.focus();
+  }
+},
+  f: (e) => {
+    e.preventDefault();
+    if (window.matchMedia("(max-width: 900px)").matches) {
+      setFilterSheetOpen(true);
+    } else {
+      document.getElementById("directory-filter-panel")?.focus();
+    }
+  },
+  c: (e) => {
+    if (!hasActiveFilters) return;
+    e.preventDefault();
+    clearAll();
+  },
+  escape: (e) => {
+  // Radix dialogs (filter sheet, card details, shortcuts help) handle Escape natively.
+  if (document.querySelector('[role="dialog"]')) return;
+  const active = document.activeElement as HTMLInputElement | null;
+  const heroSearch = document.getElementById("dir-search");
+  if (active && (active === searchInputRef.current || active === heroSearch)) {
+    // Clear the focused search field, even while typing in it.
+    e.preventDefault();
+    if (active === searchInputRef.current) {
+      setSearch("");
+      syncUrl({ search: "" });
+    } else {
+      active.value = "";
+    }
+    return;
+  }
+  e.preventDefault();
+  if (search) {
+    setSearch("");
+    syncUrl({ search: "" });
+  }
+},
+  arrowright: (e) => {
+    e.preventDefault();
+    moveCardFocus(1);
+  },
+  arrowleft: (e) => {
+    e.preventDefault();
+    moveCardFocus(-1);
+  },
+  enter: (e) => {
+    const active = document.activeElement as HTMLElement | null;
+    if (active?.hasAttribute("data-resource-card")) {
+      const link = active.querySelector<HTMLAnchorElement>("a[href]");
+      if (link) {
+        e.preventDefault();
+        link.click();
+      }
+    }
+  },
+  "?": (e) => {
+    e.preventDefault();
+    setShortcutsOpen(true);
+  },
+});
+
+// Every active facet filter becomes a removable chip, so the current
   // selection is always visible at a glance, not just implied by the count.
   const filterChips: { key: string; label: string; onRemove: () => void }[] = [
     ...category.map((slug) => ({
@@ -378,8 +466,9 @@ export function DirectoryClient({
   return (
     <div className={styles.layout}>
       <div className={styles.mobileBar}>
-        <input
-          placeholder="Search offers..."
+       <input
+  ref={searchInputRef}
+  placeholder="Search offers..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -458,7 +547,7 @@ export function DirectoryClient({
       />
 
     <div style={{ display: "contents" }}>
-      <aside className={styles.sidebar}>
+      <aside className={styles.sidebar} id="directory-filter-panel" tabIndex={-1}>
         <div>
           <div className={styles.sideHead}>
             <h2 className={styles.sideTitle}>Filters</h2>
@@ -538,9 +627,18 @@ export function DirectoryClient({
                 onClick={() => setViewMode("list")}
               >
                 <List className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+      </button>
+  </div>
+  <button
+    type="button"
+    className={styles.viewBtn}
+    aria-label="Keyboard shortcuts"
+    title="Keyboard shortcuts (?)"
+    onClick={() => setShortcutsOpen(true)}
+  >
+    ?
+  </button>
+</div>
         </div>
 
         {filterChips.length > 0 && (
@@ -591,7 +689,8 @@ export function DirectoryClient({
           </div>
         )}
       </div>
-    </div>
+      </div>
+      <ShortcutsHelp open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </div>
   );
 }

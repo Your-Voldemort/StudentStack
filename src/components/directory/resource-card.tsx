@@ -76,7 +76,7 @@ export function ResourceCard({
   const title = resource.tagline || resource.name;
 
   return (
-    <article className={styles.card}>
+    <article className={styles.card} data-resource-card tabIndex={0}>
       <div className={styles.cardTop}>
         <span className={styles.logo}>
           <ResourceIcon resource={resource} />
