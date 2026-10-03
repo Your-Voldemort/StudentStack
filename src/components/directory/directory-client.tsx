@@ -11,6 +11,7 @@ import { FilterPanel } from "./filter-panel";
 import { MobileFilterSheet } from "./mobile-filter-sheet";
 import { ResourceCard } from "./resource-card";
 import { ShortcutsHelp } from "./shortcuts-help";
+import { FilterAnnouncer } from "./filter-announcer";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import styles from "./directory.module.css";
 
@@ -593,6 +594,7 @@ useKeyboardShortcuts({
 
       <div style={{ minWidth: 0 }}>
         <div className={styles.resultsHead}>
+          <FilterAnnouncer count={filtered.length} />
           <div className={styles.count}>
             {filtered.length} offers
           </div>
