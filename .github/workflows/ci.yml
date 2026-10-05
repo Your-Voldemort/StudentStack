@@ -10,7 +10,7 @@ on:
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
   PNPM_VERSION: '11.6.0'
 
 concurrency:
