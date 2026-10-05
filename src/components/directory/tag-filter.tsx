@@ -46,12 +46,22 @@ export function TagFilter({
           <ChevronsUpDown className="ml-2 size-3.5 shrink-0 opacity-60" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-56 p-0 border border-white/15 bg-[#141418] text-[#f4f4f5] shadow-2xl rounded-xl font-sans">
+      <PopoverContent
+        data-radix-scroll-lock-ignore="true"
+        style={{ touchAction: "pan-y" }}
+        onWheel={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        className="w-56 p-0 border border-white/15 bg-[#141418] text-[#f4f4f5] shadow-2xl rounded-xl font-sans"
+      >
         <Command className="bg-transparent text-[#f4f4f5]">
           <CommandInput placeholder="Search tags..." className="text-xs text-[#f4f4f5] placeholder:text-[#71717a]" />
           <CommandList
             id="tag-filter-list"
-            className="max-h-60 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.25)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/20 hover:[&::-webkit-scrollbar-thumb]:bg-[#c084fc]/70"
+            data-radix-scroll-lock-ignore="true"
+            style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch" }}
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            className="max-h-60 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.3)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/30 hover:[&::-webkit-scrollbar-thumb]:bg-[#c084fc]"
           >
             <CommandEmpty className="py-3 text-center text-xs text-[#71717a]">No tag found.</CommandEmpty>
             <CommandGroup>
