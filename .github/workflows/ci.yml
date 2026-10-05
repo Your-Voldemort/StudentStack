@@ -404,7 +404,7 @@ jobs:
     steps:
       - name: Send notification
         if: github.event_name == 'pull_request'
-        uses: slackapi/slack-github-action@v1.24.0
+        uses: slackapi/slack-github-action@v4.0.0
         with:
           payload: |
             {
