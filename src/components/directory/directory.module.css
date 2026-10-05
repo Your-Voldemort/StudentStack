@@ -327,6 +327,19 @@ details[open] > summary .chevronIcon {
   background-repeat: no-repeat;
 }
 
+.check input[type="radio"] {
+  border-radius: 50%;
+}
+
+.check input[type="radio"]:checked {
+  background: var(--d-purple);
+  border-color: var(--d-purple);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='8' cy='8' r='3.5' fill='%231e0d38'/%3E%3C/svg%3E");
+  background-size: 10px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 .showMore {
   background: none;
   border: 0;

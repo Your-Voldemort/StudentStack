@@ -1,10 +1,12 @@
 import type Fuse from "fuse.js";
 import type { Resource } from "@/lib/resources";
 
+export type RegionFilter = "all" | "IN" | "Global";
+
 export type DirectoryFilters = {
   search: string;
   category: string[];
-  region: string; // "all" | "IN"
+  region: RegionFilter;
   costType: string[];
   tags: string[];
   verificationNeeded: string[];
@@ -75,14 +77,14 @@ export function countByCostType(resources: Resource[]): Record<string, number> {
   return counts;
 }
 
-export function countByRegion(resources: Resource[]): { in: number; global: number } {
+export function countByRegion(resources: Resource[]): { in: number; global: number; all: number } {
   let inCount = 0;
   let globalCount = 0;
   for (const r of resources) {
     if (r.region === "IN") inCount++;
     else globalCount++;
   }
-  return { in: inCount, global: globalCount };
+  return { in: inCount, global: globalCount, all: inCount + globalCount };
 }
 
 export type SortOption = "relevance" | "verified" | "name-asc" | "name-desc" | "free-first";
@@ -157,6 +159,12 @@ if (process.argv[1] && process.argv[1].endsWith("directory-filters.ts")) {
     applyFilters(fixture, withVerification, dummyFuse).length === 0,
     "fixture resources have no verificationNeeded set, so this should match nothing",
   );
+
+  const withGlobalRegion: DirectoryFilters = { ...noFilters, region: "Global" };
+  console.assert(applyFilters(fixture, withGlobalRegion, dummyFuse).length === 1, "global region should narrow to 1");
+
+  const regionCounts = countByRegion(fixture);
+  console.assert(regionCounts.in === 2 && regionCounts.global === 1 && regionCounts.all === 3, "region counts should match fixture");
 
   console.log("OK: directory-filters.ts self-check passed");
 }

@@ -2,6 +2,7 @@
 
 import { TagFilter } from "./tag-filter";
 import type { Category } from "@/lib/resources";
+import type { RegionFilter } from "@/lib/directory-filters";
 import { ChevronRight } from "lucide-react";
 import styles from "./directory.module.css";
 
@@ -12,6 +13,9 @@ const PLATFORM_TAGS = ["Web", "macOS", "Windows", "iOS", "Android"];
 export function FilterPanel({
   costType,
   onToggleCostType,
+  region,
+  onRegionChange,
+  regionCounts,
   worksInIndia,
   onToggleWorksInIndia,
   categories,
@@ -33,8 +37,11 @@ export function FilterPanel({
   onSearchChange: (v: string) => void;
   costType: string[];
   onToggleCostType: (v: string) => void;
-  worksInIndia: boolean;
-  onToggleWorksInIndia: () => void;
+  region?: RegionFilter;
+  onRegionChange?: (region: RegionFilter) => void;
+  regionCounts?: { in: number; global: number; all?: number };
+  worksInIndia?: boolean;
+  onToggleWorksInIndia?: () => void;
   categories: Category[];
   categoryCounts: Record<string, number>;
   selectedCategories: string[];
@@ -51,6 +58,14 @@ export function FilterPanel({
   duration: string[];
   onToggleDuration: (v: string) => void;
 }) {
+  const currentRegion: RegionFilter = region ?? (worksInIndia ? "IN" : "all");
+  const handleRegionChange = (value: RegionFilter) => {
+    if (onRegionChange) {
+      onRegionChange(value);
+    } else if (onToggleWorksInIndia) {
+      onToggleWorksInIndia();
+    }
+  };
   return (
     <div>
       <details open className={styles.group}>
@@ -78,10 +93,51 @@ export function FilterPanel({
           <ChevronRight className={styles.chevronIcon} />
         </summary>
         <div className={styles.checkList}>
-          <label className={styles.check}>
-            <input type="checkbox" checked={worksInIndia} onChange={onToggleWorksInIndia} />
-            <span>Works in India</span>
-          </label>
+          {([
+            {
+              value: "all" as const,
+              label: "All",
+              count: regionCounts ? (regionCounts.all ?? regionCounts.in + regionCounts.global) : undefined,
+            },
+            {
+              value: "Global" as const,
+              label: "Global",
+              count: regionCounts?.global,
+            },
+            {
+              value: "IN" as const,
+              label: "India (IN)",
+              count: regionCounts?.in,
+            },
+          ] as const).map((opt) => (
+            <label
+              key={opt.value}
+              className={styles.check}
+              style={{ justifyContent: "space-between" }}
+              onClick={(e) => {
+                if (currentRegion === opt.value && opt.value !== "all") {
+                  e.preventDefault();
+                  handleRegionChange("all");
+                }
+              }}
+            >
+              <span style={{ display: "flex", gap: 9, alignItems: "center" }}>
+                <input
+                  type="radio"
+                  name="region-filter"
+                  value={opt.value}
+                  checked={currentRegion === opt.value}
+                  onChange={() => handleRegionChange(opt.value)}
+                />
+                <span>{opt.label}</span>
+              </span>
+              {typeof opt.count === "number" && (
+                <span style={{ color: "var(--d-muted)", fontSize: "0.75rem", fontVariantNumeric: "tabular-nums" }}>
+                  {opt.count}
+                </span>
+              )}
+            </label>
+          ))}
         </div>
       </details>
 
