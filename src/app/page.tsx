@@ -25,13 +25,6 @@ const COST_LABELS = {
   stipend: "Stipend",
 } as const;
 
-const checkedDate = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: "UTC",
-});
-
 export default async function Home() {
   const [stats, categories, featured] = await Promise.all([
     getHomeStats(),
@@ -50,26 +43,23 @@ export default async function Home() {
 
       <main>
         <section className={`${styles.wrap} ${styles.hero}`}>
-          <div>
-            <h1 className={styles.headline}>
-              Being a student unlocks <span className={styles.num}>{stats.live}</span> live offers. Here’s the
-              whole list.
-            </h1>
-            <p className={styles.lede}>
-              Free software, cloud credits, scholarships and discounts, sorted so you find yours fast. Found one we
-              missed? Add it, and it goes live after a quick review.
-            </p>
-            <form action="/directory" method="GET" role="search" className={styles.search}>
-              <label htmlFor="home-search" className="sr-only">
-                Search offers
-              </label>
-              <input id="home-search" type="search" name="q" placeholder={`Search ${stats.total} offers`} />
-              <button type="submit">Search</button>
-            </form>
-            {stats.lastCheckedAt && (
-              <p className={styles.meta}>Links last checked {checkedDate.format(stats.lastCheckedAt)}</p>
-            )}
-          </div>
+          <h1 className={styles.headline}>
+            Being a student <br className="hidden md:inline" />
+            unlocks <span className={styles.num}>{stats.live}</span> live offers. <br className="hidden md:inline" />
+            Here’s the whole list.
+          </h1>
+          <p className={styles.lede}>
+            Free software, cloud credits, scholarships and discounts, sorted so you find yours fast. Found one we missed? Add it, and it goes live after a quick review.
+          </p>
+          <form action="/directory" method="GET" role="search" className={styles.search}>
+            <label htmlFor="home-search" className="sr-only">
+              Search offers
+            </label>
+            <input id="home-search" type="search" name="q" placeholder={`Search ${stats.total} offers...`} />
+            <button type="submit">Search</button>
+          </form>
+
+          <p className={styles.scrollHint}>Scroll to reveal your student pass ↓</p>
 
           <IdCard
             live={stats.live}
