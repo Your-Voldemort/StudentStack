@@ -53,25 +53,21 @@ export function IdCard({
             onToggleFlip={toggle}
           />
         </div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/leather-sleeve.png"
-          alt="StudentStack leather sleeve cover"
-          className={styles.sleeveOverlay}
-          aria-hidden="true"
-        />
+        <picture>
+          <source media="(max-width: 640px)" srcSet="/images/leather-sleeve-mobile.webp" type="image/webp" />
+          <source srcSet="/images/leather-sleeve.webp" type="image/webp" />
+          <img
+            src="/images/leather-sleeve.png"
+            alt="StudentStack leather sleeve cover"
+            className={styles.sleeveOverlay}
+            width={490}
+            height={181}
+            loading="eager"
+            decoding="async"
+            aria-hidden="true"
+          />
+        </picture>
       </div>
-
-      <p className={styles.cardHint}>Move to tilt · Click to flip</p>
-
-      <button
-        type="button"
-        className={styles.flip}
-        aria-pressed={flipped}
-        onClick={toggle}
-      >
-        {flipped ? "Flip to the front" : "Flip the card"}
-      </button>
     </div>
   );
 }

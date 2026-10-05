@@ -2,7 +2,9 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { MOCK_CATEGORIES, MOCK_RESOURCES } from "./mock-data";
 
-const isDbAvailable = Boolean(process.env.POSTGRES_URL);
+function hasDatabase(): boolean {
+  return Boolean(process.env.POSTGRES_URL);
+}
 
 export type Resource = {
   id: number;
@@ -69,7 +71,7 @@ function toResource(row: ResourceRow): Resource {
 // Directory is small enough (~600 rows) to load in full server-side and
 // filter/search in memory — no need for a paginated query layer yet.
 export async function getAllResources(): Promise<Resource[]> {
-  if (!isDbAvailable) return MOCK_RESOURCES;
+  if (!hasDatabase()) return MOCK_RESOURCES;
   try {
     const rows = await db
       .select(resourceColumns)
@@ -77,7 +79,8 @@ export async function getAllResources(): Promise<Resource[]> {
       .innerJoin(categories, eq(resources.categoryId, categories.id))
       .where(eq(resources.approved, true));
     return rows.map(toResource);
-  } catch {
+  } catch (error) {
+    console.warn("[StudentStack DB] getAllResources query failed:", error instanceof Error ? error.message : error);
     return MOCK_RESOURCES;
   }
 }
@@ -85,7 +88,7 @@ export async function getAllResources(): Promise<Resource[]> {
 // Admin-only: finds a row whether or not it's approved, so a pending
 // submission can be opened in the edit form before it goes live.
 export async function getResourceById(id: number): Promise<Resource | null> {
-  if (!isDbAvailable) return MOCK_RESOURCES.find((r) => r.id === id) ?? null;
+  if (!hasDatabase()) return MOCK_RESOURCES.find((r) => r.id === id) ?? null;
   try {
     const [row] = await db
       .select(resourceColumns)
@@ -94,13 +97,14 @@ export async function getResourceById(id: number): Promise<Resource | null> {
       .where(eq(resources.id, id))
       .limit(1);
     return row ? toResource(row) : null;
-  } catch {
+  } catch (error) {
+    console.warn("[StudentStack DB] getResourceById query failed:", error instanceof Error ? error.message : error);
     return MOCK_RESOURCES.find((r) => r.id === id) ?? null;
   }
 }
 
 export async function getCategories(): Promise<Category[]> {
-  if (!isDbAvailable) return MOCK_CATEGORIES;
+  if (!hasDatabase()) return MOCK_CATEGORIES;
   try {
     return await db
       .select({
@@ -111,7 +115,8 @@ export async function getCategories(): Promise<Category[]> {
       })
       .from(categories)
       .orderBy(categories.sortOrder);
-  } catch {
+  } catch (error) {
+    console.warn("[StudentStack DB] getCategories query failed:", error instanceof Error ? error.message : error);
     return MOCK_CATEGORIES;
   }
 }
@@ -121,7 +126,7 @@ export function getAllTags(list: Resource[]): string[] {
 }
 
 export async function getCategoriesWithCounts(): Promise<(Category & { count: number })[]> {
-  if (!isDbAvailable) {
+  if (!hasDatabase()) {
     return MOCK_CATEGORIES.map((c) => ({
       ...c,
       count: MOCK_RESOURCES.filter((r) => r.categorySlug === c.slug).length,
@@ -141,7 +146,8 @@ export async function getCategoriesWithCounts(): Promise<(Category & { count: nu
       .groupBy(categories.id)
       .orderBy(sql`count(${resources.id}) desc`);
     return rows.map((row) => ({ ...row, count: Number(row.count) }));
-  } catch {
+  } catch (error) {
+    console.warn("[StudentStack DB] getCategoriesWithCounts query failed:", error instanceof Error ? error.message : error);
     return MOCK_CATEGORIES.map((c) => ({
       ...c,
       count: MOCK_RESOURCES.filter((r) => r.categorySlug === c.slug).length,
@@ -150,14 +156,15 @@ export async function getCategoriesWithCounts(): Promise<(Category & { count: nu
 }
 
 export async function getResourceCount(): Promise<number> {
-  if (!isDbAvailable) return MOCK_RESOURCES.length;
+  if (!hasDatabase()) return MOCK_RESOURCES.length;
   try {
     const [row] = await db
       .select({ count: sql<number>`count(*)` })
       .from(resources)
       .where(eq(resources.approved, true));
     return Number(row.count);
-  } catch {
+  } catch (error) {
+    console.warn("[StudentStack DB] getResourceCount query failed:", error instanceof Error ? error.message : error);
     return MOCK_RESOURCES.length;
   }
 }
@@ -165,7 +172,7 @@ export async function getResourceCount(): Promise<number> {
 // "Live" = approved and not flagged expired/broken by an admin or the
 // link-health cron. lastCheckedAt is the most recent link-health run.
 export async function getHomeStats(): Promise<{ live: number; total: number; lastCheckedAt: Date | null }> {
-  if (!isDbAvailable) {
+  if (!hasDatabase()) {
     return {
       live: MOCK_RESOURCES.length,
       total: MOCK_RESOURCES.length,
@@ -186,7 +193,8 @@ export async function getHomeStats(): Promise<{ live: number; total: number; las
       total: Number(row.total),
       lastCheckedAt: row.lastCheckedAt ? new Date(row.lastCheckedAt) : null,
     };
-  } catch {
+  } catch (error) {
+    console.warn("[StudentStack DB] getHomeStats query failed:", error instanceof Error ? error.message : error);
     return {
       live: MOCK_RESOURCES.length,
       total: MOCK_RESOURCES.length,
@@ -201,7 +209,7 @@ export type FeaturedResource = Pick<Resource, "slug" | "name" | "tagline" | "cos
 // live, approved row are skipped.
 export async function getResourcesBySlugs(slugs: string[]): Promise<FeaturedResource[]> {
   if (slugs.length === 0) return [];
-  if (!isDbAvailable) {
+  if (!hasDatabase()) {
     return slugs
       .map((slug) => MOCK_RESOURCES.find((r) => r.slug === slug))
       .filter((r): r is Resource => Boolean(r))
@@ -213,7 +221,8 @@ export async function getResourcesBySlugs(slugs: string[]): Promise<FeaturedReso
       .from(resources)
       .where(and(inArray(resources.slug, slugs), eq(resources.approved, true), eq(resources.status, "active")));
     return slugs.flatMap((slug) => rows.filter((row) => row.slug === slug));
-  } catch {
+  } catch (error) {
+    console.warn("[StudentStack DB] getResourcesBySlugs query failed:", error instanceof Error ? error.message : error);
     return slugs
       .map((slug) => MOCK_RESOURCES.find((r) => r.slug === slug))
       .filter((r): r is Resource => Boolean(r))

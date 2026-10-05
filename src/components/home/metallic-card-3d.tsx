@@ -16,7 +16,6 @@ interface MetallicCard3DProps {
   onToggleFlip: () => void;
 }
 
-// Generate high-resolution front texture on canvas
 function createFrontTexture(live: number, categoryCount: number, year: number): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
   canvas.width = 2048;
@@ -26,113 +25,100 @@ function createFrontTexture(live: number, categoryCount: number, year: number): 
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Subtle silver brushed-metal gradient
   const bgGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  bgGrad.addColorStop(0, "#f0f2f5");
-  bgGrad.addColorStop(0.3, "#e2e6eb");
-  bgGrad.addColorStop(0.5, "#f7f9fa");
-  bgGrad.addColorStop(0.7, "#d8dde3");
-  bgGrad.addColorStop(1, "#e6eaef");
+  bgGrad.addColorStop(0, "#f3f5f8");
+  bgGrad.addColorStop(0.25, "#e5e9ee");
+  bgGrad.addColorStop(0.5, "#f8fafc");
+  bgGrad.addColorStop(0.75, "#dfe4ea");
+  bgGrad.addColorStop(1, "#edf0f4");
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Subtle brushed metallic horizontal micro-lines
-  ctx.fillStyle = "rgba(0, 0, 0, 0.015)";
-  for (let i = 0; i < canvas.height; i += 3) {
-    if (Math.random() > 0.4) {
-      ctx.fillRect(0, i, canvas.width, 1.5);
+  ctx.fillStyle = "rgba(0, 0, 0, 0.02)";
+  for (let i = 0; i < canvas.height; i += 2) {
+    if (Math.random() > 0.35) {
+      ctx.fillRect(0, i, canvas.width, 1.2);
     }
   }
 
-  // Top header bar
-  ctx.fillStyle = "#121417";
-  ctx.font = "900 80px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-  ctx.letterSpacing = "0.04em";
-  ctx.fillText("STUDENTSTACK", 120, 160);
+  ctx.fillStyle = "#0f1115";
+  ctx.font = "900 86px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+  ctx.letterSpacing = "0.03em";
+  ctx.fillText("STUDENTSTACK", 130, 165);
 
-  ctx.font = "700 48px monospace";
-  ctx.fillStyle = "#3a3d42";
-  ctx.fillText("STUDENT PASS", canvas.width - 540, 155);
+  ctx.font = "700 50px monospace";
+  ctx.fillStyle = "#1a1d24";
+  ctx.fillText("STUDENT PASS", canvas.width - 560, 160);
 
-  // Divider rule
-  ctx.fillStyle = "#121417";
-  ctx.fillRect(120, 205, canvas.width - 240, 6);
+  ctx.fillStyle = "#0f1115";
+  ctx.fillRect(130, 210, canvas.width - 260, 6);
 
-  // Photo / Monogram Box
-  ctx.fillStyle = "#16171a";
-  const boxX = 120;
-  const boxY = 270;
-  const boxW = 340;
-  const boxH = 430;
-  const boxR = 36;
+  const boxX = 130;
+  const boxY = 275;
+  const boxW = 350;
+  const boxH = 435;
+  const boxR = 40;
   ctx.beginPath();
   ctx.roundRect(boxX, boxY, boxW, boxH, boxR);
+  ctx.fillStyle = "#121316";
   ctx.fill();
 
-  // White "S" monogram
   ctx.fillStyle = "#ffffff";
-  ctx.font = "900 240px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  ctx.font = "900 250px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("S", boxX + boxW / 2, boxY + boxH / 2);
   ctx.textAlign = "start";
   ctx.textBaseline = "alphabetic";
 
-  // Data fields
-  const fieldX = 520;
-  let curY = 320;
+  const fieldX = 540;
+  let curY = 325;
 
-  // HOLDER
-  ctx.fillStyle = "#63676e";
-  ctx.font = "600 36px monospace";
+  ctx.fillStyle = "#1a1d24";
+  ctx.font = "700 42px monospace";
   ctx.fillText("HOLDER", fieldX, curY);
-  ctx.fillStyle = "#121417";
-  ctx.font = "800 68px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("You", fieldX, curY + 68);
+  ctx.fillStyle = "#050608";
+  ctx.font = "800 74px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("You", fieldX, curY + 70);
 
-  curY += 150;
-  // VALID
-  ctx.fillStyle = "#63676e";
-  ctx.font = "600 36px monospace";
+  curY += 155;
+  ctx.fillStyle = "#1a1d24";
+  ctx.font = "700 42px monospace";
   ctx.fillText("VALID", fieldX, curY);
-  ctx.fillStyle = "#121417";
-  ctx.font = "800 68px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("While enrolled", fieldX, curY + 68);
+  ctx.fillStyle = "#050608";
+  ctx.font = "800 74px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("While enrolled", fieldX, curY + 70);
 
-  curY += 150;
-  // UNLOCKS
-  ctx.fillStyle = "#63676e";
-  ctx.font = "600 36px monospace";
+  curY += 155;
+  ctx.fillStyle = "#1a1d24";
+  ctx.font = "700 42px monospace";
   ctx.fillText("UNLOCKS", fieldX, curY);
-  ctx.fillStyle = "#121417";
-  ctx.font = "800 68px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText(`${live} live offers`, fieldX, curY + 68);
+  ctx.fillStyle = "#050608";
+  ctx.font = "800 74px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText(`${live} live offers`, fieldX, curY + 70);
 
-  // Barcode stripes
   const serial = String(live).padStart(4, "0");
-  const barcodeY = 870;
-  const barcodeH = 110;
-  let barX = 120;
+  const barcodeY = 880;
+  const barcodeH = 115;
+  let barX = 130;
   const patternSeed = `STUDENTSTACK${serial}`;
   for (let i = 0; i < patternSeed.length; i++) {
     const code = patternSeed.charCodeAt(i);
     for (let b = 0; b < 4; b++) {
       const w = ((code >> b) & 1) ? 9 : 4;
-      ctx.fillStyle = "#121417";
+      ctx.fillStyle = "#0f1115";
       ctx.fillRect(barX, barcodeY, w, barcodeH);
       barX += w + ((code >> (4 + b)) & 1 ? 8 : 4);
     }
   }
 
-  // Serial number
-  ctx.fillStyle = "#33363b";
+  ctx.fillStyle = "#2d3036";
   ctx.font = "600 38px monospace";
-  ctx.fillText(`No. ${serial} - ${year}`, canvas.width - 560, barcodeY + 80);
+  ctx.fillText(`No. ${serial} - ${year}`, canvas.width - 560, barcodeY + 82);
 
-  // Bottom machine-readable line
-  ctx.fillStyle = "#4a4e54";
+  ctx.fillStyle = "#43464d";
   ctx.font = "600 38px monospace";
-  ctx.fillText(`P<STUDENTSTACK<<${live}<LIVE<<${categoryCount}<CATEGORIES<<`, 120, 1080);
+  ctx.fillText(`P<STUDENTSTACK<<${live}<LIVE<<${categoryCount}<CATEGORIES<<`, 130, 1080);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.generateMipmaps = true;
@@ -141,7 +127,6 @@ function createFrontTexture(live: number, categoryCount: number, year: number): 
   return texture;
 }
 
-// Generate high-resolution back texture on canvas
 function createBackTexture(zones: Zone[], moreZones: number): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
   canvas.width = 2048;
@@ -151,23 +136,20 @@ function createBackTexture(zones: Zone[], moreZones: number): THREE.CanvasTextur
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Dark metallic slate back
   const bgGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  bgGrad.addColorStop(0, "#1c1e22");
-  bgGrad.addColorStop(0.5, "#25282d");
-  bgGrad.addColorStop(1, "#181a1d");
+  bgGrad.addColorStop(0, "#191a1d");
+  bgGrad.addColorStop(0.5, "#22252a");
+  bgGrad.addColorStop(1, "#151619");
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Top header bar
   ctx.fillStyle = "#e4e8ec";
   ctx.font = "900 68px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("ACCESS ZONES", 120, 150);
+  ctx.fillText("ACCESS ZONES", 130, 150);
 
-  ctx.fillStyle = "#63676e";
-  ctx.fillRect(120, 185, canvas.width - 240, 4);
+  ctx.fillStyle = "#555962";
+  ctx.fillRect(130, 185, canvas.width - 260, 4);
 
-  // 2-column zones list
   const startY = 280;
   const colWidth = 840;
   const rowHeight = 90;
@@ -176,7 +158,7 @@ function createBackTexture(zones: Zone[], moreZones: number): THREE.CanvasTextur
   zones.forEach((zone, idx) => {
     const col = idx < 4 ? 0 : 1;
     const row = idx % 4;
-    const x = 120 + col * colWidth;
+    const x = 130 + col * colWidth;
     const y = startY + row * rowHeight;
 
     ctx.fillStyle = "#d0d4d9";
@@ -193,7 +175,7 @@ function createBackTexture(zones: Zone[], moreZones: number): THREE.CanvasTextur
   if (moreZones > 0) {
     ctx.fillStyle = "#9ba1a8";
     ctx.font = "600 40px monospace";
-    ctx.fillText(`+ ${moreZones} more zones inside`, 120, startY + 4 * rowHeight + 60);
+    ctx.fillText(`+ ${moreZones} more zones inside`, 130, startY + 4 * rowHeight + 60);
   }
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -203,7 +185,6 @@ function createBackTexture(zones: Zone[], moreZones: number): THREE.CanvasTextur
   return texture;
 }
 
-// Generate studio environment with silver, lavender, and ice-blue reflection bands
 function createStudioEnvMap(): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
   canvas.width = 1024;
@@ -211,33 +192,29 @@ function createStudioEnvMap(): THREE.CanvasTexture {
   const ctx = canvas.getContext("2d");
   if (!ctx) return new THREE.CanvasTexture(canvas);
 
-  // Deep neutral studio ground
-  ctx.fillStyle = "#0c0d10";
+  ctx.fillStyle = "#08090b";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Broad central overhead silver-white light
-  const topGrad = ctx.createLinearGradient(0, 0, 0, 200);
-  topGrad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
-  topGrad.addColorStop(0.5, "rgba(230, 235, 245, 0.6)");
-  topGrad.addColorStop(1, "rgba(12, 13, 16, 0)");
+  const topGrad = ctx.createLinearGradient(0, 0, 0, 220);
+  topGrad.addColorStop(0, "rgba(255, 255, 255, 1.0)");
+  topGrad.addColorStop(0.5, "rgba(235, 240, 250, 0.7)");
+  topGrad.addColorStop(1, "rgba(8, 9, 11, 0)");
   ctx.fillStyle = topGrad;
-  ctx.fillRect(0, 0, canvas.width, 200);
+  ctx.fillRect(0, 0, canvas.width, 220);
 
-  // Right key reflection band with subtle ice-blue tone
-  const blueGrad = ctx.createLinearGradient(700, 0, 1000, 0);
-  blueGrad.addColorStop(0, "rgba(12, 13, 16, 0)");
-  blueGrad.addColorStop(0.5, "rgba(180, 220, 255, 0.55)");
-  blueGrad.addColorStop(1, "rgba(12, 13, 16, 0)");
+  const blueGrad = ctx.createLinearGradient(680, 0, 1024, 0);
+  blueGrad.addColorStop(0, "rgba(8, 9, 11, 0)");
+  blueGrad.addColorStop(0.5, "rgba(103, 232, 249, 0.75)");
+  blueGrad.addColorStop(1, "rgba(8, 9, 11, 0)");
   ctx.fillStyle = blueGrad;
-  ctx.fillRect(700, 0, 300, canvas.height);
+  ctx.fillRect(680, 0, 344, canvas.height);
 
-  // Left fill reflection band with subtle lavender tone
-  const lavGrad = ctx.createLinearGradient(80, 0, 380, 0);
-  lavGrad.addColorStop(0, "rgba(12, 13, 16, 0)");
-  lavGrad.addColorStop(0.5, "rgba(225, 195, 255, 0.45)");
-  lavGrad.addColorStop(1, "rgba(12, 13, 16, 0)");
+  const lavGrad = ctx.createLinearGradient(0, 0, 360, 0);
+  lavGrad.addColorStop(0, "rgba(8, 9, 11, 0)");
+  lavGrad.addColorStop(0.5, "rgba(216, 180, 254, 0.65)");
+  lavGrad.addColorStop(1, "rgba(8, 9, 11, 0)");
   ctx.fillStyle = lavGrad;
-  ctx.fillRect(80, 0, 300, canvas.height);
+  ctx.fillRect(0, 0, 360, canvas.height);
 
   const envTexture = new THREE.CanvasTexture(canvas);
   envTexture.mapping = THREE.EquirectangularReflectionMapping;
@@ -254,6 +231,22 @@ function checkWebGL(): boolean {
   }
 }
 
+function createRoundedFaceGeometry(shape: THREE.Shape, width: number, height: number): THREE.ShapeGeometry {
+  const geo = new THREE.ShapeGeometry(shape);
+  const pos = geo.attributes.position;
+  const uvs = new Float32Array(pos.count * 2);
+
+  for (let i = 0; i < pos.count; i++) {
+    const px = pos.getX(i);
+    const py = pos.getY(i);
+    uvs[i * 2] = (px + width / 2) / width;
+    uvs[i * 2 + 1] = (py + height / 2) / height;
+  }
+
+  geo.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
+  return geo;
+}
+
 export function MetallicCard3D({
   live,
   categoryCount,
@@ -266,47 +259,48 @@ export function MetallicCard3D({
   const mountRef = useRef<HTMLDivElement>(null);
   const [webglSupported] = useState(checkWebGL);
 
-  // Target and current rotation tracking
   const targetYawRef = useRef(0);
   const targetPitchRef = useRef(0);
   const currentYawRef = useRef(0);
   const currentPitchRef = useRef(0);
   const currentFlipRef = useRef(flipped ? Math.PI : 0);
+  const scrollProgressRef = useRef(0);
+  const currentYRef = useRef(0.08);
 
   useEffect(() => {
     const container = mountRef.current;
     if (!container || !webglSupported) return;
 
-    const width = container.clientWidth || 440;
-    const height = container.clientHeight || 280;
+    const width = container.clientWidth || 490;
+    const height = container.clientHeight || 380;
+    const aspect = width / height;
 
-    // 1. Scene setup
     const scene = new THREE.Scene();
 
-    // 2. Camera setup with generous framing to prevent tilt clipping
-    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
-    camera.position.set(0, 0, 4.4);
+    const camera = new THREE.PerspectiveCamera(38, aspect, 0.1, 100);
 
-    // 3. WebGL Renderer
+    const cardW = 3.20;
+    const cardH = 3.20 / 1.585;
+    const cardR = 0.18;
+
+    const targetWidthFraction = 0.91;
+    const vFovRad = (38 * Math.PI) / 180;
+    const reqZ = (cardW / targetWidthFraction) / (2 * Math.tan(vFovRad / 2) * aspect);
+    camera.position.set(0, 0.28, Math.max(3.6, reqZ));
+
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: true,
       powerPreference: "high-performance",
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
     renderer.setSize(width, height);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
     container.appendChild(renderer.domElement);
 
-    // 4. Studio Environment map
     const envMap = createStudioEnvMap();
     scene.environment = envMap;
-
-    // 5. Card Geometry (ID-1 aspect ratio: 85.6mm x 54mm = 1.585)
-    const cardW = 3.25;
-    const cardH = 3.25 / 1.585; // approx 2.05
-    const cardR = 0.14; // corner radius
 
     const shape = new THREE.Shape();
     const x = -cardW / 2;
@@ -322,96 +316,101 @@ export function MetallicCard3D({
     shape.quadraticCurveTo(x, y, x + cardR, y);
 
     const extrudeSettings = {
-      depth: 0.035,
+      depth: 0.04,
       bevelEnabled: true,
-      bevelSegments: 4,
+      bevelSegments: 5,
       steps: 1,
-      bevelSize: 0.012,
-      bevelThickness: 0.012,
+      bevelSize: 0.015,
+      bevelThickness: 0.015,
     };
 
     const cardGeometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
     cardGeometry.center();
 
-    // 6. Metallic Body Material
     const metalMaterial = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color(0xdce0e5),
-      metalness: 1.0,
-      roughness: 0.28,
-      iridescence: 0.22,
-      iridescenceIOR: 1.35,
-      clearcoat: 0.1,
-      clearcoatRoughness: 0.15,
-      envMapIntensity: 1.25,
+      color: new THREE.Color(0xf2f5f8),
+      metalness: 0.96,
+      roughness: 0.25,
+      clearcoat: 0.35,
+      clearcoatRoughness: 0.1,
+      iridescence: 0.35,
+      iridescenceIOR: 1.45,
+      iridescenceThicknessRange: [120, 380],
+      envMapIntensity: 1.5,
     });
 
     const cardMesh = new THREE.Mesh(cardGeometry, metalMaterial);
 
-    // 7. High-Res Artwork Face Textures
     const frontTex = createFrontTexture(live, categoryCount, year);
     const backTex = createBackTexture(zones, moreZones);
 
-    const frontPlaneGeo = new THREE.PlaneGeometry(cardW - 0.01, cardH - 0.01);
-    const frontPlaneMat = new THREE.MeshPhysicalMaterial({
+    const frontFaceGeo = createRoundedFaceGeometry(shape, cardW, cardH);
+    const frontFaceMat = new THREE.MeshPhysicalMaterial({
       map: frontTex,
-      metalness: 0.65,
-      roughness: 0.32,
-      iridescence: 0.18,
+      metalness: 0.25,
+      roughness: 0.35,
       clearcoat: 0.2,
-      envMapIntensity: 1.0,
+      envMapIntensity: 0.6,
       polygonOffset: true,
       polygonOffsetFactor: -1,
       polygonOffsetUnits: -1,
     });
-    const frontPlane = new THREE.Mesh(frontPlaneGeo, frontPlaneMat);
-    frontPlane.position.z = 0.032;
+    const frontPlane = new THREE.Mesh(frontFaceGeo, frontFaceMat);
+    frontPlane.position.z = 0.036;
 
-    const backPlaneGeo = new THREE.PlaneGeometry(cardW - 0.01, cardH - 0.01);
-    const backPlaneMat = new THREE.MeshPhysicalMaterial({
+    const backFaceGeo = createRoundedFaceGeometry(shape, cardW, cardH);
+    const backFaceMat = new THREE.MeshPhysicalMaterial({
       map: backTex,
-      metalness: 0.45,
-      roughness: 0.38,
-      clearcoat: 0.1,
-      envMapIntensity: 0.8,
+      metalness: 0.4,
+      roughness: 0.35,
+      clearcoat: 0.15,
+      envMapIntensity: 0.7,
       polygonOffset: true,
       polygonOffsetFactor: -1,
       polygonOffsetUnits: -1,
     });
-    const backPlane = new THREE.Mesh(backPlaneGeo, backPlaneMat);
+    const backPlane = new THREE.Mesh(backFaceGeo, backFaceMat);
     backPlane.rotation.y = Math.PI;
-    backPlane.position.z = -0.032;
+    backPlane.position.z = -0.036;
 
-    // 8. Separate Groups for Flip and Tilt to prevent interference
     const tiltGroup = new THREE.Group();
     tiltGroup.add(cardMesh);
     tiltGroup.add(frontPlane);
     tiltGroup.add(backPlane);
+    tiltGroup.position.set(0, 0.08, 0);
 
     const flipGroup = new THREE.Group();
     flipGroup.add(tiltGroup);
-
-    // Resting card angle: subtle -3deg tilt on Z, +5deg on X
-    flipGroup.rotation.z = THREE.MathUtils.degToRad(-3.5);
-    flipGroup.rotation.x = THREE.MathUtils.degToRad(3.0);
+    flipGroup.rotation.set(0, 0, 0);
 
     scene.add(flipGroup);
 
-    // 9. Directional studio lights for rim highlights
-    const topLight = new THREE.DirectionalLight(0xffffff, 2.0);
-    topLight.position.set(0, 5, 4);
+    const frontLight = new THREE.DirectionalLight(0xffffff, 2.0);
+    frontLight.position.set(0, 2, 5);
+    scene.add(frontLight);
+
+    const topLight = new THREE.DirectionalLight(0xffffff, 2.2);
+    topLight.position.set(0, 6, 3);
     scene.add(topLight);
 
-    const rimLightBlue = new THREE.DirectionalLight(0xcde6ff, 1.5);
-    rimLightBlue.position.set(5, 2, 2);
+    const rimLightBlue = new THREE.DirectionalLight(0x38bdf8, 2.2);
+    rimLightBlue.position.set(6, 2, -1);
     scene.add(rimLightBlue);
 
-    const rimLightLav = new THREE.DirectionalLight(0xf1dbff, 1.2);
-    rimLightLav.position.set(-5, -2, 2);
+    const rimLightLav = new THREE.DirectionalLight(0xc084fc, 2.0);
+    rimLightLav.position.set(-6, 2, -1);
     scene.add(rimLightLav);
 
-    // 10. Pointer Tracking for Cursor Tilt
+    const ambientLight = new THREE.AmbientLight(0x2d3139, 1.2);
+    scene.add(ambientLight);
+
     const hasFinePointer = window.matchMedia("(pointer: fine)").matches;
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let needsRender = true;
+    const wake = () => {
+      needsRender = true;
+    };
 
     const handlePointerMove = (e: PointerEvent) => {
       if (!hasFinePointer || prefersReducedMotion) return;
@@ -421,76 +420,119 @@ export function MetallicCard3D({
       const nx = Math.max(-1, Math.min(1, ((e.clientX - rect.left) / rect.width) * 2 - 1));
       const ny = Math.max(-1, Math.min(1, ((e.clientY - rect.top) / rect.height) * 2 - 1));
 
-      // targetYaw up to 12 degrees, targetPitch up to 8 degrees
       targetYawRef.current = THREE.MathUtils.degToRad(nx * 12);
       targetPitchRef.current = THREE.MathUtils.degToRad(-ny * 8);
+      wake();
     };
 
     const handlePointerLeave = () => {
       targetYawRef.current = 0;
       targetPitchRef.current = 0;
+      wake();
     };
 
     container.addEventListener("pointermove", handlePointerMove);
     container.addEventListener("pointerleave", handlePointerLeave);
 
-    // 11. Resize handling
+    let isVisible = true;
+    const intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]) {
+          isVisible = entries[0].isIntersecting;
+          if (isVisible) wake();
+        }
+      },
+      { threshold: 0.02 }
+    );
+    intersectionObserver.observe(container);
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      const progress = Math.min(Math.max(scrollY / 180, 0), 1);
+      scrollProgressRef.current = progress;
+      wake();
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width: newW, height: newH } = entry.contentRect;
         if (newW > 0 && newH > 0) {
-          camera.aspect = newW / newH;
+          const newAspect = newW / newH;
+          camera.aspect = newAspect;
+          const rz = (cardW / targetWidthFraction) / (2 * Math.tan(vFovRad / 2) * newAspect);
+          camera.position.z = Math.max(3.6, rz);
           camera.updateProjectionMatrix();
           renderer.setSize(newW, newH);
+          wake();
         }
       }
     });
     resizeObserver.observe(container);
 
-    // 12. Animation Loop with frame-rate independent exponential damping
     let animId: number;
     let lastTime = performance.now();
 
     const animate = (now: number) => {
       animId = requestAnimationFrame(animate);
 
+      if (!isVisible) {
+        lastTime = now;
+        return;
+      }
+
       const deltaSeconds = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
 
       const alpha = 1 - Math.exp(-10 * deltaSeconds);
 
-      // Interpolate tilt
-      currentYawRef.current += (targetYawRef.current - currentYawRef.current) * alpha;
-      currentPitchRef.current += (targetPitchRef.current - currentPitchRef.current) * alpha;
-
-      tiltGroup.rotation.y = currentYawRef.current;
-      tiltGroup.rotation.x = currentPitchRef.current;
-
-      // Interpolate flip rotation
+      const targetY = 0.08 + scrollProgressRef.current * 0.36;
       const targetFlip = flipped ? Math.PI : 0;
-      currentFlipRef.current += (targetFlip - currentFlipRef.current) * alpha;
-      flipGroup.rotation.y = currentFlipRef.current;
 
-      renderer.render(scene, camera);
+      const yawDiff = Math.abs(targetYawRef.current - currentYawRef.current);
+      const pitchDiff = Math.abs(targetPitchRef.current - currentPitchRef.current);
+      const yDiff = Math.abs(targetY - currentYRef.current);
+      const flipDiff = Math.abs(targetFlip - currentFlipRef.current);
+
+      if (needsRender || yawDiff > 0.0003 || pitchDiff > 0.0003 || yDiff > 0.0003 || flipDiff > 0.0003) {
+        currentYawRef.current += (targetYawRef.current - currentYawRef.current) * alpha;
+        currentPitchRef.current += (targetPitchRef.current - currentPitchRef.current) * alpha;
+        tiltGroup.rotation.y = currentYawRef.current;
+        tiltGroup.rotation.x = currentPitchRef.current;
+
+        currentYRef.current += (targetY - currentYRef.current) * alpha;
+        tiltGroup.position.set(0, currentYRef.current, 0);
+
+        currentFlipRef.current += (targetFlip - currentFlipRef.current) * alpha;
+        flipGroup.rotation.y = currentFlipRef.current;
+
+        renderer.render(scene, camera);
+
+        if (yawDiff <= 0.0003 && pitchDiff <= 0.0003 && yDiff <= 0.0003 && flipDiff <= 0.0003) {
+          needsRender = false;
+        }
+      }
     };
 
     animId = requestAnimationFrame(animate);
 
-    // Cleanup on unmount
     return () => {
       cancelAnimationFrame(animId);
       container.removeEventListener("pointermove", handlePointerMove);
       container.removeEventListener("pointerleave", handlePointerLeave);
+      window.removeEventListener("scroll", handleScroll);
+      intersectionObserver.disconnect();
       resizeObserver.disconnect();
 
       cardGeometry.dispose();
       metalMaterial.dispose();
       frontTex.dispose();
-      frontPlaneMat.dispose();
-      frontPlaneGeo.dispose();
+      frontFaceMat.dispose();
+      frontFaceGeo.dispose();
       backTex.dispose();
-      backPlaneMat.dispose();
-      backPlaneGeo.dispose();
+      backFaceMat.dispose();
+      backFaceGeo.dispose();
       envMap.dispose();
       renderer.dispose();
 
@@ -519,7 +561,7 @@ export function MetallicCard3D({
       onClick={onToggleFlip}
       role="button"
       tabIndex={0}
-      aria-label="3D metallic student pass. Click to flip, move cursor to tilt."
+      aria-label="3D metallic student pass. Click to flip, move cursor to tilt, scroll to lift."
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
