@@ -146,7 +146,8 @@ const searchInputRef = useRef<HTMLInputElement>(null);
     () =>
       new Fuse(resources, {
         keys: ["name", "tagline", "description", "tags"],
-        threshold: 0.35,
+        threshold: 0.4,
+        ignoreLocation: true,
       }),
     [resources],
   );
@@ -504,6 +505,7 @@ useKeyboardShortcuts({
         open={filterSheetOpen}
         onOpenChange={setFilterSheetOpen}
         resultCount={filtered.length}
+        onClearAll={clearAll}
         search={search}
         onSearchChange={(v) => {
           setSearch(v);

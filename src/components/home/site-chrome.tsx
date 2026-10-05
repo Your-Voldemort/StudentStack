@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Menu, X } from "lucide-react";
@@ -8,10 +8,35 @@ import styles from "./brand.module.css";
 
 export function SiteHeader({}: { total?: number } = {}) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const navRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled((window.scrollY || document.documentElement.scrollTop) > 25);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!navRef.current) return;
+    const rect = navRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    navRef.current.style.setProperty("--sheen-x", `${x}%`);
+    navRef.current.style.setProperty("--sheen-y", `${y}%`);
+  };
 
   return (
-    <header className={styles.bar}>
-      <div className={`${styles.wrap} ${styles.barInner}`}>
+    <header className={`${styles.bar} ${scrolled ? styles.barScrolled : ""}`}>
+      <div
+        ref={navRef}
+        onMouseMove={handleMouseMove}
+        className={`${styles.wrap} ${styles.barInner} ${scrolled ? styles.capsule : ""}`}
+      >
+        <div className={styles.liquidSheen} aria-hidden="true" />
         <Link href="/" className={styles.wordmark}>
           StudentStack
         </Link>
@@ -44,7 +69,9 @@ export function SiteHeader({}: { total?: number } = {}) {
       </div>
 
       {menuOpen && (
-        <div className={styles.mobileMenuDropdown}>
+        <div
+          className={`${styles.mobileMenuDropdown} ${scrolled ? styles.mobileMenuDropdownFloating : ""}`}
+        >
           <Link
             href="/directory"
             className={styles.mobileMenuLink}

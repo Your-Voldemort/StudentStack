@@ -60,28 +60,112 @@
 
 /* ---------- header / footer ---------- */
 .bar {
-  border-bottom: 1px solid var(--line);
-  position: relative;
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 50;
-  background: var(--ground);
+  padding: 0;
+  pointer-events: none;
+  transition: padding-top 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.barScrolled {
+  padding-top: 14px;
 }
 .barInner {
+  pointer-events: auto;
+  position: relative;
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
   min-height: 56px;
+  padding: 6px clamp(16px, 4vw, 32px);
+  background: var(--ground);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+  border-top: 1px solid transparent;
+  box-shadow: 0 0 0 transparent;
+  overflow: hidden;
+  transition:
+    width 520ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    max-width 520ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-radius 520ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    padding 520ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 440ms ease,
+    backdrop-filter 440ms ease,
+    border-color 440ms ease,
+    box-shadow 520ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 520ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: width, max-width, border-radius, transform, backdrop-filter;
+}
+.capsule {
+  width: min(calc(100% - 32px), 840px);
+  max-width: 840px;
+  border-radius: 999px;
+  padding: 6px 14px 6px 22px;
+  min-height: 50px;
+  background: rgba(14, 15, 18, 0.74);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top-color: rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 20px 42px -10px rgba(0, 0, 0, 0.88),
+    0 6px 16px -2px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.4);
+  transform: translateY(0) scale(1);
+}
+:global(.light) .capsule {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(0, 0, 0, 0.1);
+  border-top-color: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 16px 36px -10px rgba(0, 0, 0, 0.16),
+    0 4px 10px -2px rgba(0, 0, 0, 0.08),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95);
+}
+.liquidSheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    280px circle at var(--sheen-x, 50%) var(--sheen-y, 0%),
+    rgba(255, 255, 255, 0.12),
+    transparent 65%
+  );
+  opacity: 0;
+  transition: opacity 300ms ease;
+  border-radius: inherit;
+  z-index: 1;
+}
+.capsule .liquidSheen {
+  opacity: 1;
+}
+@media (max-width: 768px) {
+  .capsule {
+    width: min(calc(100% - 20px), 440px);
+    max-width: 440px;
+    padding: 4px 8px 4px 16px;
+    min-height: 46px;
+  }
 }
 .wordmark {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: 40px;
   color: inherit;
   font-family: var(--display);
   font-stretch: 150%;
   font-weight: 900;
-  font-size: 1rem;
+  font-size: 0.95rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   text-decoration: none;
@@ -97,7 +181,7 @@
 .desktopLinks {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 @media (max-width: 768px) {
   .desktopLinks {
@@ -108,9 +192,9 @@
   display: none;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--ink);
@@ -128,6 +212,19 @@
   background: var(--ground);
   border-bottom: 1px solid var(--line);
   animation: slideDown 160ms ease-out;
+}
+.mobileMenuDropdownFloating {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 16px;
+  right: 16px;
+  border-radius: 18px;
+  background: rgba(18, 18, 22, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+  pointer-events: auto;
 }
 @keyframes slideDown {
   from {
@@ -152,15 +249,19 @@
 .navLink {
   display: inline-flex;
   align-items: center;
-  min-height: 40px;
-  padding-inline: 10px;
-  color: var(--ink);
+  min-height: 34px;
+  padding-inline: 12px;
+  color: var(--muted);
   text-decoration: none;
-  text-underline-offset: 4px;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 999px;
+  transition: color 140ms ease, background-color 140ms ease;
 }
 .navLink:hover {
-  text-decoration: underline;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.07);
+  text-decoration: none;
 }
 .pillLink {
   display: inline-flex;
