@@ -105,7 +105,7 @@ export function DirectoryClient({
   );
 const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 const [filterSheetOpen, setFilterSheetOpen] = useState(false);
-const [sort, setSort] = useState<"recommended" | "name" | "recent">("recommended");
+const [sort, setSort] = useState<"recommended" | "name" | "recent" | "free-first">("recommended");
 const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 const [shortcutsOpen, setShortcutsOpen] = useState(false);
 const searchInputRef = useRef<HTMLInputElement>(null);
@@ -208,13 +208,20 @@ const searchInputRef = useRef<HTMLInputElement>(null);
   const filtered = useMemo(() => {
     const result = applyFilters(resources, filters, fuse);
     if (sort === "name") {
-      return [...result].sort((a, b) => a.name.localeCompare(b.name));
+      return [...result].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
     }
     if (sort === "recent") {
       return [...result].sort((a, b) => {
         const aTime = a.lastVerifiedAt ?? 0;
         const bTime = b.lastVerifiedAt ?? 0;
         return bTime - aTime;
+      });
+    }
+    if (sort === "free-first") {
+      return [...result].sort((a, b) => {
+        if (a.costType === "free" && b.costType !== "free") return -1;
+        if (a.costType !== "free" && b.costType === "free") return 1;
+        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
       });
     }
     return result;
@@ -615,13 +622,14 @@ useKeyboardShortcuts({
             <select
               id="sort-select"
               value={sort}
-              onChange={(e) => setSort(e.target.value as "recommended" | "name" | "recent")}
+              onChange={(e) => setSort(e.target.value as "recommended" | "name" | "recent" | "free-first")}
               aria-label="Sort offers"
               className={styles.sort}
             >
               <option value="recommended">Recommended</option>
               <option value="name">Name A-Z</option>
               <option value="recent">Recently verified</option>
+              <option value="free-first">Free first</option>
             </select>
             <div className={styles.viewToggle}>
               <button

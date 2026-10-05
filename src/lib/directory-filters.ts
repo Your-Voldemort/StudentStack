@@ -51,8 +51,11 @@ export function applyFilters(
     list = list.filter((r) => r.duration && filters.duration.includes(r.duration));
   }
   if (skip !== "search" && filters.search.trim()) {
-    const matchIds = new Set(fuse.search(filters.search).map((m) => m.item.id));
-    list = list.filter((r) => matchIds.has(r.id));
+    const searchResults = fuse.search(filters.search);
+    const orderMap = new Map(searchResults.map((m, idx) => [m.item.id, idx]));
+    list = list
+      .filter((r) => orderMap.has(r.id))
+      .sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0));
   }
   return list;
 }
