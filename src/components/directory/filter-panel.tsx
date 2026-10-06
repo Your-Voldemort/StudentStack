@@ -73,17 +73,21 @@ export function FilterPanel({
           <span>Cost type</span>
           <ChevronRight className={styles.chevronIcon} />
         </summary>
-        <div className={styles.checkList}>
-          {[...COST_TYPES, ...COST_EXTRA].map((c) => (
-            <label key={c} className={styles.check}>
-              <input
-                type="checkbox"
-                checked={costType.includes(c)}
-                onChange={() => onToggleCostType(c)}
-              />
-              <span style={{ textTransform: "capitalize" }}>{c}</span>
-            </label>
-          ))}
+        <div className={styles.costPills}>
+          {[...COST_TYPES, ...COST_EXTRA].map((c) => {
+            const isSelected = costType.includes(c);
+            return (
+              <button
+                key={c}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => onToggleCostType(c)}
+                className={`${styles.costFilterPill} ${isSelected ? styles.costFilterPillActive : ""}`}
+              >
+                {c}
+              </button>
+            );
+          })}
         </div>
       </details>
 
@@ -146,7 +150,7 @@ export function FilterPanel({
           <span>Category</span>
           <ChevronRight className={styles.chevronIcon} />
         </summary>
-        <div className={styles.checkList}>
+        <div className={styles.categoryScrollList}>
           {categories.map((c) => (
             <label key={c.slug} className={styles.check} style={{ justifyContent: "space-between" }}>
               <span style={{ display: "flex", gap: 9, alignItems: "center" }}>

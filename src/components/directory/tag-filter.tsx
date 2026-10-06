@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -34,31 +33,52 @@ export function TagFilter({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
+        <button
+          type="button"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between sm:w-44"
+          aria-controls="tag-filter-list"
+          className="flex w-full min-h-[38px] items-center justify-between rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-[#f4f4f5] hover:border-white/30 hover:bg-white/10 transition-colors sm:w-44 outline-none cursor-pointer"
         >
-          {selected.length ? `${selected.length} tag(s) selected` : "Filter by tag..."}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
+          <span className="truncate">
+            {selected.length ? `${selected.length} tag(s) selected` : "Filter by tag..."}
+          </span>
+          <ChevronsUpDown className="ml-2 size-3.5 shrink-0 opacity-60" />
+        </button>
       </PopoverTrigger>
-      <PopoverContent className="w-56 p-0">
-        <Command>
-          <CommandInput placeholder="Search tags..." />
-          <CommandList>
-            <CommandEmpty>No tag found.</CommandEmpty>
+      <PopoverContent
+        data-radix-scroll-lock-ignore="true"
+        style={{ touchAction: "pan-y" }}
+        onWheel={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        className="w-56 p-0 border border-white/15 bg-[#141418] text-[#f4f4f5] shadow-2xl rounded-xl font-sans"
+      >
+        <Command className="bg-transparent text-[#f4f4f5]">
+          <CommandInput placeholder="Search tags..." className="text-xs text-[#f4f4f5] placeholder:text-[#71717a]" />
+          <CommandList
+            id="tag-filter-list"
+            data-radix-scroll-lock-ignore="true"
+            style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch" }}
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            className="max-h-60 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.3)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/30 hover:[&::-webkit-scrollbar-thumb]:bg-[#c084fc]"
+          >
+            <CommandEmpty className="py-3 text-center text-xs text-[#71717a]">No tag found.</CommandEmpty>
             <CommandGroup>
               {allTags.map((tag) => (
-                <CommandItem key={tag} value={tag} onSelect={() => toggle(tag)}>
+                <CommandItem
+                  key={tag}
+                  value={tag}
+                  onSelect={() => toggle(tag)}
+                  className="flex items-center px-2 py-1.5 text-xs text-[#d4d4d8] hover:bg-white/10 hover:text-white cursor-pointer rounded-lg aria-selected:bg-white/10 aria-selected:text-white"
+                >
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
+                      "mr-2 size-3.5 text-[#c084fc]",
                       selected.includes(tag) ? "opacity-100" : "opacity-0",
                     )}
                   />
-                  {tag}
+                  <span>{tag}</span>
                 </CommandItem>
               ))}
             </CommandGroup>

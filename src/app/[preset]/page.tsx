@@ -28,7 +28,11 @@ export async function generateMetadata({
   const preset = getPreset(slug);
   if (!preset) return {};
   const resources = await getAllResources();
-  const fuse = new Fuse(resources, { keys: ["name", "tagline", "description", "tags"], threshold: 0.35 });
+  const fuse = new Fuse(resources, {
+    keys: ["name", "tagline", "description", "tags"],
+    threshold: 0.4,
+    ignoreLocation: true,
+  });
   const count = applyFilters(resources, fullFilters(preset.filters), fuse).length;
   return {
     title: `${preset.title} | StudentStack`,

@@ -207,8 +207,21 @@
 /* ---------- Sidebar ---------- */
 .sidebar {
   position: sticky;
-  top: 16px;
+  top: 80px;
   padding-top: 4px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
 }
 
 @media (max-width: 900px) {
@@ -287,44 +300,116 @@ details[open] > summary .chevronIcon {
   padding-bottom: 4px;
 }
 
+.categoryScrollList {
+  display: grid;
+  gap: 2px;
+  margin-top: 6px;
+  padding-right: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.categoryScrollList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.categoryScrollList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.categoryScrollList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+}
+
+.categoryScrollList::-webkit-scrollbar-thumb:hover {
+  background: rgba(192, 132, 252, 0.5);
+}
+
 .check {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 5px 2px;
-  font-size: 0.84rem;
-  color: #c4c4cc;
+  gap: 10px;
+  padding: 7px 6px;
+  min-height: 36px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #d4d4d8;
   cursor: pointer;
   user-select: none;
-  transition: color 120ms ease;
+  transition: background-color 120ms ease, color 120ms ease;
 }
 
 .check:hover {
+  background: rgba(255, 255, 255, 0.04);
   color: var(--d-ink);
 }
 
 .check input {
   appearance: none;
-  width: 15px;
-  height: 15px;
-  border-radius: 4px;
-  border: 1.5px solid var(--d-line-hover);
-  background: transparent;
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
+  border: 2px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.04);
   display: grid;
   place-items: center;
   cursor: pointer;
   flex: none;
   margin: 0;
-  transition: background-color 140ms ease, border-color 140ms ease;
+  transition: background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.check input:hover {
+  border-color: rgba(255, 255, 255, 0.55);
 }
 
 .check input:checked {
-  background: var(--d-purple);
+  background-color: var(--d-purple);
   border-color: var(--d-purple);
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.5 8.5L6.5 11.5L12.5 4.5' stroke='%231e0d38' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.5 8.5L6.5 11.5L12.5 4.5' stroke='%231e0d38' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-size: 11px;
   background-position: center;
   background-repeat: no-repeat;
+  box-shadow: 0 0 8px rgba(192, 132, 252, 0.35);
+}
+
+.costPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 8px;
+  padding-bottom: 4px;
+}
+
+.costFilterPill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  color: #d4d4d8;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.costFilterPill:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  color: var(--d-ink);
+}
+
+.costFilterPillActive {
+  background: rgba(192, 132, 252, 0.22);
+  border-color: var(--d-purple);
+  color: var(--d-purple-soft);
+  box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);
 }
 
 .check input[type="radio"] {
@@ -736,6 +821,15 @@ details[open] > summary .chevronIcon {
 @media (max-width: 900px) {
   .mobileBar {
     display: flex;
+    position: sticky;
+    top: 60px;
+    z-index: 40;
+    background: rgba(9, 9, 11, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 6px 0;
+    margin-top: 4px;
+    margin-bottom: 8px;
   }
 }
 
