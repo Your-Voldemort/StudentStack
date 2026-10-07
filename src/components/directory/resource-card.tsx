@@ -73,6 +73,18 @@ function getResourceShareUrl(resource: Resource): string {
   return `${origin}/directory?q=${query}`;
 }
 
+function trackOfferClick(resourceId: number) {
+  // Fire-and-forget: never block or delay navigation to the offer.
+  try {
+    fetch(`/api/resources/${resourceId}/click`, {
+      method: "POST",
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // ignore — tracking must not break the link
+  }
+}
+
 export function ResourceCard({
   resource,
   onTagClick,
@@ -195,7 +207,13 @@ export function ResourceCard({
           </span>
         ) : null}
         {resource.hasStaticClaimUrl && resource.url ? (
-          <a href={resource.url} target="_blank" rel="noopener noreferrer" className={styles.viewOffer}>
+          <a
+            href={resource.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.viewOffer}
+            onClick={() => trackOfferClick(resource.id)}
+          >
             <span>View offer</span>
             <ArrowUpRight className="size-3.5" aria-hidden />
           </a>
