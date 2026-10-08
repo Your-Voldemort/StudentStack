@@ -23,6 +23,7 @@ const mockResource: Resource = {
   duration: "while_student",
   status: "active",
   lastVerifiedAt: Date.now() - 2 * 86_400_000,
+  deadline: null,
 };
 
 describe("ResourceCard verification status", () => {
