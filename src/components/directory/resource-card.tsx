@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import type { Resource } from "@/lib/resources";
 import { relativeTime } from "@/lib/format";
-import { GraduationCap, CheckCircle2, ArrowUpRight, Bookmark, Link as LinkIcon, Check } from "lucide-react";
+import { GraduationCap, CheckCircle2, ArrowUpRight, Bookmark, BookmarkCheck, Link as LinkIcon, Check, Loader2 } from "lucide-react";
 import styles from "./directory.module.css";
 
 const COST_LABEL: Record<Resource["costType"], string> = {
@@ -85,14 +85,39 @@ function trackOfferClick(resourceId: number) {
   }
 }
 
+function toggleBookmark(resourceId: number, currentlyBookmarked: boolean) {
+  const url = currentlyBookmarked
+    ? `/api/bookmarks?resourceId=${resourceId}`
+    : "/api/bookmarks";
+  const method = currentlyBookmarked ? "DELETE" : "POST";
+  const body = currentlyBookmarked ? undefined : JSON.stringify({ resourceId });
+
+  return fetch(url, {
+    method,
+    headers: body ? { "Content-Type": "application/json" } : {},
+    body,
+  }).then((res) => {
+    if (res.status === 401) {
+      window.location.href = `/admin/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+      throw new Error("Unauthorized");
+    }
+    if (!res.ok) throw new Error("Failed to toggle bookmark");
+    return res.json();
+  });
+}
+
 export function ResourceCard({
   resource,
   onTagClick,
+  initiallyBookmarked = false,
 }: {
   resource: Resource;
   onTagClick: (tag: string) => void;
+  initiallyBookmarked?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
+  const [bookmarked, setBookmarked] = useState(initiallyBookmarked);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
   const verified = relativeTime(resource.lastVerifiedAt);
   const title = resource.tagline || resource.name;
 
@@ -124,6 +149,20 @@ export function ResourceCard({
       setCopied(true);
     } catch {
       // Fallback if clipboard writing fails
+    }
+  };
+
+  const handleBookmark = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (bookmarkLoading) return;
+    setBookmarkLoading(true);
+    try {
+      await toggleBookmark(resource.id, bookmarked);
+      setBookmarked((prev) => !prev);
+    } catch (err) {
+      console.error("Bookmark failed:", err);
+    } finally {
+      setBookmarkLoading(false);
     }
   };
 
@@ -163,8 +202,21 @@ export function ResourceCard({
               Link copied!
             </span>
           )}
-          <button type="button" className={styles.bookmark} aria-label={`Save ${resource.name}`}>
-            <Bookmark className="size-4" />
+          <button
+            type="button"
+            className={`${styles.bookmark} ${bookmarked ? styles.bookmarkActive : ""}`}
+            onClick={handleBookmark}
+            disabled={bookmarkLoading}
+            aria-label={bookmarked ? `Remove ${resource.name} from saved` : `Save ${resource.name}`}
+            aria-pressed={bookmarked}
+          >
+            {bookmarkLoading ? (
+              <Loader2 className="size-4" style={{ animation: "spin 1s linear infinite" }} aria-hidden="true" />
+            ) : bookmarked ? (
+              <BookmarkCheck className="size-4" aria-hidden="true" />
+            ) : (
+              <Bookmark className="size-4" aria-hidden="true" />
+            )}
           </button>
         </div>
       </div>

@@ -683,16 +683,27 @@ details[open] > summary .chevronIcon {
   display: grid;
   place-items: center;
   border-radius: 6px;
-  transition: color 120ms ease;
+  transition: color 120ms ease, background-color 120ms ease;
 }
 
 .bookmark:hover {
   color: var(--d-ink);
+  background: var(--d-surface-hover);
 }
 
 .bookmark:focus-visible {
   outline: 2px solid var(--d-purple);
   outline-offset: 1px;
+}
+
+.bookmarkActive {
+  color: var(--d-purple-soft);
+  background: var(--d-purple-glow);
+}
+
+.bookmarkActive:hover {
+  color: var(--d-purple);
+  background: var(--d-purple-glow);
 }
 
 .offerTitle {
@@ -972,6 +983,19 @@ details[open] > summary .chevronIcon {
   .card,
   .chevronIcon {
     transition: none;
+  }
+}
+
+.animateSpin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 

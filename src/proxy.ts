@@ -35,13 +35,16 @@ export default async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isAdminRoute = pathname.startsWith("/admin") && pathname !== "/admin/login";
-  if (isAdminRoute && !user) {
-    return NextResponse.redirect(new URL("/admin/login", request.url));
+  const isProtectedRoute = pathname.startsWith("/my-list") || pathname.startsWith("/onboarding");
+  if ((isAdminRoute || isProtectedRoute) && !user) {
+    const loginUrl = new URL("/admin/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return response;
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/submit"],
+  matcher: ["/admin/:path*", "/submit", "/my-list/:path*", "/onboarding/:path*"],
 };
