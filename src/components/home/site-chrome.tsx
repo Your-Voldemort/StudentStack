@@ -40,18 +40,21 @@ export function SiteHeader({}: { total?: number } = {}) {
         <Link href="/" className={styles.wordmark}>
           StudentStack
         </Link>
-        <nav aria-label="Main" className={styles.nav} data-has-theme-toggle>
-          <div className={styles.desktopLinks}>
-            <Link href="/directory" className={styles.navLink}>
-              Directory
-            </Link>
-            <a href="#passes-title" className={styles.navLink}>
-              How it works
-            </a>
-            <a href="#passes-title" className={styles.navLink}>
-              FAQs
-            </a>
-          </div>
+<nav aria-label="Main" className={styles.nav} data-has-theme-toggle>
+            <div className={styles.desktopLinks}>
+              <Link href="/directory" className={styles.navLink}>
+                Directory
+              </Link>
+              <Link href="/deadlines" className={styles.navLink}>
+                Deadlines
+              </Link>
+              <a href="#passes-title" className={styles.navLink}>
+                How it works
+              </a>
+              <a href="#passes-title" className={styles.navLink}>
+                FAQs
+              </a>
+            </div>
           <Link href="/submit" className={styles.pillLink}>
             Add a perk
           </Link>
@@ -78,6 +81,13 @@ export function SiteHeader({}: { total?: number } = {}) {
             onClick={() => setMenuOpen(false)}
           >
             Directory
+          </Link>
+          <Link
+            href="/deadlines"
+            className={styles.mobileMenuLink}
+            onClick={() => setMenuOpen(false)}
+          >
+            Deadlines
           </Link>
           <a
             href="#passes-title"

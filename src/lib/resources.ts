@@ -26,6 +26,7 @@ export type Resource = {
   duration: "one_time" | "one_year" | "while_student" | "lifetime" | null;
   status: "active" | "expired" | "broken";
   lastVerifiedAt: number | null;
+  deadline?: number | null;
 };
 
 export type Category = {
@@ -55,15 +56,20 @@ const resourceColumns = {
   duration: resources.duration,
   status: resources.status,
   lastVerifiedAt: resources.lastVerifiedAt,
+  deadline: resources.deadline,
   categorySlug: categories.slug,
   categoryName: categories.name,
   categoryIcon: categories.icon,
 };
 
-type ResourceRow = Omit<Resource, "lastVerifiedAt"> & { lastVerifiedAt: Date | null };
+type ResourceRow = Omit<Resource, "lastVerifiedAt" | "deadline"> & { lastVerifiedAt: Date | null; deadline: Date | null };
 
 function toResource(row: ResourceRow): Resource {
-  return { ...row, lastVerifiedAt: row.lastVerifiedAt ? row.lastVerifiedAt.getTime() : null };
+  return {
+    ...row,
+    lastVerifiedAt: row.lastVerifiedAt ? row.lastVerifiedAt.getTime() : null,
+    deadline: row.deadline ? row.deadline.getTime() : null,
+  };
 }
 
 // Public pages only ever see approved rows. Student submissions land with
@@ -304,4 +310,32 @@ export async function isUrlListed(url: string): Promise<boolean> {
     .where(sql`lower(rtrim(${resources.url}, '/')) = ${needle}`)
     .limit(1);
   return Boolean(row);
+}
+
+// Returns approved resources that have a deadline set, sorted by deadline ascending.
+// Used for the /deadlines page.
+export async function getResourcesWithDeadlines(): Promise<Resource[]> {
+  if (!hasDatabase()) {
+    return MOCK_RESOURCES.filter((r) => r.deadline !== null && r.deadline !== undefined).sort((a, b) => {
+      const ad = a.deadline ?? Infinity;
+      const bd = b.deadline ?? Infinity;
+      return ad - bd;
+    });
+  }
+  try {
+    const rows = await db
+      .select(resourceColumns)
+      .from(resources)
+      .innerJoin(categories, eq(resources.categoryId, categories.id))
+      .where(and(eq(resources.approved, true), sql`${resources.deadline} is not null`))
+      .orderBy(resources.deadline);
+    return rows.map(toResource);
+  } catch (error) {
+    console.warn("[StudentStack DB] getResourcesWithDeadlines query failed:", error instanceof Error ? error.message : error);
+    return MOCK_RESOURCES.filter((r) => r.deadline !== null && r.deadline !== undefined).sort((a, b) => {
+      const ad = a.deadline ?? Infinity;
+      const bd = b.deadline ?? Infinity;
+      return ad - bd;
+    });
+  }
 }
