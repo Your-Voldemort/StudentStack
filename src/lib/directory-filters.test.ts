@@ -33,6 +33,7 @@ const sampleResources: Resource[] = [
     duration: "one_year",
     status: "active",
     lastVerifiedAt: 1700000000,
+    deadline: null,
   },
   {
     id: 2,
@@ -54,6 +55,7 @@ const sampleResources: Resource[] = [
     duration: "while_student",
     status: "active",
     lastVerifiedAt: 1700005000,
+    deadline: null,
   },
   {
     id: 3,
@@ -75,6 +77,7 @@ const sampleResources: Resource[] = [
     duration: null,
     status: "active",
     lastVerifiedAt: 1700010000,
+    deadline: null,
   },
   {
     id: 4,
@@ -96,6 +99,7 @@ const sampleResources: Resource[] = [
     duration: "lifetime",
     status: "active",
     lastVerifiedAt: null,
+    deadline: null,
   },
 ];
 
