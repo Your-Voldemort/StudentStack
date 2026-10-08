@@ -122,9 +122,9 @@ export function sortResources(
 
 if (process.argv[1] && process.argv[1].endsWith("directory-filters.ts")) {
   const fixture: Resource[] = [
-    { id: 1, slug: "a", name: "A", tagline: null, description: "", url: null, hasStaticClaimUrl: false, categoryId: 1, categorySlug: "ai", categoryName: "AI", categoryIcon: "🤖", tags: ["Web"], region: "IN", costType: "free", verificationNeeded: null, creditCardRequired: null, duration: null, status: "active", lastVerifiedAt: null },
-    { id: 2, slug: "b", name: "B", tagline: null, description: "", url: null, hasStaticClaimUrl: false, categoryId: 2, categorySlug: "dev", categoryName: "Dev", categoryIcon: "🛠️", tags: ["Web"], region: "Global", costType: "discount", verificationNeeded: null, creditCardRequired: null, duration: null, status: "active", lastVerifiedAt: null },
-    { id: 3, slug: "c", name: "C", tagline: null, description: "", url: null, hasStaticClaimUrl: false, categoryId: 1, categorySlug: "ai", categoryName: "AI", categoryIcon: "🤖", tags: ["iOS"], region: "IN", costType: "free", verificationNeeded: null, creditCardRequired: null, duration: null, status: "active", lastVerifiedAt: null },
+    { id: 1, slug: "a", name: "A", tagline: null, description: "", url: null, hasStaticClaimUrl: false, categoryId: 1, categorySlug: "ai", categoryName: "AI", categoryIcon: "🤖", tags: ["Web"], region: "IN", costType: "free", verificationNeeded: null, creditCardRequired: null, duration: null, status: "active", lastVerifiedAt: null, deadline: null },
+    { id: 2, slug: "b", name: "B", tagline: null, description: "", url: null, hasStaticClaimUrl: false, categoryId: 2, categorySlug: "dev", categoryName: "Dev", categoryIcon: "🛠️", tags: ["Web"], region: "Global", costType: "discount", verificationNeeded: null, creditCardRequired: null, duration: null, status: "active", lastVerifiedAt: null, deadline: null },
+    { id: 3, slug: "c", name: "C", tagline: null, description: "", url: null, hasStaticClaimUrl: false, categoryId: 1, categorySlug: "ai", categoryName: "AI", categoryIcon: "🤖", tags: ["iOS"], region: "IN", costType: "free", verificationNeeded: null, creditCardRequired: null, duration: null, status: "active", lastVerifiedAt: null, deadline: null },
   ];
   const dummyFuse = { search: () => [] } as unknown as Fuse<Resource>;
   const noFilters: DirectoryFilters = {
