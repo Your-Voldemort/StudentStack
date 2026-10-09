@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { MOCK_CATEGORIES, MOCK_RESOURCES } from "./mock-data";
 
@@ -24,6 +24,7 @@ export type Resource = {
   verificationNeeded: "none" | "edu_email" | "github_student_pack" | "student_id" | null;
   creditCardRequired: boolean | null;
   duration: "one_time" | "one_year" | "while_student" | "lifetime" | null;
+  deadline: number | null;
   status: "active" | "expired" | "broken";
   lastVerifiedAt: number | null;
 };
@@ -53,6 +54,7 @@ const resourceColumns = {
   verificationNeeded: resources.verificationNeeded,
   creditCardRequired: resources.creditCardRequired,
   duration: resources.duration,
+  deadline: resources.deadline,
   status: resources.status,
   lastVerifiedAt: resources.lastVerifiedAt,
   categorySlug: categories.slug,
@@ -60,10 +62,17 @@ const resourceColumns = {
   categoryIcon: categories.icon,
 };
 
-type ResourceRow = Omit<Resource, "lastVerifiedAt"> & { lastVerifiedAt: Date | null };
+type ResourceRow = Omit<Resource, "lastVerifiedAt" | "deadline"> & {
+  lastVerifiedAt: Date | null;
+  deadline: Date | null;
+};
 
 function toResource(row: ResourceRow): Resource {
-  return { ...row, lastVerifiedAt: row.lastVerifiedAt ? row.lastVerifiedAt.getTime() : null };
+  return {
+    ...row,
+    lastVerifiedAt: row.lastVerifiedAt ? row.lastVerifiedAt.getTime() : null,
+    deadline: row.deadline ? row.deadline.getTime() : null,
+  };
 }
 
 // Public pages only ever see approved rows. Student submissions land with
@@ -82,6 +91,28 @@ export async function getAllResources(): Promise<Resource[]> {
   } catch (error) {
     console.warn("[StudentStack DB] getAllResources query failed:", error instanceof Error ? error.message : error);
     return MOCK_RESOURCES;
+  }
+}
+
+// /deadlines: every approved resource carrying a deadline, soonest first.
+// The page partitions these into closing-soon / upcoming / past sections.
+export async function getResourcesWithDeadlines(): Promise<Resource[]> {
+  const mockFallback = () =>
+    MOCK_RESOURCES.filter((r) => r.deadline !== null).sort(
+      (a, b) => (a.deadline as number) - (b.deadline as number),
+    );
+  if (!hasDatabase()) return mockFallback();
+  try {
+    const rows = await db
+      .select(resourceColumns)
+      .from(resources)
+      .innerJoin(categories, eq(resources.categoryId, categories.id))
+      .where(and(eq(resources.approved, true), isNotNull(resources.deadline)))
+      .orderBy(resources.deadline);
+    return rows.map(toResource);
+  } catch (error) {
+    console.warn("[StudentStack DB] getResourcesWithDeadlines query failed:", error instanceof Error ? error.message : error);
+    return mockFallback();
   }
 }
 

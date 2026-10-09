@@ -47,6 +47,7 @@ if (process.argv[1] && process.argv[1].endsWith("classify-match.ts")) {
       duration: null,
       status: "active",
       lastVerifiedAt: null,
+      deadline: null,
     },
   ];
 

@@ -1,0 +1,142 @@
+/* /deadlines sections. Lives inside directory.module.css's .root, so the
+   --d-* palette is inherited; .light overrides follow the same pattern. */
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding-bottom: 72px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 6px;
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  color: var(--d-ink);
+}
+
+.count {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--d-muted);
+}
+
+.sectionSub {
+  margin: 0 0 18px;
+  font-size: 0.9375rem;
+  color: var(--d-muted);
+}
+
+.cardWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.deadlineLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--d-muted);
+}
+
+.closingLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--d-ink-secondary);
+}
+
+.closingBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: rgba(251, 146, 60, 0.16);
+  border: 1px solid rgba(251, 146, 60, 0.55);
+  color: #fdba74;
+}
+
+:global(.light) .closingBadge {
+  background: rgba(194, 65, 12, 0.1);
+  border-color: rgba(194, 65, 12, 0.45);
+  color: #c2410c;
+}
+
+.pastDetails {
+  border: 1px solid var(--d-line);
+  border-radius: 14px;
+  padding: 4px 18px 18px;
+  background: var(--d-surface);
+}
+
+.pastDetails:not([open]) {
+  padding-bottom: 4px;
+}
+
+.pastSummary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  color: var(--d-ink);
+  cursor: pointer;
+  list-style: none;
+}
+
+.pastSummary::-webkit-details-marker {
+  display: none;
+}
+
+.pastSummary::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--d-muted);
+  border-bottom: 2px solid var(--d-muted);
+  transform: rotate(-45deg);
+  transition: transform 160ms ease;
+  flex-shrink: 0;
+}
+
+.pastDetails[open] .pastSummary::before {
+  transform: rotate(45deg);
+}
+
+.pastDetails .sectionSub {
+  margin-bottom: 14px;
+}
+
+.empty {
+  margin: 0;
+  padding: 48px 24px;
+  text-align: center;
+  font-size: 1rem;
+  color: var(--d-muted);
+  border: 1px dashed var(--d-line);
+  border-radius: 14px;
+}
+
+.empty a {
+  color: var(--d-purple-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

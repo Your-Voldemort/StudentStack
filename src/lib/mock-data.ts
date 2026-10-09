@@ -33,6 +33,7 @@ export const MOCK_RESOURCES: Resource[] = [
     duration: "while_student",
     status: "active",
     lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24 * 2,
+    deadline: null,
   },
   {
     id: 2,
@@ -54,6 +55,7 @@ export const MOCK_RESOURCES: Resource[] = [
     duration: "one_year",
     status: "active",
     lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24 * 3,
+    deadline: null,
   },
   {
     id: 3,
@@ -75,6 +77,7 @@ export const MOCK_RESOURCES: Resource[] = [
     duration: "one_year",
     status: "active",
     lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24 * 1,
+    deadline: null,
   },
   {
     id: 4,
@@ -96,6 +99,7 @@ export const MOCK_RESOURCES: Resource[] = [
     duration: "one_year",
     status: "active",
     lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24 * 4,
+    deadline: null,
   },
   {
     id: 5,
@@ -117,6 +121,7 @@ export const MOCK_RESOURCES: Resource[] = [
     duration: "while_student",
     status: "active",
     lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24 * 4,
+    deadline: Date.now() - 12 * 86_400_000,
   },
   {
     id: 6,
@@ -138,6 +143,7 @@ export const MOCK_RESOURCES: Resource[] = [
     duration: "one_year",
     status: "active",
     lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24 * 4,
+    deadline: null,
   },
   {
     id: 7,
@@ -159,6 +165,7 @@ export const MOCK_RESOURCES: Resource[] = [
     duration: "while_student",
     status: "active",
     lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24 * 5,
+    deadline: null,
   },
   {
     id: 8,
@@ -180,6 +187,7 @@ export const MOCK_RESOURCES: Resource[] = [
     duration: "one_year",
     status: "active",
     lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24 * 2,
+    deadline: Date.now() + 40 * 86_400_000,
   },
   {
     id: 9,
@@ -201,6 +209,7 @@ export const MOCK_RESOURCES: Resource[] = [
     duration: "one_year",
     status: "active",
     lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24 * 6,
+    deadline: Date.now() + 5 * 86_400_000,
   },
   {
     id: 10,
@@ -222,6 +231,7 @@ export const MOCK_RESOURCES: Resource[] = [
     duration: "one_year",
     status: "active",
     lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24 * 3,
+    deadline: null,
   },
   {
     id: 11,
@@ -243,6 +253,7 @@ export const MOCK_RESOURCES: Resource[] = [
     duration: "one_year",
     status: "active",
     lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24 * 4,
+    deadline: null,
   },
   {
     id: 12,
@@ -264,5 +275,6 @@ export const MOCK_RESOURCES: Resource[] = [
     duration: "while_student",
     status: "active",
     lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24 * 2,
+    deadline: null,
   },
 ];
