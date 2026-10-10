@@ -1,6 +1,9 @@
 import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { MOCK_CATEGORIES, MOCK_RESOURCES } from "./mock-data";
+import { normalizePagination, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "./pagination";
+
+export { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE };
 
 function hasDatabase(): boolean {
   return Boolean(process.env.POSTGRES_URL);
@@ -77,8 +80,9 @@ function toResource(row: ResourceRow): Resource {
 
 // Public pages only ever see approved rows. Student submissions land with
 // approved = false and stay invisible until an admin approves them.
-// Directory is small enough (~600 rows) to load in full server-side and
-// filter/search in memory — no need for a paginated query layer yet.
+// The directory page loads everything server-side and filters/searches in
+// memory (fine at ~600 rows); the paginated layer below exists for
+// server-side consumers that can't afford the full table (see #28).
 export async function getAllResources(): Promise<Resource[]> {
   if (!hasDatabase()) return MOCK_RESOURCES;
   try {
@@ -91,6 +95,66 @@ export async function getAllResources(): Promise<Resource[]> {
   } catch (error) {
     console.warn("[StudentStack DB] getAllResources query failed:", error instanceof Error ? error.message : error);
     return MOCK_RESOURCES;
+  }
+}
+
+// Server-side pagination, offset-based (Option A from #28: simpler than
+// cursor pagination, and fine at the current dataset size). Rows are
+// ordered by id ascending so pages are stable across requests. Only
+// approved rows are visible. Falls back to mock data when no database is
+// configured, mirroring getAllResources.
+export type PaginatedResources = {
+  resources: Resource[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+export async function getResourcesPaginated(
+  page: number = 1,
+  limit: number = DEFAULT_PAGE_SIZE,
+): Promise<PaginatedResources> {
+  const { page: safePage, limit: safeLimit } = normalizePagination(page, limit);
+  const offset = (safePage - 1) * safeLimit;
+
+  const finish = (items: Resource[], total: number): PaginatedResources => ({
+    resources: items,
+    total,
+    page: safePage,
+    limit: safeLimit,
+    totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+  });
+
+  const mockResult = () => {
+    const sorted = [...MOCK_RESOURCES].sort((a, b) => a.id - b.id);
+    return finish(sorted.slice(offset, offset + safeLimit), sorted.length);
+  };
+
+  if (!hasDatabase()) return mockResult();
+  try {
+    const [countRow, rows] = await Promise.all([
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(resources)
+        .where(eq(resources.approved, true)),
+      db
+        .select(resourceColumns)
+        .from(resources)
+        .innerJoin(categories, eq(resources.categoryId, categories.id))
+        .where(eq(resources.approved, true))
+        .orderBy(resources.id)
+        .limit(safeLimit)
+        .offset(offset),
+    ]);
+    const total = Number(countRow[0]?.count ?? 0);
+    return finish(
+      rows.map(toResource),
+      total,
+    );
+  } catch (error) {
+    console.warn("[StudentStack DB] getResourcesPaginated query failed:", error instanceof Error ? error.message : error);
+    return mockResult();
   }
 }
 
