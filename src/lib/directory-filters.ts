@@ -136,31 +136,66 @@ export function countByRegion(resources: Resource[]): { in: number; global: numb
 
 export type SortOption = "relevance" | "verified" | "name-asc" | "name-desc" | "free-first";
 
+export type LinkStatusRank = "active" | "broken" | "expired";
+
+// Issue #76: broken links sink below healthy ones everywhere they are
+// listed; expired sits at the very bottom.
+const LINK_STATUS_RANK: Record<LinkStatusRank, number> = {
+  active: 0,
+  broken: 1,
+  expired: 2,
+};
+
+export function statusRank(status: Resource["status"]): number {
+  return LINK_STATUS_RANK[status] ?? 0;
+}
+
+// Stable demotion pass: active first, broken after, expired last — the
+// within-status order (relevance, name, ...) is preserved.
+export function demoteBroken(resources: Resource[]): Resource[] {
+  return [...resources].sort((a, b) => statusRank(a.status) - statusRank(b.status));
+}
+
 export function sortResources(
   resources: Resource[],
   sort: SortOption,
   hasSearchQuery: boolean,
 ): Resource[] {
   if (sort === "relevance" && hasSearchQuery) {
-    // Keep search relevance order
-    return resources;
+    // Keep search relevance order, but still demote broken links below
+    // active ones (issue #76). Array.prototype.sort is stable, so relevance
+    // order within each status is preserved.
+    return demoteBroken(resources);
   }
+  // Issue #76: `status === "broken"` always sorts after `status ===
+  // "active"` (and `expired` at the very bottom), in every sort mode —
+  // so it is the primary key and each mode's comparator is the tiebreak.
+  const byStatus = (a: Resource, b: Resource) => statusRank(a.status) - statusRank(b.status);
   const copy = [...resources];
   switch (sort) {
     case "verified":
-      return copy.sort((a, b) => (b.lastVerifiedAt ?? 0) - (a.lastVerifiedAt ?? 0));
+      return copy.sort(
+        (a, b) => byStatus(a, b) || (b.lastVerifiedAt ?? 0) - (a.lastVerifiedAt ?? 0),
+      );
     case "name-asc":
-      return copy.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+      return copy.sort(
+        (a, b) => byStatus(a, b) || a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      );
     case "name-desc":
-      return copy.sort((a, b) => b.name.localeCompare(a.name, undefined, { sensitivity: "base" }));
+      return copy.sort(
+        (a, b) => byStatus(a, b) || b.name.localeCompare(a.name, undefined, { sensitivity: "base" }),
+      );
     case "free-first":
       return copy.sort((a, b) => {
-        if (a.costType === "free" && b.costType !== "free") return -1;
-        if (a.costType !== "free" && b.costType === "free") return 1;
-        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+        const freeRank = (r: Resource) => (r.costType === "free" ? 0 : 1);
+        return (
+          byStatus(a, b) ||
+          freeRank(a) - freeRank(b) ||
+          a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+        );
       });
     default:
-      return copy;
+      return demoteBroken(resources);
   }
 }
 

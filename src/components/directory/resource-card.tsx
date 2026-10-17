@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import type { Resource } from "@/lib/resources";
 import { relativeTime } from "@/lib/format";
+import { ReportBrokenLink } from "./report-broken-link";
 import { GraduationCap, CheckCircle2, ArrowUpRight, Bookmark, Link as LinkIcon, Check } from "lucide-react";
 import styles from "./directory.module.css";
 
@@ -162,6 +163,7 @@ export function ResourceCard({
               Link copied!
             </span>
           )}
+          <ReportBrokenLink resource={resource} className={styles.copyLinkBtn} />
           <button type="button" className={styles.bookmark} aria-label={`Save ${resource.name}`}>
             <Bookmark className="size-4" />
           </button>

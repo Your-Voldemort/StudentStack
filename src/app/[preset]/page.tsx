@@ -28,7 +28,9 @@ export async function generateMetadata({
   const preset = getPreset(slug);
   if (!preset) return {};
   const resources = await getAllResources();
-  const fuse = new Fuse(resources, {
+  // Issue #76: preset pages exclude non-active resources from their counts.
+  const activeResources = resources.filter((r) => r.status === "active");
+  const fuse = new Fuse(activeResources, {
     keys: ["name", "tagline", "description", "tags"],
     threshold: 0.4,
     ignoreLocation: true,
@@ -54,8 +56,12 @@ export default async function PresetPage({
     getCategories(),
     getResourceCount(),
   ]);
-  const allTags = getAllTags(resources);
-  const count = resources.length || total;
+  // Issue #76: preset landing pages only ever show healthy offers — broken
+  // and expired resources are excluded, mirroring how getResourcesBySlugs
+  // already restricts homepage featured items to status = 'active'.
+  const activeResources = resources.filter((r) => r.status === "active");
+  const allTags = getAllTags(activeResources);
+  const count = activeResources.length || total;
 
   return (
     <div className={`${passFontVariables} ${homeStyles.root}`}>
@@ -106,7 +112,7 @@ export default async function PresetPage({
           </section>
           <Suspense fallback={<DirectorySkeleton />}>
             <DirectoryClient
-              resources={resources}
+              resources={activeResources}
               categories={categories}
               allTags={allTags}
               initialFilters={preset.filters}

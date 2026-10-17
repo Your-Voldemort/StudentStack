@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import type { Resource } from "@/lib/resources";
 import { relativeTime } from "@/lib/format";
+import { ReportBrokenLink } from "./report-broken-link";
 
 const VERIFICATION_LABELS: Record<string, string> = {
   none: "No verification required",
@@ -131,6 +132,7 @@ export function ResourceDetailDialog({
 
           {/* Action button */}
           <div className="pt-2 flex justify-end gap-2">
+            <ReportBrokenLink resource={resource} textButton />
             <Button variant="ghost" asChild>
               <Link href={`/r/${resource.slug}`}>Open full page</Link>
             </Button>

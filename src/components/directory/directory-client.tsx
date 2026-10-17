@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Fuse from "fuse.js";
 import { X, LayoutGrid, List, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { applyFilters, countByCategory, countByKind, countByRegion, topTags, type DirectoryFilters, type RegionFilter } from "@/lib/directory-filters";
+import { applyFilters, countByCategory, countByKind, countByRegion, demoteBroken, statusRank, topTags, type DirectoryFilters, type RegionFilter } from "@/lib/directory-filters";
 import type { Category, Resource, ResourceKind } from "@/lib/resources";
 import { FilterPanel } from "./filter-panel";
 import { MobileFilterSheet } from "./mobile-filter-sheet";
@@ -254,24 +254,35 @@ const searchInputRef = useRef<HTMLInputElement>(null);
 
   const filtered = useMemo(() => {
     const result = applyFilters(resources, filters, fuse);
+    // Issue #76: broken links always sort below active ones and expired
+    // sits at the very bottom, regardless of the chosen sort mode.
+    const byStatus = (a: Resource, b: Resource) => statusRank(a.status) - statusRank(b.status);
     if (sort === "name") {
-      return [...result].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+      return [...result].sort(
+        (a, b) => byStatus(a, b) || a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      );
     }
     if (sort === "recent") {
       return [...result].sort((a, b) => {
         const aTime = a.lastVerifiedAt ?? 0;
         const bTime = b.lastVerifiedAt ?? 0;
-        return bTime - aTime;
+        return byStatus(a, b) || bTime - aTime;
       });
     }
     if (sort === "free-first") {
       return [...result].sort((a, b) => {
-        if (a.costType === "free" && b.costType !== "free") return -1;
-        if (a.costType !== "free" && b.costType === "free") return 1;
-        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+        const freeRank = (r: Resource) => (r.costType === "free" ? 0 : 1);
+        return (
+          byStatus(a, b) ||
+          freeRank(a) - freeRank(b) ||
+          a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+        );
       });
     }
-    return result;
+    // Default directory ordering (and search relevance): demote broken
+    // links and expired offers below active ones (issue #76). Stable sort
+    // keeps relevance order within each status group.
+    return demoteBroken(result);
   }, [resources, filters, fuse, sort]);
 
   const categoryCounts = useMemo(

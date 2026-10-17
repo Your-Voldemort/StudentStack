@@ -64,6 +64,10 @@ export const resources = pgTable("resources", {
     .notNull()
     .default("active"),
   lastVerifiedAt: timestamp("last_verified_at"),
+  // Consecutive failed weekly link-health checks (issue #76). A resource
+  // flips to 'broken' on its first failure and to 'expired' once it reaches
+  // 2 consecutive failures; a passing check resets it to 0 ('active').
+  consecutiveFailures: integer("consecutive_failures").notNull().default(0),
   clickCount: integer("click_count").notNull().default(0),
   submittedBy: text("submitted_by"),
   approved: boolean("approved").notNull().default(true),

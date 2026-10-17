@@ -6,7 +6,9 @@ import {
   countByCostType,
   countByKind,
   countByRegion,
+  demoteBroken,
   resourceKind,
+  statusRank,
   topTags,
   sortResources,
   worksInIndia,
@@ -508,6 +510,70 @@ describe("sortResources", () => {
   it("returns copy when default or unrecognized sort option", () => {
     const sorted = sortResources(sampleResources, "unknown" as unknown as SortOption, false);
     expect(sorted).toEqual(sampleResources);
+  });
+});
+
+describe("statusRank and demoteBroken (issue #76)", () => {
+  it("ranks active < broken < expired", () => {
+    expect(statusRank("active")).toBeLessThan(statusRank("broken"));
+    expect(statusRank("broken")).toBeLessThan(statusRank("expired"));
+  });
+
+  it("groups broken after active and expired last, keeping relative order within each group", () => {
+    const mixed: Resource[] = [
+      { ...sampleResources[0], status: "broken" }, // tool-in
+      { ...sampleResources[1], status: "expired" }, // tool-global
+      { ...sampleResources[2], status: "active" }, // tool-design-global
+      { ...sampleResources[3], status: "broken" }, // tool-ai-in
+      { ...sampleResources[4], status: "active" }, // tool-us-only
+    ];
+    const demoted = demoteBroken(mixed);
+    expect(demoted.map((r) => r.slug)).toEqual([
+      "tool-design-global",
+      "tool-us-only",
+      "tool-in",
+      "tool-ai-in",
+      "tool-global",
+    ]);
+  });
+
+  it("does not mutate the input array", () => {
+    const mixed: Resource[] = [
+      { ...sampleResources[0], status: "broken" },
+      { ...sampleResources[1], status: "active" },
+    ];
+    demoteBroken(mixed);
+    expect(mixed[0].status).toBe("broken");
+  });
+});
+
+describe("sortResources demotes broken links in every sort mode (issue #76)", () => {
+  const mixed: Resource[] = [
+    { ...sampleResources[0], status: "broken" }, // Alpha Tool (broken)
+    { ...sampleResources[3], status: "active" }, // Delta AI (active)
+    { ...sampleResources[4], status: "expired" }, // Epsilon US (expired)
+  ];
+
+  const modes: SortOption[] = ["verified", "name-asc", "name-desc", "free-first"];
+
+  it.each(modes)("sorts broken below active and expired last in '%s' mode", (mode) => {
+    const sorted = sortResources(mixed, mode, false);
+    expect(sorted.map((r) => r.status)).toEqual(["active", "broken", "expired"]);
+  });
+
+  it("sorts broken below active in search relevance order too", () => {
+    const sorted = sortResources(mixed, "relevance", true);
+    expect(sorted.map((r) => r.status)).toEqual(["active", "broken", "expired"]);
+  });
+
+  it("still orders alphabetically within each status group", () => {
+    const mixedNames: Resource[] = [
+      { ...sampleResources[0], status: "active", name: "Zeta" },
+      { ...sampleResources[3], status: "active", name: "Alpha" },
+      { ...sampleResources[4], status: "broken", name: "Beta" },
+    ];
+    const sorted = sortResources(mixedNames, "name-asc", false);
+    expect(sorted.map((r) => r.name)).toEqual(["Alpha", "Zeta", "Beta"]);
   });
 });
 

@@ -1,7 +1,7 @@
 import { eq, and, isNotNull, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db, schema } from "@/db";
-import { checkUrl, classifyCheck, runWithConcurrency } from "@/lib/link-health";
+import { checkUrl, resolveStatusTransition, runWithConcurrency } from "@/lib/link-health";
 
 export const maxDuration = 270;
 
@@ -16,7 +16,12 @@ export async function GET(request: Request) {
   // 'expired' is an admin decision, not something the cron should try to
   // resurrect.
   const targets = await db
-    .select({ id: schema.resources.id, url: schema.resources.url })
+    .select({
+      id: schema.resources.id,
+      url: schema.resources.url,
+      status: schema.resources.status,
+      consecutiveFailures: schema.resources.consecutiveFailures,
+    })
     .from(schema.resources)
     .where(
       and(
@@ -29,17 +34,29 @@ export async function GET(request: Request) {
 
   let broken = 0;
   let active = 0;
+  let expired = 0;
   const now = new Date();
 
   await runWithConcurrency(targets, 25, async (target) => {
     const outcome = await checkUrl(target.url!);
-    const status = classifyCheck(outcome);
-    if (status === "broken") broken++;
+    // Issue #76: first failure → 'broken'; 2 consecutive failures →
+    // 'expired'; a passing check heals back to 'active'.
+    const transition = resolveStatusTransition({
+      previousStatus: target.status,
+      consecutiveFailures: target.consecutiveFailures,
+      outcome,
+    });
+    if (transition.status === "broken") broken++;
+    else if (transition.status === "expired") expired++;
     else active++;
 
     await db
       .update(schema.resources)
-      .set({ status, lastVerifiedAt: now })
+      .set({
+        status: transition.status,
+        lastVerifiedAt: now,
+        consecutiveFailures: transition.consecutiveFailures,
+      })
       .where(eq(schema.resources.id, target.id));
   });
 
@@ -50,7 +67,7 @@ export async function GET(request: Request) {
   revalidatePath("/");
   revalidatePath("/directory");
 
-  const summary = { checked: targets.length, active, broken, checkedAt: now.toISOString() };
+  const summary = { checked: targets.length, active, broken, expired, checkedAt: now.toISOString() };
   console.log("link-health run:", summary);
   return Response.json(summary);
 }

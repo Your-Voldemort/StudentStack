@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { classifyCheck, checkUrl, runWithConcurrency } from '@/lib/link-health';
+import { classifyCheck, checkUrl, runWithConcurrency, resolveStatusTransition } from '@/lib/link-health';
 
 const mockAssertPublicUrl = vi.hoisted(() => vi.fn());
 
@@ -234,6 +234,54 @@ describe('link-health.ts', () => {
       expect(result).toEqual({ ok: false });
       // initial request + MAX_REDIRECTS (5) redirect hops = 6 fetches
       expect(mockFetch).toHaveBeenCalledTimes(6);
+    });
+  });
+
+  describe('resolveStatusTransition (issue #76)', () => {
+    it('marks a healthy resource broken on its first failed check', () => {
+      const t = resolveStatusTransition({
+        previousStatus: 'active',
+        consecutiveFailures: 0,
+        outcome: { ok: false },
+      });
+      expect(t).toEqual({ status: 'broken', consecutiveFailures: 1 });
+    });
+
+    it('expires a resource after two consecutive failed checks', () => {
+      const t = resolveStatusTransition({
+        previousStatus: 'broken',
+        consecutiveFailures: 1,
+        outcome: { ok: false },
+      });
+      expect(t).toEqual({ status: 'expired', consecutiveFailures: 2 });
+    });
+
+    it('keeps counting past two failures without flipping back', () => {
+      const t = resolveStatusTransition({
+        previousStatus: 'expired',
+        consecutiveFailures: 2,
+        outcome: { ok: false },
+      });
+      expect(t.status).toBe('expired');
+      expect(t.consecutiveFailures).toBe(3);
+    });
+
+    it('heals a broken resource back to active on a successful check', () => {
+      const t = resolveStatusTransition({
+        previousStatus: 'broken',
+        consecutiveFailures: 1,
+        outcome: { ok: true },
+      });
+      expect(t).toEqual({ status: 'active', consecutiveFailures: 0 });
+    });
+
+    it('resets the failure counter on success even for active resources', () => {
+      const t = resolveStatusTransition({
+        previousStatus: 'active',
+        consecutiveFailures: 0,
+        outcome: { ok: true },
+      });
+      expect(t).toEqual({ status: 'active', consecutiveFailures: 0 });
     });
   });
 

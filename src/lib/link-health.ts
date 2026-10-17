@@ -13,6 +13,32 @@ export function classifyCheck(outcome: CheckOutcome): "active" | "broken" {
   return outcome.ok ? "active" : "broken";
 }
 
+export type LinkHealthStatus = "active" | "broken" | "expired";
+
+export type StatusTransition = {
+  status: LinkHealthStatus;
+  consecutiveFailures: number;
+};
+
+// Pure transition for the weekly cron (issue #76): a passing check heals the
+// resource back to 'active'; a failed check increments the consecutive
+// failure counter, flipping to 'broken' on the first failure and to
+// 'expired' once 2 consecutive failures are reached.
+export function resolveStatusTransition(args: {
+  previousStatus: LinkHealthStatus;
+  consecutiveFailures: number;
+  outcome: CheckOutcome;
+}): StatusTransition {
+  if (args.outcome.ok) {
+    return { status: "active", consecutiveFailures: 0 };
+  }
+  const consecutiveFailures = (args.consecutiveFailures ?? 0) + 1;
+  return {
+    status: consecutiveFailures >= 2 ? "expired" : "broken",
+    consecutiveFailures,
+  };
+}
+
 export async function checkUrl(url: string, timeoutMs = 8000): Promise<CheckOutcome> {
   // SSRF: refuse to fetch anything that doesn't resolve to a public IP.
   try {
@@ -91,6 +117,15 @@ export async function runWithConcurrency<T>(
 if (process.argv[1] && process.argv[1].endsWith("link-health.ts")) {
   console.assert(classifyCheck({ ok: true }) === "active", "ok result should classify as active");
   console.assert(classifyCheck({ ok: false }) === "broken", "failed result should classify as broken");
+
+  // Issue #76: first failure → broken, second consecutive → expired,
+  // success → active with a reset counter.
+  const first = resolveStatusTransition({ previousStatus: "active", consecutiveFailures: 0, outcome: { ok: false } });
+  console.assert(first.status === "broken" && first.consecutiveFailures === 1, "first failure should mark broken");
+  const second = resolveStatusTransition({ previousStatus: "broken", consecutiveFailures: 1, outcome: { ok: false } });
+  console.assert(second.status === "expired" && second.consecutiveFailures === 2, "second consecutive failure should expire");
+  const healed = resolveStatusTransition({ previousStatus: "broken", consecutiveFailures: 1, outcome: { ok: true } });
+  console.assert(healed.status === "active" && healed.consecutiveFailures === 0, "success should reset to active");
 
   const seen: number[] = [];
   runWithConcurrency([1, 2, 3, 4, 5], 2, async (n) => {
