@@ -4,6 +4,23 @@ import type { Resource } from "./resources";
 // soon" treatment on /deadlines (issue #32 acceptance criteria).
 export const CLOSING_SOON_DAYS = 14;
 
+// Urgency tiers for /deadlines card coloring (issue #80, inspired by
+// Brabble.ai): ≤3 days critical, ≤7 days urgent, ≤14 days closing soon,
+// anything further out upcoming.
+export const CRITICAL_DAYS = 3;
+export const URGENT_DAYS = 7;
+
+export type UrgencyTier = "critical" | "urgent" | "closing-soon" | "upcoming" | "past";
+
+export function urgencyTier(deadlineMs: number, nowMs: number = Date.now()): UrgencyTier {
+  if (isPastDeadline(deadlineMs, nowMs)) return "past";
+  const daysLeft = (deadlineMs - nowMs) / DAY_MS;
+  if (daysLeft <= CRITICAL_DAYS) return "critical";
+  if (daysLeft <= URGENT_DAYS) return "urgent";
+  if (daysLeft <= CLOSING_SOON_DAYS) return "closing-soon";
+  return "upcoming";
+}
+
 const DAY_MS = 86_400_000;
 
 export function isPastDeadline(deadlineMs: number, nowMs: number = Date.now()): boolean {

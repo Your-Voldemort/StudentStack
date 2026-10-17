@@ -132,6 +132,9 @@ export const MOCK_RESOURCES: Resource[] = [
     status: "active",
     lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24 * 4,
     deadline: Date.now() - 12 * 86_400_000,
+    amount: "Up to 50% off",
+    provider: "Spotify",
+    recurrence: "Jan",
   },
   {
     id: 6,
@@ -204,6 +207,8 @@ export const MOCK_RESOURCES: Resource[] = [
     status: "active",
     lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24 * 2,
     deadline: Date.now() + 40 * 86_400_000,
+    amount: "Free Pro plan",
+    provider: "Vercel",
   },
   {
     id: 9,
@@ -228,6 +233,8 @@ export const MOCK_RESOURCES: Resource[] = [
     status: "active",
     lastVerifiedAt: Date.now() - 1000 * 60 * 60 * 24 * 6,
     deadline: Date.now() + 5 * 86_400_000,
+    amount: "$200 in credits",
+    provider: "DigitalOcean",
   },
   {
     id: 10,

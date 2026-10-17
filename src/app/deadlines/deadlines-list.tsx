@@ -9,22 +9,49 @@ import {
   formatDeadline,
   isClosingSoon,
   relativeDeadline,
+  urgencyTier,
+  type UrgencyTier,
 } from "@/lib/deadlines";
 import dirStyles from "@/components/directory/directory.module.css";
 import styles from "./deadlines.module.css";
 
-function DeadlineCard({ resource }: { resource: Resource }) {
+const URGENCY_CLASS: Record<UrgencyTier, string> = {
+  critical: styles.urgencyCritical,
+  urgent: styles.urgencyUrgent,
+  "closing-soon": styles.urgencyClosingSoon,
+  upcoming: styles.urgencyUpcoming,
+  past: styles.urgencyPast,
+};
+
+const URGENCY_BADGE: Partial<Record<UrgencyTier, string>> = {
+  critical: "Critical",
+  urgent: "Urgent",
+  "closing-soon": "Closing soon",
+};
+
+function DeadlineCard({ resource, showRecurrence }: { resource: Resource; showRecurrence?: boolean }) {
   const router = useRouter();
   const closingSoon = resource.deadline !== null && isClosingSoon(resource.deadline);
+  const tier = resource.deadline !== null ? urgencyTier(resource.deadline) : "upcoming";
+  const badge = URGENCY_BADGE[tier];
 
   return (
-    <div className={styles.cardWrap}>
+    <div className={`${styles.cardWrap} ${URGENCY_CLASS[tier]}`}>
       {resource.deadline !== null && (
         <p className={closingSoon ? styles.closingLine : styles.deadlineLine}>
-          {closingSoon && <span className={styles.closingBadge}>Closing soon</span>}
+          {badge && <span className={styles.closingBadge}>{badge}</span>}
           <span>
             Deadline {formatDeadline(resource.deadline)} · {relativeDeadline(resource.deadline)}
           </span>
+          {showRecurrence && resource.recurrence && (
+            <span className={styles.recurrenceBadge}>Opens again ~{resource.recurrence}</span>
+          )}
+        </p>
+      )}
+      {(resource.amount || resource.provider) && (
+        <p className={styles.metaLine}>
+          {resource.amount && <span className={styles.amount}>{resource.amount}</span>}
+          {resource.provider && <span>by {resource.provider}</span>}
         </p>
       )}
       <ResourceCard
@@ -40,11 +67,13 @@ function DeadlineSection({
   title,
   subcopy,
   resources,
+  showRecurrence,
 }: {
   id: string;
   title: string;
   subcopy?: string;
   resources: Resource[];
+  showRecurrence?: boolean;
 }) {
   if (resources.length === 0) return null;
   return (
@@ -55,7 +84,7 @@ function DeadlineSection({
       {subcopy && <p className={styles.sectionSub}>{subcopy}</p>}
       <div className={dirStyles.grid}>
         {resources.map((resource) => (
-          <DeadlineCard key={resource.id} resource={resource} />
+          <DeadlineCard key={resource.id} resource={resource} showRecurrence={showRecurrence} />
         ))}
       </div>
     </section>
@@ -99,7 +128,7 @@ export function DeadlinesList({
           </p>
           <div className={dirStyles.grid}>
             {past.map((resource) => (
-              <DeadlineCard key={resource.id} resource={resource} />
+              <DeadlineCard key={resource.id} resource={resource} showRecurrence />
             ))}
           </div>
         </details>

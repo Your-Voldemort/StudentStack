@@ -140,3 +140,87 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* ---------- Feed subscribe CTAs (issue #80) ---------- */
+.feedCtas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.feedBtn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--d-line);
+  color: var(--d-ink-secondary);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: border-color 140ms ease, color 140ms ease, background-color 140ms ease;
+}
+
+.feedBtn:hover {
+  border-color: var(--d-purple-soft);
+  color: var(--d-purple-ink);
+  background: color-mix(in srgb, var(--d-purple-soft) 12%, transparent);
+}
+
+/* ---------- Urgency tiers (issue #80, inspired by Brabble.ai) ----------
+   Each card gets a tier class on .cardWrap; the left border is the
+   color signal so the layout doesn't shift. */
+.urgencyCritical {
+  border-left: 3px solid #ef4444;
+  padding-left: 12px;
+}
+
+.urgencyUrgent {
+  border-left: 3px solid #f97316;
+  padding-left: 12px;
+}
+
+.urgencyClosingSoon {
+  border-left: 3px solid #eab308;
+  padding-left: 12px;
+}
+
+.urgencyUpcoming {
+  border-left: 3px solid transparent;
+  padding-left: 12px;
+}
+
+.urgencyPast {
+  opacity: 0.85;
+}
+
+/* Amount / provider line under the deadline line. */
+.metaLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--d-muted);
+}
+
+.amount {
+  font-weight: 700;
+  color: var(--d-ink-secondary);
+}
+
+/* Recurrence badge on past-cycle cards, e.g. "Opens again ~Feb". */
+.recurrenceBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--d-purple-soft) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--d-purple-soft) 55%, transparent);
+  color: var(--d-purple-ink);
+}

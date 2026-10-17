@@ -35,6 +35,13 @@ export type Resource = {
   creditCardRequired: boolean | null;
   duration: "one_time" | "one_year" | "while_student" | "lifetime" | null;
   deadline: number | null;
+  // Phase 1 deadline display fields (issue #80). Optional — most rows
+  // predate them. `amount` is the prize/value line ("$5,000", "Full tuition"),
+  // `provider` the organization behind the offer, and `recurrence` the cycle
+  // label shown on past items ("Feb" → "Opens again ~Feb").
+  amount?: string;
+  provider?: string;
+  recurrence?: string;
   status: "active" | "expired" | "broken";
   lastVerifiedAt: number | null;
 };

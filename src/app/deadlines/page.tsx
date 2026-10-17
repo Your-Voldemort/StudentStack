@@ -6,6 +6,7 @@ import { partitionDeadlines } from "@/lib/deadlines";
 import { DeadlinesList } from "./deadlines-list";
 import dirStyles from "@/components/directory/directory.module.css";
 import homeStyles from "@/components/home/brand.module.css";
+import styles from "./deadlines.module.css";
 
 export const metadata: Metadata = {
   title: "Deadlines — StudentStack",
@@ -38,6 +39,14 @@ export default async function DeadlinesPage() {
             <p className={dirStyles.subcopy}>
               Scholarships, internships, and limited-time student offers with application deadlines.
             </p>
+            <div className={styles.feedCtas}>
+              <a className={styles.feedBtn} href="/deadlines.ics" download>
+                Subscribe to Calendar (.ics)
+              </a>
+              <a className={styles.feedBtn} href="/deadlines.rss">
+                RSS Feed (.rss)
+              </a>
+            </div>
           </section>
           <DeadlinesList closingSoon={closingSoon} upcoming={upcoming} past={past} />
         </main>
