@@ -56,9 +56,9 @@ export type Resource = {
   // predate them. `amount` is the prize/value line ("$5,000", "Full tuition"),
   // `provider` the organization behind the offer, and `recurrence` the cycle
   // label shown on past items ("Feb" → "Opens again ~Feb").
-  amount?: string;
-  provider?: string;
-  recurrence?: string;
+  amount?: string | null;
+  provider?: string | null;
+  recurrence?: string | null;
   status: "active" | "expired" | "broken";
   lastVerifiedAt: number | null;
 };
