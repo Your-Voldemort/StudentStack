@@ -50,6 +50,8 @@ export type Resource = {
   creditCardRequired: boolean | null;
   duration: "one_time" | "one_year" | "while_student" | "lifetime" | null;
   deadline: number | null;
+  // Phase 1 opportunity schema (issue #78): when applications open.
+  opensAt?: number | null;
   // Phase 1 deadline display fields (issue #80). Optional — most rows
   // predate them. `amount` is the prize/value line ("$5,000", "Full tuition"),
   // `provider` the organization behind the offer, and `recurrence` the cycle
@@ -89,6 +91,11 @@ const resourceColumns = {
   creditCardRequired: resources.creditCardRequired,
   duration: resources.duration,
   deadline: resources.deadline,
+  kind: resources.kind,
+  opensAt: resources.opensAt,
+  recurrence: resources.recurrence,
+  amount: resources.amount,
+  provider: resources.provider,
   status: resources.status,
   lastVerifiedAt: resources.lastVerifiedAt,
   categorySlug: categories.slug,
@@ -96,9 +103,10 @@ const resourceColumns = {
   categoryIcon: categories.icon,
 };
 
-type ResourceRow = Omit<Resource, "lastVerifiedAt" | "deadline"> & {
+type ResourceRow = Omit<Resource, "lastVerifiedAt" | "deadline" | "opensAt"> & {
   lastVerifiedAt: Date | null;
   deadline: Date | null;
+  opensAt: Date | null;
 };
 
 function toResource(row: ResourceRow): Resource {
@@ -106,6 +114,7 @@ function toResource(row: ResourceRow): Resource {
     ...row,
     lastVerifiedAt: row.lastVerifiedAt ? row.lastVerifiedAt.getTime() : null,
     deadline: row.deadline ? row.deadline.getTime() : null,
+    opensAt: row.opensAt ? row.opensAt.getTime() : null,
   };
 }
 

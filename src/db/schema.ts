@@ -60,6 +60,19 @@ export const resources = pgTable("resources", {
     enum: ["one_time", "one_year", "while_student", "lifetime"],
   }),
   deadline: timestamp("deadline"),
+  // Phase 1 opportunity fields (issue #78). `kind` is orthogonal to
+  // categories; timeline/funding metadata powers scholarship, fellowship,
+  // internship, mentorship and program rows. Existing perk rows default
+  // to "perk", so no migration risk.
+  kind: text("kind", {
+    enum: ["perk", "scholarship", "fellowship", "internship", "mentorship", "program"],
+  })
+    .notNull()
+    .default("perk"),
+  opensAt: timestamp("opens_at"),
+  recurrence: text("recurrence"),
+  amount: text("amount"),
+  provider: text("provider"),
   status: text("status", { enum: ["active", "expired", "broken"] })
     .notNull()
     .default("active"),
@@ -126,6 +139,15 @@ export const ingestionCandidates = pgTable("ingestion_candidates", {
   costType: text("cost_type", {
     enum: ["free", "discount", "stipend", "scholarship", "credits", "trial"],
   }),
+  // Opportunity fields mirror `resources` (issue #78); nullable here
+  // because candidates are raw imports awaiting review.
+  kind: text("kind", {
+    enum: ["perk", "scholarship", "fellowship", "internship", "mentorship", "program"],
+  }),
+  opensAt: timestamp("opens_at"),
+  recurrence: text("recurrence"),
+  amount: text("amount"),
+  provider: text("provider"),
   matchType: text("match_type", { enum: ["new", "possible_duplicate"] }).notNull(),
   matchedResourceId: integer("matched_resource_id").references(() => resources.id),
   status: text("status", { enum: ["pending", "approved", "rejected"] })
