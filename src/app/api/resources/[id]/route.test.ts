@@ -38,7 +38,7 @@ const canned: Resource = {
 
 function get(slug: string) {
   return GET(new Request(`http://localhost/api/resources/${slug}`), {
-    params: Promise.resolve({ slug }),
+    params: Promise.resolve({ id: slug }),
   });
 }
 
