@@ -306,15 +306,20 @@ export async function getResourcesForSlugs(slugs: string[]): Promise<Resource[]>
 // resources that carry a deadline.
 export async function getBookmarkedDeadlines(userId: string): Promise<Resource[]> {
   if (!hasDatabase()) return [];
-  const bookmarks = schema.bookmarks;
-  const rows = await db
-    .select(resourceColumns)
-    .from(bookmarks)
-    .innerJoin(resources, eq(bookmarks.resourceId, resources.id))
-    .innerJoin(categories, eq(resources.categoryId, categories.id))
-    .where(and(eq(bookmarks.userId, userId), eq(resources.approved, true), isNotNull(resources.deadline)))
-    .orderBy(resources.deadline);
-  return rows.map(toResource);
+  try {
+    const bookmarks = schema.bookmarks;
+    const rows = await db
+      .select(resourceColumns)
+      .from(bookmarks)
+      .innerJoin(resources, eq(bookmarks.resourceId, resources.id))
+      .innerJoin(categories, eq(resources.categoryId, categories.id))
+      .where(and(eq(bookmarks.userId, userId), eq(resources.approved, true), isNotNull(resources.deadline)))
+      .orderBy(resources.deadline);
+    return rows.map(toResource);
+  } catch (error) {
+    console.warn("[StudentStack DB] getBookmarkedDeadlines query failed:", error instanceof Error ? error.message : error);
+    return [];
+  }
 }
 
 // Sitemap: every approved resource slug plus its last update, so
@@ -435,7 +440,7 @@ export async function getResourceCount(): Promise<number> {
       .select({ count: sql<number>`count(*)` })
       .from(resources)
       .where(eq(resources.approved, true));
-    return Number(row.count);
+    return Number(row?.count ?? 0);
   } catch (error) {
     console.warn("[StudentStack DB] getResourceCount query failed:", error instanceof Error ? error.message : error);
     return MOCK_RESOURCES.length;
@@ -462,9 +467,9 @@ export async function getHomeStats(): Promise<{ live: number; total: number; las
       .from(resources)
       .where(eq(resources.approved, true));
     return {
-      live: Number(row.live),
-      total: Number(row.total),
-      lastCheckedAt: row.lastCheckedAt ? new Date(row.lastCheckedAt) : null,
+      live: Number(row?.live ?? 0),
+      total: Number(row?.total ?? 0),
+      lastCheckedAt: row?.lastCheckedAt ? new Date(row.lastCheckedAt) : null,
     };
   } catch (error) {
     console.warn("[StudentStack DB] getHomeStats query failed:", error instanceof Error ? error.message : error);
@@ -652,7 +657,7 @@ export async function countPendingByUser(userId: string): Promise<number> {
     .select({ count: sql<number>`count(*)` })
     .from(resources)
     .where(and(eq(resources.submittedBy, userId), eq(resources.approved, false)));
-  return Number(row.count);
+  return Number(row?.count ?? 0);
 }
 
 // Matches on urlMatchKey(): ignores case, protocol, a leading "www.", the

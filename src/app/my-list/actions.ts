@@ -23,10 +23,10 @@ function validResourceId(id: unknown): id is number {
 }
 
 export async function saveBookmark(resourceId: number, status: BookmarkStatus = "interested"): Promise<BookmarkActionResult> {
-  const userId = await currentUserId();
-  if (!userId) return { ok: false, reason: "signed_out" };
-  if (!validResourceId(resourceId) || !isBookmarkStatus(status)) return { ok: false, reason: "invalid" };
   try {
+    const userId = await currentUserId();
+    if (!userId) return { ok: false, reason: "signed_out" };
+    if (!validResourceId(resourceId) || !isBookmarkStatus(status)) return { ok: false, reason: "invalid" };
     if (!(await isApprovedResource(resourceId))) return { ok: false, reason: "invalid" };
     await upsertBookmark(userId, resourceId, status);
   } catch (error) {
@@ -38,10 +38,10 @@ export async function saveBookmark(resourceId: number, status: BookmarkStatus = 
 }
 
 export async function removeBookmark(resourceId: number): Promise<BookmarkActionResult> {
-  const userId = await currentUserId();
-  if (!userId) return { ok: false, reason: "signed_out" };
-  if (!validResourceId(resourceId)) return { ok: false, reason: "invalid" };
   try {
+    const userId = await currentUserId();
+    if (!userId) return { ok: false, reason: "signed_out" };
+    if (!validResourceId(resourceId)) return { ok: false, reason: "invalid" };
     await deleteBookmark(userId, resourceId);
   } catch (error) {
     console.warn("[bookmarks] remove failed:", error instanceof Error ? error.message : error);

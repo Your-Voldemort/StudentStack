@@ -147,6 +147,7 @@ export const profiles = pgTable("profiles", {
     country?: string;
     state?: string;
     level?: string;
+    field?: string;
     hasEduEmail?: boolean;
     hasGithubPack?: boolean;
     hasStudentId?: boolean;

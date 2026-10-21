@@ -36,7 +36,7 @@ export function profileToEligibility(profile: Profile | null): EligibilityProfil
   if (!profile.eligibility && !profile.branch && !profile.year) return null;
   return parseEligibilityProfile({
     ...(profile.eligibility ?? {}),
-    field: profile.branch ?? undefined,
+    field: profile.branch ?? profile.eligibility?.field ?? undefined,
     year: profile.year ?? undefined,
   });
 }
@@ -50,6 +50,7 @@ export async function saveEligibility(userId: string, eligibility: EligibilityPr
       country: eligibility.country,
       state: eligibility.state,
       level: eligibility.level,
+      field: eligibility.field,
       hasEduEmail: eligibility.hasEduEmail,
       hasGithubPack: eligibility.hasGithubPack,
       hasStudentId: eligibility.hasStudentId,
