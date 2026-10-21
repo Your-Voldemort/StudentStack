@@ -64,9 +64,39 @@ describe("BookmarkButton", () => {
     expect(await screen.findByRole("button", { name: "Save Figma" })).toBeTruthy();
   });
 
-  it("shows the saved status from the API", async () => {
+  it("shows the saved status from the API, changes status via StatusPills, and removes the bookmark", async () => {
     mockBookmarksApi({ signedIn: true, bookmarks: { 7: "applied" } });
+    saveBookmark.mockResolvedValue({ ok: true });
+    removeBookmark.mockResolvedValue({ ok: true });
     renderButton();
-    expect(await screen.findByRole("button", { name: /saved as Applied/ })).toBeTruthy();
+
+    const trigger = await screen.findByRole("button", { name: /saved as Applied/ });
+    fireEvent.click(trigger);
+
+    // Clicking the already-active status pill is a no-op
+    fireEvent.click(await screen.findByRole("radio", { name: "Applied" }));
+    expect(saveBookmark).not.toHaveBeenCalled();
+
+    // Clicking a different status pill updates the bookmark
+    fireEvent.click(screen.getByRole("radio", { name: "Got it" }));
+    expect(saveBookmark).toHaveBeenCalledWith(7, "got_it");
+    expect(await screen.findByRole("button", { name: /saved as Got it/ })).toBeTruthy();
+
+    // Clicking Remove deletes the bookmark and rolls back if signed_out
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+    expect(removeBookmark).toHaveBeenCalledWith(7);
+    expect(await screen.findByRole("button", { name: "Save Figma" })).toBeTruthy();
+  });
+
+  it("transitions to signed-out link when saveBookmark returns signed_out", async () => {
+    mockBookmarksApi({ signedIn: true, bookmarks: {} });
+    saveBookmark.mockResolvedValue({ ok: false, reason: "signed_out" });
+    renderButton();
+
+    const button = await screen.findByRole("button", { name: "Save Figma" });
+    await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(button);
+
+    expect(await screen.findByRole("link", { name: "Sign in to save Figma" })).toBeTruthy();
   });
 });

@@ -9,6 +9,7 @@ import {
   isApprovedResource,
   upsertBookmark,
 } from "./bookmarks";
+import { isBookmarkStatus } from "./bookmark-status";
 
 vi.mock("@/db", async () => {
   const { fakeDb } = await import("@/test/fake-db");
@@ -24,6 +25,18 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
+});
+
+describe("bookmark-status.ts", () => {
+  it("validates allowed bookmark statuses", () => {
+    expect(isBookmarkStatus("interested")).toBe(true);
+    expect(isBookmarkStatus("applied")).toBe(true);
+    expect(isBookmarkStatus("got_it")).toBe(true);
+    expect(isBookmarkStatus("rejected")).toBe(true);
+    expect(isBookmarkStatus("archived")).toBe(false);
+    expect(isBookmarkStatus(null)).toBe(false);
+    expect(isBookmarkStatus(42)).toBe(false);
+  });
 });
 
 describe("bookmark reads", () => {

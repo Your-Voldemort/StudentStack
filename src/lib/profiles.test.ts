@@ -71,6 +71,17 @@ describe("profileToEligibility", () => {
     expect(result).toEqual({ country: "US", level: "UG", field: "CSE", year: 3, hasEduEmail: true });
   });
 
+  it("preserves a non-branch custom field stored in eligibility when branch is null", () => {
+    const result = profileToEligibility(
+      profile({
+        branch: null,
+        year: 4,
+        eligibility: { country: "IN", field: "Biotech" } as Profile["eligibility"],
+      }),
+    );
+    expect(result).toEqual({ country: "IN", field: "Biotech", year: 4 });
+  });
+
   it("defaults to India when only branch/year are known", () => {
     expect(profileToEligibility(profile({ year: 1 }))).toEqual({ country: "IN", year: 1 });
   });

@@ -1,7 +1,26 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { brabble, scholars4dev } from "./feeds";
-import { mapMonthlyTableRow, mapProgramTableRow, mapYamlProgram, parsePackPage, githubStudentPack } from "./github";
-import { hackathonStart, mapChallengeRow, mapHackathonRow, mapInternshalaRow, mapUnstopRow, apifySources } from "./apify";
+import {
+  ayushPrograms,
+  deepanshuPrograms,
+  eduPerks,
+  githubStudentPack,
+  latestCommitSha,
+  mapMonthlyTableRow,
+  mapProgramTableRow,
+  mapYamlProgram,
+  parsePackPage,
+  yashisraniPrograms,
+} from "./github";
+import {
+  apifySources,
+  hackathonStart,
+  mapChallengeRow,
+  mapHackathonRow,
+  mapInternshalaRow,
+  mapUnstopRow,
+  runApifyActor,
+} from "./apify";
 import { getSources } from "./index";
 import type { RssItem } from "../rss";
 
@@ -100,10 +119,85 @@ describe("GitHub list sources", () => {
       url: "https://education.github.com/pack#namecheap",
       tagline: "1 year domain name registration on the .me TLD.",
     });
+    expect(githubStudentPack.mapToCandidate({ id: "empty", name: "", about: "", offers: [] })).toBeNull();
+  });
+
+  it("fetches commit SHAs via latestCommitSha and maps eduPerks sections", async () => {
+    const okFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [{ sha: "abc1234" }],
+    });
+    expect(await latestCommitSha({ repo: "o/r", branch: "main", path: "README.md" }, okFetch as unknown as typeof fetch)).toBe(
+      "abc1234",
+    );
+
+    const badFetch = vi.fn().mockResolvedValue({ ok: false, status: 403 });
+    expect(await latestCommitSha({ repo: "o/r", branch: "main", path: "README.md" }, badFetch as unknown as typeof fetch)).toBeNull();
+
+    const throwFetch = vi.fn().mockRejectedValue(new Error("timeout"));
+    expect(await latestCommitSha({ repo: "o/r", branch: "main", path: "README.md" }, throwFetch as unknown as typeof fetch)).toBeNull();
+
+    expect(
+      eduPerks.mapToCandidate({
+        text: "Spotify Student",
+        url: "https://spotify.com/student",
+        note: "50% off Premium",
+        section: "Entertainment & Music",
+      }),
+    ).toMatchObject({
+      categorySlug: "media-and-entertainment",
+      kind: "perk",
+    });
+
+    expect(
+      deepanshuPrograms.mapToCandidate({
+        Name: "[GSoC](https://gsoc.test)",
+        Stipend: "No",
+        Type: "Fellowship",
+        "Tech Stack/Focus": "Rust",
+      }),
+    ).toMatchObject({
+      kind: "fellowship",
+      costType: "free",
+    });
+
+    expect(
+      ayushPrograms.mapToCandidate({
+        Name: "[LFX](https://lfx.test)",
+        Type: "Internship",
+      }),
+    ).toMatchObject({
+      kind: "internship",
+    });
+
+    expect(
+      yashisraniPrograms.mapToCandidate({
+        name: "MLH Fellowship",
+        url: "https://mlh.io",
+        stipend: { min: 5000, max: 5000, currency: "INR" },
+      }),
+    ).toMatchObject({
+      kind: "fellowship",
+      amount: "₹5,000",
+    });
   });
 });
 
 describe("Apify sources", () => {
+  it("runs Apify actors via runApifyActor and throws on non-2xx responses", async () => {
+    const okFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [{ title: "Item 1" }],
+    });
+    const items = await runApifyActor<{ title: string }>("owner/actor", { maxItems: 5 }, "tok", okFetch as unknown as typeof fetch);
+    expect(items).toEqual([{ title: "Item 1" }]);
+    expect(okFetch.mock.calls[0][0]).toContain("owner~actor/run-sync-get-dataset-items");
+
+    const errFetch = vi.fn().mockResolvedValue({ ok: false, status: 502 });
+    await expect(runApifyActor("owner/actor", {}, "tok", errFetch as unknown as typeof fetch)).rejects.toThrow(
+      "Apify owner/actor returned HTTP 502",
+    );
+  });
   it("is disabled without APIFY_TOKEN", () => {
     expect(apifySources(undefined)).toEqual([]);
     expect(apifySources("t")).toHaveLength(4);

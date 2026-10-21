@@ -14,8 +14,9 @@ import {
 // cover the session check and argument validation in front of the DB
 // helpers (which are mocked).
 const getUser = vi.fn();
+const createServerSupabaseClient = vi.fn(async () => ({ auth: { getUser } }));
 vi.mock("@/lib/supabase/server", () => ({
-  createServerSupabaseClient: async () => ({ auth: { getUser } }),
+  createServerSupabaseClient: () => createServerSupabaseClient(),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/bookmarks", () => ({
@@ -39,6 +40,7 @@ function signedOut() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  createServerSupabaseClient.mockImplementation(async () => ({ auth: { getUser } }));
   vi.mocked(isApprovedResource).mockResolvedValue(true);
   vi.spyOn(console, "warn").mockImplementation(() => {});
   signedIn();
@@ -82,6 +84,9 @@ describe("saveBookmark", () => {
     vi.mocked(upsertBookmark).mockRejectedValueOnce(new Error("db down"));
     expect(await saveBookmark(3)).toEqual({ ok: false, reason: "failed" });
     expect(revalidatePath).not.toHaveBeenCalled();
+
+    createServerSupabaseClient.mockRejectedValueOnce(new Error("supabase unreachable"));
+    expect(await saveBookmark(3)).toEqual({ ok: false, reason: "failed" });
   });
 });
 
@@ -104,6 +109,9 @@ describe("removeBookmark", () => {
     vi.mocked(deleteBookmark).mockRejectedValueOnce("boom");
     expect(await removeBookmark(3)).toEqual({ ok: false, reason: "failed" });
     expect(console.warn).toHaveBeenCalledWith("[bookmarks] remove failed:", "boom");
+
+    createServerSupabaseClient.mockRejectedValueOnce(new Error("auth failed"));
+    expect(await removeBookmark(3)).toEqual({ ok: false, reason: "failed" });
   });
 });
 

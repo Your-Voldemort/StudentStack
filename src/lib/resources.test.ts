@@ -193,14 +193,18 @@ describe("with a database", () => {
       [MOCK_CATEGORIES[0]],
       [{ ...MOCK_CATEGORIES[0], count: "7" }],
       [{ count: "12" }],
+      [],
       [{ slug: "a", updatedAt }],
       [{ count: "3" }],
+      [],
     );
     expect(await getCategories()).toEqual([MOCK_CATEGORIES[0]]);
     expect(await getCategoriesWithCounts()).toEqual([{ ...MOCK_CATEGORIES[0], count: 7 }]);
     expect(await getResourceCount()).toBe(12);
+    expect(await getResourceCount()).toBe(0);
     expect(await getAllResourceSlugs()).toEqual([{ slug: "a", updatedAt }]);
     expect(await getPendingSubmissionsCount()).toBe(3);
+    expect(await getPendingSubmissionsCount()).toBe(0);
   });
 
   it("parses home stats, with and without a link-health run", async () => {
@@ -237,11 +241,12 @@ describe("with a database", () => {
   it("passes pending submissions and per-user submissions through", async () => {
     const pending = [{ id: 1, name: "New perk", createdAt: new Date() }];
     const mine = [{ id: 2, name: "Mine", approved: false, status: "active", createdAt: new Date() }];
-    fakeDb.queue(pending, mine, [{ count: "4" }]);
+    fakeDb.queue(pending, mine, [{ count: "4" }], []);
     expect(await getPendingSubmissions()).toEqual(pending);
     expect(await getSubmissionsByUser("user-1")).toEqual(mine);
     expect(fakeDb.call(1, "limit")?.args).toEqual([20]);
     expect(await countPendingByUser("user-1")).toBe(4);
+    expect(await countPendingByUser("user-1")).toBe(0);
   });
 
   it("reports whether a URL is already listed", async () => {
@@ -252,13 +257,14 @@ describe("with a database", () => {
 
   it("falls back to mock data or empty values when a query fails", async () => {
     // One failure per query below; getResourcesPaginated runs two.
-    fakeDb.queue(...Array.from({ length: 18 }, () => new Error("connection refused")));
+    fakeDb.queue(...Array.from({ length: 19 }, () => new Error("connection refused")));
 
     expect(await getAllResources()).toBe(MOCK_RESOURCES);
     expect((await getResourcesPaginated(1, 5)).resources.map((r) => r.id)).toEqual([1, 2, 3, 4, 5]);
     expect((await getResourcesWithDeadlines()).length).toBeGreaterThan(0);
     expect((await getResourceBySlug("figma"))?.id).toBe(3);
     expect((await getResourcesForSlugs(["figma"])).map((r) => r.slug)).toEqual(["figma"]);
+    expect(await getBookmarkedDeadlines("user-1")).toEqual([]);
     expect(await getAllResourceSlugs()).toHaveLength(MOCK_RESOURCES.length);
     expect((await getResourceById(1))?.slug).toBe("github-copilot");
     expect((await getResourcesByIds([1])).map((r) => r.id)).toEqual([1]);
