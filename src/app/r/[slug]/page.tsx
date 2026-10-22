@@ -12,9 +12,10 @@ import { BookmarksProvider } from "@/components/bookmarks/bookmarks-provider";
 import { BookmarkButton } from "@/components/bookmarks/bookmark-button";
 import { RatingStars } from "@/components/reviews/rating-stars";
 import { ReviewForm } from "@/components/reviews/review-form";
-import { getRatingSummary, getResourceReviews, type ReviewSort } from "@/lib/reviews";
+import { HelpfulButton, HelpfulVotesProvider } from "@/components/reviews/helpful-votes";
+import { getRatingSummary, getResourceReviews } from "@/lib/reviews";
 import { getGotItCount } from "@/lib/bookmarks";
-import { formatRating, type RatingSummary } from "@/lib/review-rules";
+import { formatRating, parseReviewSort, type RatingSummary } from "@/lib/review-rules";
 import { passFontVariables } from "@/lib/fonts";
 import homeStyles from "@/components/home/brand.module.css";
 import dirStyles from "@/components/directory/directory.module.css";
@@ -119,7 +120,7 @@ export default async function ResourcePage({
   const { slug } = await params;
   const resource = await getResourceBySlug(slug);
   if (!resource) notFound();
-  const reviewSort: ReviewSort = (await searchParams).reviews === "highest" ? "highest" : "recent";
+  const reviewSort = parseReviewSort((await searchParams).reviews);
   const [reviews, rating, gotItCount] = await Promise.all([
     getResourceReviews(resource.id, reviewSort),
     getRatingSummary(resource.id),
@@ -280,24 +281,36 @@ export default async function ResourcePage({
                     >
                       Highest rated
                     </Link>
+                    <Link
+                      href={`/r/${resource.slug}?reviews=helpful#reviews-heading`}
+                      aria-current={reviewSort === "helpful" ? "true" : undefined}
+                      className={reviewSort === "helpful" ? "font-semibold" : "text-muted-foreground hover:underline"}
+                    >
+                      Most helpful
+                    </Link>
                   </nav>
-                  <ul className="flex flex-col gap-3">
-                    {reviews.map((review) => (
-                      <li key={review.id} className="rounded-lg border border-border/60 bg-card/50 p-4">
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                          <RatingStars value={review.rating} />
-                          <span className="font-medium">Student</span>
-                          {review.verifiedStudent ? (
-                            <span className="rounded-full border border-emerald-300 px-2 py-0.5 text-xs text-emerald-800 dark:border-emerald-700 dark:text-emerald-300">
-                              Verified student
-                            </span>
-                          ) : null}
-                          <span className="text-xs text-muted-foreground">{reviewDate.format(review.createdAt)}</span>
-                        </div>
-                        {review.comment ? <p className="mt-2 whitespace-pre-line text-sm">{review.comment}</p> : null}
-                      </li>
-                    ))}
-                  </ul>
+                  <HelpfulVotesProvider resourceId={resource.id}>
+                    <ul className="flex flex-col gap-3">
+                      {reviews.map((review) => (
+                        <li key={review.id} className="rounded-lg border border-border/60 bg-card/50 p-4">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                            <RatingStars value={review.rating} />
+                            <span className="font-medium">Student</span>
+                            {review.verifiedStudent ? (
+                              <span className="rounded-full border border-emerald-300 px-2 py-0.5 text-xs text-emerald-800 dark:border-emerald-700 dark:text-emerald-300">
+                                Verified student
+                              </span>
+                            ) : null}
+                            <span className="text-xs text-muted-foreground">{reviewDate.format(review.createdAt)}</span>
+                          </div>
+                          {review.comment ? <p className="mt-2 whitespace-pre-line text-sm">{review.comment}</p> : null}
+                          <div className="mt-3">
+                            <HelpfulButton reviewId={review.id} count={review.helpfulCount} />
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </HelpfulVotesProvider>
                 </>
               )}
             </section>

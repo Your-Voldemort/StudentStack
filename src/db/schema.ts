@@ -182,6 +182,21 @@ export const reviews = pgTable(
   (t) => [uniqueIndex("reviews_resource_user_unique").on(t.resourceId, t.userId)],
 ).enableRLS();
 
+// "Helpful" votes on reviews (issue #119): one per student per review,
+// removed with the review. Authors can't vote on their own review; the
+// Server Action enforces that.
+export const reviewVotes = pgTable(
+  "review_votes",
+  {
+    reviewId: integer("review_id")
+      .notNull()
+      .references(() => reviews.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.reviewId, t.userId] })],
+).enableRLS();
+
 export const clickEvents = pgTable("click_events", {
   id: serial("id").primaryKey(),
   resourceId: integer("resource_id")

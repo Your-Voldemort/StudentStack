@@ -2,8 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { isApprovedResource } from "@/lib/bookmarks";
-import { isAcademicEmail, validateReview } from "@/lib/review-rules";
-import { deleteReview, getUserReview, hasBookmarked, upsertReview } from "@/lib/reviews";
+import { isAcademicEmail, validateHelpfulVote, validateReview } from "@/lib/review-rules";
+import {
+  addHelpfulVote,
+  deleteReview,
+  getReviewForVote,
+  getUserReview,
+  hasBookmarked,
+  removeHelpfulVote,
+  upsertReview,
+} from "@/lib/reviews";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type ReviewActionResult = { ok: true } | { ok: false; error: string };
@@ -62,5 +70,29 @@ export async function deleteMyReview(resourceId: number, slug: string): Promise<
   }
   revalidatePath(`/r/${slug}`);
   revalidatePath("/directory");
+  return { ok: true };
+}
+
+// Mark (or unmark) a review as helpful (issue #119). The author check runs
+// here, against the stored review, because the client never sees author ids.
+// No revalidatePath: /r/[slug] renders per request and the button updates
+// its own count.
+export async function setHelpfulVote(reviewId: number, helpful: boolean): Promise<ReviewActionResult> {
+  const user = await currentUser();
+  if (!user) return { ok: false, error: "Sign in to mark reviews as helpful." };
+  const parsed = validateHelpfulVote(reviewId, helpful);
+  if (!parsed.ok) return parsed;
+  try {
+    const review = await getReviewForVote(parsed.value.reviewId);
+    if (!review || !(await isApprovedResource(review.resourceId))) {
+      return { ok: false, error: "That review no longer exists." };
+    }
+    if (review.userId === user.id) return { ok: false, error: "You can’t vote on your own review." };
+    if (parsed.value.helpful) await addHelpfulVote(user.id, parsed.value.reviewId);
+    else await removeHelpfulVote(user.id, parsed.value.reviewId);
+  } catch (error) {
+    console.warn("[reviews] vote failed:", error instanceof Error ? error.message : error);
+    return { ok: false, error: "We couldn’t save your vote. Try again." };
+  }
   return { ok: true };
 }

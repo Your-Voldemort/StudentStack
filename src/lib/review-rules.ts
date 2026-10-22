@@ -32,3 +32,23 @@ export type RatingSummary = { average: number; count: number };
 export function formatRating(summary: RatingSummary): string {
   return `${summary.average.toFixed(1)} ★ (${summary.count} review${summary.count === 1 ? "" : "s"})`;
 }
+
+// Review list sorts on /r/[slug] (?reviews=). Anything unknown falls back
+// to most recent.
+export type ReviewSort = "recent" | "highest" | "helpful";
+
+export function parseReviewSort(raw: unknown): ReviewSort {
+  return raw === "highest" || raw === "helpful" ? raw : "recent";
+}
+
+// "Helpful" vote arguments (issue #119), checked before any database work.
+export function validateHelpfulVote(
+  reviewId: unknown,
+  helpful: unknown,
+): { ok: true; value: { reviewId: number; helpful: boolean } } | { ok: false; error: string } {
+  if (typeof reviewId !== "number" || !Number.isInteger(reviewId) || reviewId <= 0) {
+    return { ok: false, error: "That review no longer exists." };
+  }
+  if (typeof helpful !== "boolean") return { ok: false, error: "Something went wrong. Try again." };
+  return { ok: true, value: { reviewId, helpful } };
+}
