@@ -9,6 +9,7 @@ import {
   type BrokenLink,
   type LinkHealthSummary,
 } from '@/lib/admin-notify';
+import type { FlagshipRefreshEntry } from '@/lib/flagship-freshness';
 
 const summary: LinkHealthSummary = {
   checked: 10,
@@ -21,6 +22,20 @@ const summary: LinkHealthSummary = {
 const links: BrokenLink[] = [
   { id: 1, url: 'https://example.com/a', previousStatus: 'active', newStatus: 'broken' },
   { id: 2, url: 'https://example.com/b', previousStatus: 'broken', newStatus: 'expired' },
+];
+
+const refresh: FlagshipRefreshEntry[] = [
+  {
+    slug: 'gsoc',
+    name: 'Google Summer of Code',
+    source: 'https://developers.google.com/open-source/gsoc/timeline',
+    reasons: [
+      {
+        code: 'deadline-passed',
+        message: 'Deadline 2026-03-31 passed; next cycle expected ~Mar, check the official page',
+      },
+    ],
+  },
 ];
 
 afterEach(() => {
@@ -62,6 +77,23 @@ describe('admin-notify.ts', () => {
       expect(message).toContain('…and 5 more');
       expect(message).not.toContain('https://example.com/24');
     });
+
+    it('appends the curated programs to re-check with reason and source', () => {
+      const message = buildBrokenLinksMessage(links, summary, refresh);
+      expect(message).toContain('1 curated program to re-check');
+      expect(message).toContain(
+        '- Google Summer of Code: Deadline 2026-03-31 passed; next cycle expected ~Mar, check the official page (https://developers.google.com/open-source/gsoc/timeline)',
+      );
+    });
+
+    it('says so when only curated programs need attention, and truncates at 10', () => {
+      const many = Array.from({ length: 12 }, (_, i) => ({ ...refresh[0], slug: `p${i}`, name: `Program ${i}` }));
+      const message = buildBrokenLinksMessage([], summary, many);
+      expect(message).toContain('no newly flagged links');
+      expect(message).toContain('12 curated programs to re-check');
+      expect(message).toContain('…and 2 more on the admin dashboard');
+      expect(message).not.toContain('Program 11');
+    });
   });
 
   describe('notifyBrokenLinks', () => {
@@ -73,6 +105,18 @@ describe('admin-notify.ts', () => {
       });
       expect(result).toEqual({ sent: false, reason: 'no newly flagged links' });
       expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    it('still sends when only curated programs need a re-check', async () => {
+      const fetchImpl = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+      const result = await notifyBrokenLinks([], summary, {
+        webhookUrl: 'https://hooks.example/x',
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+        flagshipRefresh: refresh,
+      });
+      expect(result).toEqual({ sent: true });
+      const body = JSON.parse(fetchImpl.mock.calls[0][1].body as string);
+      expect(body.text).toContain('Google Summer of Code');
     });
 
     it('skips silently when no webhook is configured', async () => {

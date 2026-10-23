@@ -107,6 +107,7 @@ src/
 │   ├── comparisons.ts                     # Hand-picked comparison sets for /compare
 │   ├── resource-labels.ts                 # Shared cost, verification, and duration labels
 │   ├── link-health.ts                     # URL health-check logic
+│   ├── flagship-freshness.ts              # Which curated flagship programs need their dates re-checked
 │   ├── reviews.ts                         # Review queries and rating aggregates
 │   ├── review-rules.ts                    # Review validation, academic-email check, rating format
 │   ├── api-filters.ts                     # Public API filter parsing and matching
@@ -250,7 +251,7 @@ Normalization maps source categories, regions, cost types, tags, descriptions, a
 Two more inputs feed `pnpm db:seed`:
 
 - **`student_resources.json`** (optional, gitignored like `offers.json`): the [resources.tensorboy.com](https://resources.tensorboy.com/resources.json) export. `scripts/student-resources.ts` maps its four buckets to `kind` (perk, scholarship, fellowship, internship, mentorship, program), drops job boards and loan marketplaces, and skips anything `offers.json` already lists, matching on the product name with deal words like "Student" or "Education Plan" removed, or on the claim link. Against the current `offers.json` that leaves about 100 net-new rows.
-- **`src/lib/flagship-opportunities.ts`** (committed): about 60 hand-curated scholarships, fellowships, internships, open-source programs, and free mentorship programs, with the amount, provider, eligibility, and usual opening month. Opening dates and deadlines are only filled in where they were read off the program's official page, and `source` records that page. The seed overlays these onto matching rows and adds the rest. The mock data uses the same file, so `/deadlines` shows real programs without a database. When a new cycle is announced, update the dates in this file and re-seed.
+- **`src/lib/flagship-opportunities.ts`** (committed): about 60 hand-curated scholarships, fellowships, internships, open-source programs, and free mentorship programs, with the amount, provider, eligibility, and usual opening month. Opening dates and deadlines are only filled in where they were read off the program's official page, and `source` records that page. The seed overlays these onto matching rows and adds the rest. The mock data uses the same file, so `/deadlines` shows real programs without a database. When a new cycle is announced, update the dates in this file and re-seed. The admin dashboard and the weekly link-health notification list the entries that need a re-check (see [Link-Health Checks](#link-health-checks)).
 
 The directory currently loads the full dataset server-side and filters in memory — intentional at ~600 rows, and a paginated query layer can be introduced later if the dataset grows significantly.
 
@@ -280,6 +281,13 @@ GitHub sources report the latest commit SHA of their file (using `GITHUB_TOKEN` 
 `GET /api/cron/link-health`, triggered weekly by Vercel Cron (see [`vercel.json`](vercel.json)), re-checks every resource that has a static claim URL and hasn't been manually marked `expired`. It issues a `HEAD` request (falling back to `GET` on `405`/`501`), classifies the result as `active` or `broken`, and revalidates the homepage and directory so status changes show up immediately. The route requires a `Bearer ${CRON_SECRET}` header and runs up to 25 checks concurrently.
 
 Before checking links, the same cron rolls over past deadlines: an approved resource whose deadline has passed is marked `expired` if it has no `recurrence`, or has its deadline cleared if it does, so the "Opens again ~<recurrence>" label stays. Rows expired this way aren't link-checked in that run, and `/deadlines` is revalidated along with the homepage and directory.
+
+When `LINK_HEALTH_WEBHOOK_URL` is set, the cron posts a summary of newly broken links to it. The same message lists the curated programs in `src/lib/flagship-opportunities.ts` whose dates need a re-check, and it's sent when either list is non-empty, so a pending re-check is a weekly reminder until the file is updated. The admin dashboard shows the same list under "Curated programs to re-check". An entry is listed when:
+
+- its deadline has passed and it hasn't been verified since;
+- it was re-verified after the deadline, but its usual opening month (`recurrence`) has come round again since then;
+- it has no deadline and its opening month has come round since it was last verified (mentorship programs are never asked for dates);
+- `verifiedOn` is missing or more than 180 days old.
 
 ---
 

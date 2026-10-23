@@ -10,7 +10,12 @@
  * Configure with the LINK_HEALTH_WEBHOOK_URL env var. When it is unset the
  * cron keeps its current behavior (console summary only): notifications
  * are strictly opt-in and never fail the cron run.
+ *
+ * Issue #120: the same message carries a short list of curated flagship
+ * programs whose dates need a re-check (src/lib/flagship-freshness.ts).
  */
+
+import type { FlagshipRefreshEntry } from "./flagship-freshness";
 
 export type BrokenLink = {
   id: number;
@@ -37,10 +42,14 @@ export function getWebhookUrl(
   return url ? url : null;
 }
 
-/** Renders the plain-text notification body listing newly flagged links. */
+/**
+ * Renders the plain-text notification body listing newly flagged links,
+ * plus the curated programs to re-check when there are any.
+ */
 export function buildBrokenLinksMessage(
   links: BrokenLink[],
   summary: LinkHealthSummary,
+  flagshipRefresh: FlagshipRefreshEntry[] = [],
 ): string {
   const shown = links.slice(0, 20);
   const lines = shown.map(
@@ -49,12 +58,27 @@ export function buildBrokenLinksMessage(
   if (links.length > shown.length) {
     lines.push(`…and ${links.length - shown.length} more`);
   }
-  return [
-    `Link-health cron: ${links.length} newly flagged link${links.length === 1 ? "" : "s"}`,
+  const message = [
+    links.length > 0
+      ? `Link-health cron: ${links.length} newly flagged link${links.length === 1 ? "" : "s"}`
+      : "Link-health cron: no newly flagged links",
     `Checked ${summary.checked} URLs — ${summary.active} active, ${summary.broken} broken, ${summary.expired} expired (${summary.checkedAt}).`,
-    "",
-    ...lines,
-  ].join("\n");
+  ];
+  if (lines.length > 0) message.push("", ...lines);
+  if (flagshipRefresh.length > 0) {
+    const refreshShown = flagshipRefresh.slice(0, 10);
+    message.push(
+      "",
+      `${flagshipRefresh.length} curated program${flagshipRefresh.length === 1 ? "" : "s"} to re-check in src/lib/flagship-opportunities.ts:`,
+      ...refreshShown.map(
+        (entry) => `- ${entry.name}: ${entry.reasons.map((r) => r.message).join("; ")} (${entry.source})`,
+      ),
+    );
+    if (flagshipRefresh.length > refreshShown.length) {
+      message.push(`…and ${flagshipRefresh.length - refreshShown.length} more on the admin dashboard`);
+    }
+  }
+  return message.join("\n");
 }
 
 // Shared webhook POST. Never throws: a missing webhook, an HTTP error, or a
@@ -84,16 +108,22 @@ async function postWebhook(
   }
 }
 
-/** POSTs the broken-links summary to the configured webhook. Never throws. */
+/**
+ * POSTs the broken-links summary to the configured webhook. Never throws.
+ * Sends when there are newly flagged links or curated programs to re-check;
+ * the cron runs weekly, so a pending re-check is a weekly reminder at most.
+ */
 export async function notifyBrokenLinks(
   links: BrokenLink[],
   summary: LinkHealthSummary,
   options: {
     webhookUrl?: string | null;
     fetchImpl?: typeof fetch;
+    flagshipRefresh?: FlagshipRefreshEntry[];
   } = {},
 ): Promise<NotifyResult> {
-  if (links.length === 0) {
+  const flagshipRefresh = options.flagshipRefresh ?? [];
+  if (links.length === 0 && flagshipRefresh.length === 0) {
     return { sent: false, reason: "no newly flagged links" };
   }
   const webhookUrl =
@@ -102,7 +132,7 @@ export async function notifyBrokenLinks(
     return { sent: false, reason: "LINK_HEALTH_WEBHOOK_URL is not configured" };
   }
   return postWebhook(
-    buildBrokenLinksMessage(links, summary),
+    buildBrokenLinksMessage(links, summary, flagshipRefresh),
     webhookUrl,
     options.fetchImpl ?? fetch,
   );

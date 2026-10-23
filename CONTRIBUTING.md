@@ -61,6 +61,20 @@ opportunities in `src/lib/flagship-opportunities.ts` are always seeded. If you u
 program's dates there, use only dates from the program's official page and update its
 `source` and `verifiedOn` fields.
 
+The admin dashboard's "Curated programs to re-check" section, and the weekly
+link-health webhook message when `LINK_HEALTH_WEBHOOK_URL` is set, list the entries
+whose dates need attention, each with the reason and a link to its `source`. To clear an
+entry, open that page and then:
+
+- if a new cycle is announced, update `opensAt`, `deadline`, and `recurrence` if the
+  month moved;
+- if nothing new is published yet, leave the old dates as they are (they show as a
+  past cycle);
+- in either case, set `verifiedOn` to the day you checked. A re-verified entry stays off
+  the list until its usual opening month comes round again or 180 days pass.
+
+The rules are in `src/lib/flagship-freshness.ts`.
+
 **Seeding deletes and reloads the resources and categories tables. Only run it
 against a disposable development database, not a shared or production database.**
 

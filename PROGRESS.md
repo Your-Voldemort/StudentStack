@@ -115,6 +115,39 @@ report-a-problem control.
   with "Could not find profile folder" even when launched by hand with an
   existing profile directory and after a clean reinstall, so it's the
   local browser build, not the config.
+## Issue #120 — Flag curated flagship programs whose dates need a refresh
+
+`src/lib/flagship-freshness.ts` is a pure check over
+`FLAGSHIP_OPPORTUNITIES`. The admin dashboard lists its result as "Curated
+programs to re-check", and the weekly link-health webhook message includes
+it. The curated data itself is unchanged.
+
+- **`verifiedOn` is the "already looked at it" marker.** A passed deadline
+  is flagged only if the entry wasn't verified after the deadline. Otherwise
+  every closed cycle (GSoC closes in March, opens again next March) would sit
+  on the list for most of the year. A re-verified entry comes back once its
+  `recurrence` month has come round since `verifiedOn`, because the next cycle
+  should be announced by then. The same test flags entries with no deadline
+  at all.
+- **Mentorship programs never need dates.** They're rolling. Entries with no
+  `recurrence` have no expected window, so only the 180-day check applies to
+  them.
+- **The 180-day check applies to every kind, mentorship included.** Amounts,
+  eligibility, and links drift too.
+- **Dates are compared as UTC calendar days.** A deadline is "passed" from
+  the day after it.
+- **Notification.** `notifyBrokenLinks` now also sends when there are no newly
+  broken links but some curated programs need a re-check. Judgment call: the
+  cron is weekly, so this is at most one reminder a week, and the list only
+  shrinks when someone edits the file, so a reminder that repeats until then
+  is the point. It's still opt-in through `LINK_HEALTH_WEBHOOK_URL` and never
+  fails the run. The message shows at most 10 programs; the dashboard has the
+  full list.
+- **Today the list is empty**, because every entry was verified on
+  2026-10-21. Nine entries appear on 1 November (Hacktoberfest and the
+  scholarships with 31 October deadlines), and 32 by mid-April 2027. On
+  2027-04-20 all 59 pass the 180-day mark together, since they share one
+  `verifiedOn`; re-checking entries as they come up spreads that out.
 
 ## Issue #42 — Phase 3 wrap-up: admin roles and RLS
 
