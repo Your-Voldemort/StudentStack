@@ -115,6 +115,29 @@ report-a-problem control.
   with "Could not find profile folder" even when launched by hand with an
   existing profile directory and after a clean reinstall, so it's the
   local browser build, not the config.
+## Issue #119 — Reviews: "Most helpful" sort with helpful votes
+
+- **`review_votes`** (`drizzle/0009_review_votes.sql`): one row per student
+  per review, primary key `(review_id, user_id)`, cascades when the review is
+  deleted, RLS on. Counts come from a `left join … group by reviews.id` in the
+  existing list query, so there's no denormalized counter to keep in sync.
+- **"Most helpful"** (`?reviews=helpful`) orders by helpful count, then most
+  recent. `parseReviewSort` maps anything unknown to most recent.
+- **Own-review check is server-side.** Reviews stay anonymous, so the page
+  never sends author ids. `setHelpfulVote` looks up the review's author and
+  refuses a vote from that user. `GET /api/reviews/votes` returns only the
+  viewer's own votes and the id of their own review, if they wrote one, so the
+  button can show a plain count there instead of a toggle. Judgment call: an
+  author's own review still shows its count, just not as a button.
+- **Optimistic toggle** like the bookmarks provider: the button flips and
+  adjusts the count at once, then rolls back with an inline message if the
+  action fails. The rendered count already includes the viewer's earlier
+  vote, and the button corrects for that so it isn't counted twice.
+- **Signed out:** the count links to `/my-list` to sign in. Judgment call: no
+  `?save=` param, because voting shouldn't also save the offer to their list.
+  The student lands on My list after signing in, not back on the review.
+- No `revalidatePath` after a vote: `/r/[slug]` is `force-dynamic`, so the
+  next request already shows the new count.
 
 ## Issue #42 — Phase 3 wrap-up: admin roles and RLS
 
