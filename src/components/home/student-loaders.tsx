@@ -10,6 +10,8 @@ const MAX_WAIT_DURATION_MS = 5500;
 
 type ReadyWindow = Window & {
   __studentstackCardReady?: boolean;
+  __studentstackLoaderStart?: number;
+  __studentstackLoaderProgress?: number;
 };
 
 /**
@@ -22,12 +24,15 @@ function useAutonomousProgress(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
     let frameId: number;
-    const start = performance.now();
+    const win = window as ReadyWindow;
+    const start = win.__studentstackLoaderStart ?? performance.now();
+    win.__studentstackLoaderStart = start;
 
     const tick = (now: number) => {
       const elapsed = now - start;
       // Asymptotically approaches 0.92 while waiting for server stream
       const value = 0.08 + 0.84 * (1 - Math.exp(-elapsed / 1400));
+      win.__studentstackLoaderProgress = value;
       setAutoProgress(value);
       frameId = requestAnimationFrame(tick);
     };
@@ -282,15 +287,22 @@ export function HomePreloader({
     let frameId: number;
     let finishTimer: ReturnType<typeof setTimeout> | undefined;
 
-    const mountTime = performance.now();
-    // Seed initial progress based on how long the browser already spent downloading HTML/JS
-    const preHydrationElapsed = Math.min(mountTime, 1200);
-    let currentProgress = Math.min(0.28, 0.08 + (preHydrationElapsed / 1200) * 0.2);
-    let lastTickTime = mountTime;
+    const win = window as ReadyWindow;
+    const nowAtMount = performance.now();
+    const mountTime = win.__studentstackLoaderStart ?? nowAtMount;
+    win.__studentstackLoaderStart = mountTime;
+
+    // Seed initial progress based on streaming loader handoff or pre-hydration elapsed time
+    const preHydrationElapsed = Math.min(nowAtMount, 1200);
+    let currentProgress = Math.max(
+      win.__studentstackLoaderProgress ?? 0.08,
+      Math.min(0.28, 0.08 + (preHydrationElapsed / 1200) * 0.2),
+    );
+    let lastTickTime = nowAtMount;
 
     let windowReady = document.readyState === "complete";
     let fontsReady = false;
-    let cardReady = Boolean((window as ReadyWindow).__studentstackCardReady);
+    let cardReady = Boolean(win.__studentstackCardReady);
     let completionStartedAt: number | null = null;
 
     const onWindowLoad = () => {
@@ -344,7 +356,11 @@ export function HomePreloader({
 
         if (finalizeRatio >= 1) {
           finishTimer = setTimeout(() => {
-            if (!cancelled) setIsOpen(false);
+            if (!cancelled) {
+              delete win.__studentstackLoaderStart;
+              delete win.__studentstackLoaderProgress;
+              setIsOpen(false);
+            }
           }, 180);
           return;
         }

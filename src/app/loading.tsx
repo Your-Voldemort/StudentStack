@@ -1,6 +1,5 @@
 import styles from "@/components/home/brand.module.css";
-import { SiteFooter, SiteHeader } from "@/components/home/site-chrome";
-import { PassCardSkeleton, WordmarkShimmerLoader } from "@/components/home/student-loaders";
+import { WordmarkShimmerLoader } from "@/components/home/student-loaders";
 import { passFontVariables } from "@/lib/fonts";
 
 export default function Loading() {
@@ -9,28 +8,20 @@ export default function Loading() {
       className={`${passFontVariables} ${styles.root}`}
       role="status"
       aria-busy="true"
-      aria-label="Loading StudentStack homepage"
+      aria-label="Loading StudentStack"
     >
-      <SiteHeader />
-
-      <main>
-        <section className={`${styles.wrap} ${styles.hero}`}>
-          <div className="py-4 w-full flex flex-col items-center">
-            <WordmarkShimmerLoader />
-          </div>
-
-          <div className={styles.cardStage}>
-            <div className={styles.sleeveWrapper}>
-              <div className={styles.sleeveSpotlight} aria-hidden="true" />
-              <div className={styles.cardWrapper}>
-                <PassCardSkeleton />
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <SiteFooter />
+      <div
+        data-studentstack-preloader
+        style={{
+          background: "var(--ground)",
+          color: "var(--ink)",
+        }}
+        className="fixed inset-0 z-[120] flex flex-col items-center justify-center p-6"
+      >
+        <div className="w-full max-w-lg">
+          <WordmarkShimmerLoader />
+        </div>
+      </div>
     </div>
   );
 }
