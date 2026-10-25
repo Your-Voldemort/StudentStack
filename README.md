@@ -43,7 +43,7 @@ StudentStack is a student-first resource directory for finding useful software, 
 - **"For you" sort** — signed-in students can set an optional branch and year at `/onboarding` (offered once after first sign-in, skippable, and linked from `/my-list`). The directory then defaults to a "For you" sort that ranks matching offers first; nothing is hidden.
 - **"Only what I'm eligible for"** — an accountless eligibility profile (country, state, degree level, year, field, and whether you have a college email, the GitHub Student Pack, or a student ID) set from the directory and saved in the browser. A toggle then hides offers you can't claim. Signed-in students get the profile synced across devices.
 - **Personal deadlines calendar** — signed-in students can get a private `/u/<token>/deadlines.ics` link from `/my-list` that subscribes Google Calendar, Apple Calendar, or Outlook to the deadlines of their saved offers. The link can be reset at any time.
-- **Student reviews and ratings** on each `/r/[slug]` page: students who saved an offer can leave a 1–5 star rating and an optional comment (one review per student per offer, editable). Reviews show as "Student" with a "Verified student" badge for academic emails, sort by most recent or highest rated, and directory cards show the average and count.
+- **Student reviews and ratings** on each `/r/[slug]` page: students who saved an offer can leave a 1–5 star rating and an optional comment (one review per student per offer, editable). Reviews show as "Student" with a "Verified student" badge for academic emails, sort by most recent, highest rated, or most helpful, and directory cards show the average and count. Signed-in students can mark other students' reviews as "Helpful" (not their own); everyone sees the count.
 - **Public read API and agent docs**: `GET /api/resources` (filters for `kind`, `category`, `region`, `deadline_before`) and `GET /api/resources/{slug}`, cached at the CDN and rate limited per client. `/api-docs` documents them with `curl` examples and `/llms.txt` gives AI agents a map of the site; both are linked from the footer.
 - **Community credits**: cards and resource pages show "N students got this" (an aggregate count only), and `/submit` has an optional "Credit me as" field shown as "Added by …" once a submission is approved.
 - **Weekly digest email** sent with [Resend](https://resend.com/) every Friday: offers added that week plus deadlines closing in the next 7 days. On by default for signed-in students, with a signed one-click unsubscribe link and an on/off toggle on `/my-list`.
@@ -83,8 +83,9 @@ src/
 │   ├── onboarding/                        # Optional branch + year step for the "For you" sort
 │   ├── api/profile/route.ts               # Signed-in student's branch/year (GET)
 │   ├── u/[token]/deadlines.ics/route.ts   # Per-user calendar feed of saved deadlines (token in URL)
-│   ├── reviews/actions.ts                 # Submit/delete review Server Actions
+│   ├── reviews/actions.ts                 # Submit/delete review + helpful vote Server Actions
 │   ├── api/reviews/route.ts               # Signed-in student's own review + whether they can review
+│   ├── api/reviews/votes/route.ts         # Signed-in student's helpful votes on a resource's reviews
 │   ├── api-docs/page.tsx                  # Public API & Agents documentation
 │   ├── llms.txt/route.ts                  # llms.txt for AI agents
 │   ├── api/resources/route.ts             # Public list API with filters, cache, rate limit
@@ -97,11 +98,11 @@ src/
 │   ├── directory/                         # Search, filters, cards, loading UI
 │   ├── admin/                             # Resource create/edit form
 │   ├── home/                              # Student Pass card, category wallet
-│   ├── reviews/                           # Star rating display + review form
+│   ├── reviews/                           # Star rating display, review form, helpful votes
 │   └── ui/                                # Reusable interface primitives
 ├── db/
 │   ├── index.ts                           # Postgres/Drizzle connection
-│   └── schema.ts                          # Drizzle schema (categories, resources, bookmarks, reviews, click events)
+│   └── schema.ts                          # Drizzle schema (categories, resources, bookmarks, reviews, review votes, click events)
 ├── lib/
 │   ├── resources.ts                       # Resource and category queries
 │   ├── comparisons.ts                     # Hand-picked comparison sets for /compare
@@ -109,7 +110,7 @@ src/
 │   ├── link-health.ts                     # URL health-check logic
 │   ├── flagship-freshness.ts              # Which curated flagship programs need their dates re-checked
 │   ├── reviews.ts                         # Review queries and rating aggregates
-│   ├── review-rules.ts                    # Review validation, academic-email check, rating format
+│   ├── review-rules.ts                    # Review + vote validation, sort parsing, academic-email check, rating format
 │   ├── api-filters.ts                     # Public API filter parsing and matching
 │   ├── rate-limit.ts                      # In-memory per-instance API rate limiter
 │   ├── llms-txt.ts                        # Builds the /llms.txt body

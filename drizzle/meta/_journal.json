@@ -64,6 +64,13 @@
       "when": 1792537209289,
       "tag": "0008_admin_role_and_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792630154916,
+      "tag": "0009_review_votes",
+      "breakpoints": true
     }
   ]
 }
