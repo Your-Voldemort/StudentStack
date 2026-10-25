@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { sql } from "drizzle-orm";
 import { db, schema } from "@/db";
+import { FlagshipRefreshList } from "@/components/admin/flagship-refresh-list";
+import { FLAGSHIP_OPPORTUNITIES } from "@/lib/flagship-opportunities";
+import { flagshipsNeedingRefresh } from "@/lib/flagship-freshness";
 import { getAllResources, getCategories, getPendingSubmissions } from "@/lib/resources";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { approveSubmission, deleteResource, rejectSubmission, updateStatus } from "./actions";
@@ -35,6 +38,7 @@ export default async function AdminDashboard() {
 
   const counts = { active: 0, expired: 0, broken: 0 } as Record<string, number>;
   for (const r of resources) counts[r.status]++;
+  const flagshipRefresh = flagshipsNeedingRefresh(FLAGSHIP_OPPORTUNITIES, new Date());
 
   return (
     <div>
@@ -101,6 +105,8 @@ export default async function AdminDashboard() {
           </ul>
         </section>
       )}
+
+      <FlagshipRefreshList entries={flagshipRefresh} total={FLAGSHIP_OPPORTUNITIES.length} />
 
       <table className="w-full text-sm">
         <thead>

@@ -3,6 +3,8 @@ import { revalidatePath } from "next/cache";
 import { db, schema } from "@/db";
 import { checkUrl, deadlineRollover, resolveStatusTransition, runWithConcurrency } from "@/lib/link-health";
 import { notifyBrokenLinks, type BrokenLink } from "@/lib/admin-notify";
+import { FLAGSHIP_OPPORTUNITIES } from "@/lib/flagship-opportunities";
+import { flagshipsNeedingRefresh } from "@/lib/flagship-freshness";
 
 export const maxDuration = 270;
 
@@ -117,14 +119,20 @@ export async function GET(request: Request) {
   console.log(`link-health: ${deadlinesExpired} past deadline(s) expired, ${deadlinesRolledOver} rolled over.`);
   console.log("link-health run:", summary);
 
+  // Issue #120: curated programs in src/lib/flagship-opportunities.ts whose
+  // dates need a re-check. That file only changes on deploy, so the cron
+  // can't fix them; it reminds the admin in the same weekly message.
+  const flagshipRefresh = flagshipsNeedingRefresh(FLAGSHIP_OPPORTUNITIES, now);
+  console.log(`link-health: ${flagshipRefresh.length} curated program(s) to re-check.`);
+
   // Issue #41: proactively notify the admin about newly broken links.
   // Opt-in via LINK_HEALTH_WEBHOOK_URL — without it the cron behaves
   // exactly as before, and a notification failure never fails the run.
-  if (newlyFlagged.length > 0) {
-    const notification = await notifyBrokenLinks(newlyFlagged, summary);
+  if (newlyFlagged.length > 0 || flagshipRefresh.length > 0) {
+    const notification = await notifyBrokenLinks(newlyFlagged, summary, { flagshipRefresh });
     if (notification.sent) {
       console.log(
-        `link-health: notified admin about ${newlyFlagged.length} newly flagged link(s).`,
+        `link-health: notified admin about ${newlyFlagged.length} newly flagged link(s) and ${flagshipRefresh.length} curated program(s) to re-check.`,
       );
     } else {
       console.log(`link-health: admin notification skipped (${notification.reason}).`);
