@@ -269,7 +269,12 @@ export function MetallicCard3D({
 
   useEffect(() => {
     const container = mountRef.current;
-    if (!container || !webglSupported) return;
+    if (!webglSupported) {
+      (window as Window & { __studentstackCardReady?: boolean }).__studentstackCardReady = true;
+      window.dispatchEvent(new CustomEvent("studentstack:card-ready"));
+      return;
+    }
+    if (!container) return;
 
     const width = container.clientWidth || 490;
     const height = container.clientHeight || 380;
@@ -473,6 +478,7 @@ export function MetallicCard3D({
 
     let animId: number;
     let lastTime = performance.now();
+    let announcedReady = false;
 
     const animate = (now: number) => {
       animId = requestAnimationFrame(animate);
@@ -508,6 +514,12 @@ export function MetallicCard3D({
         flipGroup.rotation.y = currentFlipRef.current;
 
         renderer.render(scene, camera);
+
+        if (!announcedReady) {
+          announcedReady = true;
+          (window as Window & { __studentstackCardReady?: boolean }).__studentstackCardReady = true;
+          window.dispatchEvent(new CustomEvent("studentstack:card-ready"));
+        }
 
         if (yawDiff <= 0.0003 && pitchDiff <= 0.0003 && yDiff <= 0.0003 && flipDiff <= 0.0003) {
           needsRender = false;

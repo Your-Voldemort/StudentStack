@@ -2,6 +2,7 @@ import Link from "next/link";
 import styles from "@/components/home/brand.module.css";
 import { IdCard } from "@/components/home/id-card";
 import { SiteFooter, SiteHeader } from "@/components/home/site-chrome";
+import { HomePreloader } from "@/components/home/student-loaders";
 import { passFontVariables } from "@/lib/fonts";
 import { getCategoriesWithCounts, getHomeStats, getLiveCostTypeCounts, getPopularThisWeek, getResourcesBySlugs } from "@/lib/resources";
 import { heroLede } from "@/lib/home-copy";
@@ -48,6 +49,7 @@ export default async function Home() {
 
   return (
     <div className={`${passFontVariables} ${styles.root}`}>
+      <HomePreloader live={stats.live} categoryCount={categories.length} />
       <SiteHeader total={stats.total} />
 
       <main>

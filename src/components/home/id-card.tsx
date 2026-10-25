@@ -3,6 +3,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import styles from "./brand.module.css";
+import { PassCardSkeleton } from "./student-loaders";
 
 type Zone = { name: string; count: number };
 
@@ -10,15 +11,7 @@ const MetallicCard3D = dynamic(
   () => import("./metallic-card-3d").then((mod) => mod.MetallicCard3D),
   {
     ssr: false,
-    loading: () => (
-      <div
-        className={styles.canvasContainer}
-        style={{
-          borderRadius: 14,
-          background: "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01))",
-        }}
-      />
-    ),
+    loading: () => <PassCardSkeleton />,
   }
 );
 
