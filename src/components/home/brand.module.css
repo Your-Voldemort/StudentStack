@@ -51,6 +51,11 @@
   outline-offset: 3px;
 }
 
+.root ::selection {
+  background: var(--amber);
+  color: var(--on-amber);
+}
+
 .wrap {
   width: 100%;
   max-width: 1180px;
@@ -1061,8 +1066,17 @@
   border-radius: 10px;
   background: var(--ground);
   color: var(--ink);
+  caret-color: var(--amber);
   font: inherit;
   transition: border-color 150ms ease-out;
+}
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--ground) inset;
+  -webkit-text-fill-color: var(--ink);
+  caret-color: var(--amber);
+  transition: background-color 600000s 0s, color 600000s 0s;
 }
 .input:hover {
   border-color: var(--muted);
@@ -1073,6 +1087,35 @@
 }
 .input[aria-invalid="true"] {
   border-color: var(--danger);
+}
+.passwordWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.passwordInput {
+  padding-right: 78px;
+}
+.passwordToggle {
+  position: absolute;
+  right: 8px;
+  min-height: 34px;
+  padding-inline: 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 140ms ease, border-color 140ms ease;
+}
+.passwordToggle:hover {
+  color: var(--ink);
+  border-color: var(--muted);
 }
 .textarea {
   min-height: 140px;

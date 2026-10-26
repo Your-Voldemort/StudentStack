@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { verifyAdmin } from "@/lib/admin/auth";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { email } = await verifyAdmin();
 

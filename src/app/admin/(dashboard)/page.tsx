@@ -8,7 +8,25 @@ import { getAllResources, getCategories, getPendingSubmissions } from "@/lib/res
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { approveSubmission, deleteResource, rejectSubmission, updateStatus } from "./actions";
 
+export const dynamic = "force-dynamic";
+
 const STATUS_OPTIONS = ["active", "expired", "broken"] as const;
+
+async function getLastVerifiedAt(): Promise<string | null> {
+  if (!process.env.POSTGRES_URL) return null;
+  try {
+    const [row] = await db
+      .select({ maxVerified: sql<string | null>`max(${schema.resources.lastVerifiedAt})` })
+      .from(schema.resources);
+    return row?.maxVerified ?? null;
+  } catch (error) {
+    console.warn(
+      "[StudentStack DB] getLastVerifiedAt query failed:",
+      error instanceof Error ? error.message : error,
+    );
+    return null;
+  }
+}
 
 // Submissions store the student's auth user id; look the emails up with the
 // service-role client so the queue shows who sent each offer.
@@ -26,13 +44,11 @@ async function getSubmitterEmails(ids: (string | null)[]): Promise<Map<string, s
 }
 
 export default async function AdminDashboard() {
-  const [resources, categories, pending, [{ maxVerified }]] = await Promise.all([
+  const [resources, categories, pending, maxVerified] = await Promise.all([
     getAllResources(),
     getCategories(),
     getPendingSubmissions(),
-    db
-      .select({ maxVerified: sql<string | null>`max(${schema.resources.lastVerifiedAt})` })
-      .from(schema.resources),
+    getLastVerifiedAt(),
   ]);
   const submitterEmails = await getSubmitterEmails(pending.map((p) => p.submittedBy));
 
