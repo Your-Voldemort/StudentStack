@@ -535,7 +535,7 @@ export async function getPopularThisWeek(limit: number = 5): Promise<PopularReso
       .innerJoin(resources, eq(clickEvents.resourceId, resources.id))
       .where(
         and(
-          sql`${clickEvents.createdAt} >= ${weekAgo}`,
+          gte(clickEvents.createdAt, weekAgo),
           eq(resources.approved, true),
           eq(resources.status, "active"),
         ),
