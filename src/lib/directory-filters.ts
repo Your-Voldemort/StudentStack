@@ -46,6 +46,17 @@ export type DirectoryFilters = {
   duration: string[];
 };
 
+const fuseSearchCache = new WeakMap<Fuse<Resource>, { query: string; orderMap: Map<number, number> }>();
+
+function getSearchOrderMap(fuse: Fuse<Resource>, query: string): Map<number, number> {
+  const cached = fuseSearchCache.get(fuse);
+  if (cached && cached.query === query) return cached.orderMap;
+  const searchResults = fuse.search(query);
+  const orderMap = new Map(searchResults.map((m, idx) => [m.item.id, idx]));
+  fuseSearchCache.set(fuse, { query, orderMap });
+  return orderMap;
+}
+
 // `skip` excludes one dimension from filtering — used to compute faceted
 // counts for that dimension (e.g. category counts that reflect every OTHER
 // active filter, but not the category selection itself).
@@ -88,8 +99,7 @@ export function applyFilters(
     list = list.filter((r) => r.duration && filters.duration.includes(r.duration));
   }
   if (skip !== "search" && filters.search.trim()) {
-    const searchResults = fuse.search(filters.search);
-    const orderMap = new Map(searchResults.map((m, idx) => [m.item.id, idx]));
+    const orderMap = getSearchOrderMap(fuse, filters.search);
     list = list
       .filter((r) => orderMap.has(r.id))
       .sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0));
