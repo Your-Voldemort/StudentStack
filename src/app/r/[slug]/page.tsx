@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -26,6 +27,8 @@ import dirStyles from "@/components/directory/directory.module.css";
 // mode. Force per-request rendering instead (same as /directory).
 export const dynamic = "force-dynamic";
 
+const getCachedResourceBySlug = cache(getResourceBySlug);
+
 export async function generateStaticParams() {
   const slugs = await getAllResourceSlugs();
   return slugs.map(({ slug }) => ({ slug }));
@@ -43,7 +46,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const resource = await getResourceBySlug(slug);
+  const resource = await getCachedResourceBySlug(slug);
   if (!resource) return {};
   const siteUrl = getSiteUrl();
   const canonical = `${siteUrl}/r/${resource.slug}`;
@@ -117,21 +120,21 @@ export default async function ResourcePage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ reviews?: string }>;
 }) {
-  const { slug } = await params;
-  const resource = await getResourceBySlug(slug);
+  const [{ slug }, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const resource = await getCachedResourceBySlug(slug);
   if (!resource) notFound();
-  const reviewSort = parseReviewSort((await searchParams).reviews);
-  const [reviews, rating, gotItCount] = await Promise.all([
+  const reviewSort = parseReviewSort(resolvedSearchParams.reviews);
+  const [reviews, rating, gotItCount, allResources] = await Promise.all([
     getResourceReviews(resource.id, reviewSort),
     getRatingSummary(resource.id),
     getGotItCount(resource.id),
+    getAllResources(),
   ]);
 
   const siteUrl = getSiteUrl();
   const canonical = `${siteUrl}/r/${resource.slug}`;
   const verified = relativeTime(resource.lastVerifiedAt);
 
-  const allResources = await getAllResources();
   const related = allResources
     .filter((r) => r.categoryId === resource.categoryId && r.id !== resource.id)
     .slice(0, 6);

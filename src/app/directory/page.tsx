@@ -5,7 +5,7 @@ import { DirectorySkeleton } from "@/components/directory/directory-skeleton";
 import { BookmarksProvider } from "@/components/bookmarks/bookmarks-provider";
 import { SiteHeader } from "@/components/home/site-chrome";
 import { passFontVariables } from "@/lib/fonts";
-import { getAllResources, getAllTags, getCategories, getResourceCount } from "@/lib/resources";
+import { getAllResources, getAllTags, getCategories } from "@/lib/resources";
 import { PRESETS } from "@/lib/presets";
 import { searchPlaceholder } from "@/lib/directory-filters";
 import { getRatingSummaries } from "@/lib/reviews";
@@ -24,10 +24,9 @@ export default async function DirectoryPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
-  const [rows, categories, total, ratings, gotIt] = await Promise.all([
+  const [rows, categories, ratings, gotIt] = await Promise.all([
     getAllResources(),
     getCategories(),
-    getResourceCount(),
     getRatingSummaries(),
     getGotItCounts(),
   ]);
@@ -36,7 +35,8 @@ export default async function DirectoryPage({
   );
   const allTags = getAllTags(resources);
   const { q } = await searchParams;
-  const count = resources.length || total;
+  const total = resources.length;
+  const count = total;
 
   return (
     <div className={`${passFontVariables} ${homeStyles.root}`}>

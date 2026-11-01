@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { cache, Suspense } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { DirectoryClient } from "@/components/directory/directory-client";
 import { DirectorySkeleton } from "@/components/directory/directory-skeleton";
 import { SiteHeader } from "@/components/home/site-chrome";
 import { passFontVariables } from "@/lib/fonts";
-import { getAllResources, getAllTags, getCategories, getResourceCount } from "@/lib/resources";
+import { getAllResources, getAllTags, getCategories } from "@/lib/resources";
 import { applyFilters, searchPlaceholder } from "@/lib/directory-filters";
 import { getPreset, fullFilters, PRESETS } from "@/lib/presets";
 import dirStyles from "@/components/directory/directory.module.css";
@@ -14,6 +14,8 @@ import homeStyles from "@/components/home/brand.module.css";
 import Fuse from "fuse.js";
 
 export const dynamic = "force-dynamic";
+
+const getCachedResources = cache(getAllResources);
 
 export function generateStaticParams() {
   return PRESETS.map((p) => ({ preset: p.slug }));
@@ -27,7 +29,7 @@ export async function generateMetadata({
   const { preset: slug } = await params;
   const preset = getPreset(slug);
   if (!preset) return {};
-  const resources = await getAllResources();
+  const resources = await getCachedResources();
   // Issue #76: preset pages exclude non-active resources from their counts.
   const activeResources = resources.filter((r) => r.status === "active");
   const fuse = new Fuse(activeResources, {
@@ -51,11 +53,11 @@ export default async function PresetPage({
   const preset = getPreset(slug);
   if (!preset) notFound();
 
-  const [resources, categories, total] = await Promise.all([
-    getAllResources(),
+  const [resources, categories] = await Promise.all([
+    getCachedResources(),
     getCategories(),
-    getResourceCount(),
   ]);
+  const total = resources.length;
   // Issue #76: preset landing pages only ever show healthy offers — broken
   // and expired resources are excluded, mirroring how getResourcesBySlugs
   // already restricts homepage featured items to status = 'active'.

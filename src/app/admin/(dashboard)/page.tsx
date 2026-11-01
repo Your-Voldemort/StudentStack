@@ -4,7 +4,7 @@ import { db, schema } from "@/db";
 import { FlagshipRefreshList } from "@/components/admin/flagship-refresh-list";
 import { FLAGSHIP_OPPORTUNITIES } from "@/lib/flagship-opportunities";
 import { flagshipsNeedingRefresh } from "@/lib/flagship-freshness";
-import { getAllResources, getCategories, getPendingSubmissions } from "@/lib/resources";
+import { getAllResources, getPendingSubmissions } from "@/lib/resources";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { approveSubmission, deleteResource, rejectSubmission, updateStatus } from "./actions";
 
@@ -44,13 +44,11 @@ async function getSubmitterEmails(ids: (string | null)[]): Promise<Map<string, s
 }
 
 export default async function AdminDashboard() {
-  const [resources, categories, pending, maxVerified] = await Promise.all([
+  const [resources, [pending, submitterEmails], maxVerified] = await Promise.all([
     getAllResources(),
-    getCategories(),
-    getPendingSubmissions(),
+    getPendingSubmissions().then(async (list) => [list, await getSubmitterEmails(list.map((p) => p.submittedBy))] as const),
     getLastVerifiedAt(),
   ]);
-  const submitterEmails = await getSubmitterEmails(pending.map((p) => p.submittedBy));
 
   const counts = { active: 0, expired: 0, broken: 0 } as Record<string, number>;
   for (const r of resources) counts[r.status]++;
@@ -134,39 +132,39 @@ export default async function AdminDashboard() {
           </tr>
         </thead>
         <tbody>
-          {resources.map((r) => {
-            const category = categories.find((c) => c.slug === r.categorySlug);
-            return (
-              <tr key={r.id} className="border-line border-b">
-                <td className="py-2">{r.name}</td>
-                <td>{category?.name ?? r.categorySlug}</td>
-                <td>
-                  <form action={updateStatus.bind(null, r.id)} className="flex items-center gap-2">
-                    <select name="status" defaultValue={r.status} className="border-line rounded border px-2 py-1">
-                      {STATUS_OPTIONS.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                    <button type="submit" className="text-xs underline">
-                      Save
-                    </button>
-                  </form>
-                </td>
-                <td className="space-x-3 text-right">
-                  <Link href={`/admin/resources/${r.id}`} className="underline">
-                    Edit
-                  </Link>
-                  <form action={deleteResource.bind(null, r.id)} className="inline">
-                    <button type="submit" className="text-destructive underline">
-                      Delete
-                    </button>
-                  </form>
-                </td>
-              </tr>
-            );
-          })}
+          {resources.map((r) => (
+            <tr
+              key={r.id}
+              className="border-line border-b [content-visibility:auto] [contain-intrinsic-size:auto_41px]"
+            >
+              <td className="py-2">{r.name}</td>
+              <td>{r.categoryName || r.categorySlug}</td>
+              <td>
+                <form action={updateStatus.bind(null, r.id)} className="flex items-center gap-2">
+                  <select name="status" defaultValue={r.status} className="border-line rounded border px-2 py-1">
+                    {STATUS_OPTIONS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="submit" className="text-xs underline">
+                    Save
+                  </button>
+                </form>
+              </td>
+              <td className="space-x-3 text-right">
+                <Link href={`/admin/resources/${r.id}`} className="underline">
+                  Edit
+                </Link>
+                <form action={deleteResource.bind(null, r.id)} className="inline">
+                  <button type="submit" className="text-destructive underline">
+                    Delete
+                  </button>
+                </form>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

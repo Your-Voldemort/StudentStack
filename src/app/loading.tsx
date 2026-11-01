@@ -9,6 +9,7 @@ export default function Loading() {
       role="status"
       aria-busy="true"
       aria-label="Loading StudentStack"
+      data-has-theme-toggle
     >
       <div
         data-studentstack-preloader
