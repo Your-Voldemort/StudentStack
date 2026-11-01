@@ -7,7 +7,10 @@ import { NextResponse, type NextRequest } from "next/server";
 // with verifyAdmin() and submission actions re-check the signed-in user.
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isAdminRoute = pathname.startsWith("/admin") && pathname !== "/admin/login";
+  if (pathname === "/admin/login") {
+    return NextResponse.next({ request });
+  }
+  const isAdminRoute = pathname.startsWith("/admin");
 
   // Local dev without Supabase configured: behave as signed out, like
   // /api/bookmarks, instead of throwing a 500 on every matched route.

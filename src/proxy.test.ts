@@ -73,4 +73,10 @@ describe("proxy with Supabase configured", () => {
     const res = await run("/admin");
     expect(res.headers.get("location")).toBeNull();
   });
+
+  it("skips the Supabase Auth round-trip on /admin/login", async () => {
+    const res = await run("/admin/login");
+    expect(res.headers.get("location")).toBeNull();
+    expect(mockCreateClient).not.toHaveBeenCalled();
+  });
 });
