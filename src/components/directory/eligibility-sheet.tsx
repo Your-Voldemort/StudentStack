@@ -49,6 +49,7 @@ export function EligibilitySheet({
   profile: EligibilityProfile | null;
   onSave: (profile: EligibilityProfile | null) => void;
 }) {
+  if (!open) return null;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={`max-h-[90vh] overflow-y-auto ${styles.dialog}`}>

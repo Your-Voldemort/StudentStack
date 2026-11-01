@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Fuse from "fuse.js";
 import { X, LayoutGrid, List, SlidersHorizontal } from "lucide-react";
@@ -77,6 +77,29 @@ function kindSelectionLabel(kinds: string[]): string {
   const chip = KIND_CHIPS.find((c) => c.key !== "all" && sameKindSet(c.kinds, kinds));
   if (chip) return chip.label;
   return kinds.map((k) => KIND_VALUE_LABELS[k] ?? k).join(", ");
+}
+
+function replaceDirectoryUrl(nextUrl: string, router: ReturnType<typeof useRouter>) {
+  if (typeof window !== "undefined" && typeof window.history?.replaceState === "function") {
+    window.history.replaceState(window.history.state, "", nextUrl);
+  } else {
+    router.replace(nextUrl, { scroll: false });
+  }
+}
+
+const EMPTY_FUSE = { search: () => [] } as unknown as Fuse<Resource>;
+const fuseInstances = new WeakMap<Resource[], Fuse<Resource>>();
+
+function getOrCreateFuse(resources: Resource[]): Fuse<Resource> {
+  const existing = fuseInstances.get(resources);
+  if (existing) return existing;
+  const instance = new Fuse(resources, {
+    keys: ["name", "tagline", "description", "tags"],
+    threshold: 0.4,
+    ignoreLocation: true,
+  });
+  fuseInstances.set(resources, instance);
+  return instance;
 }
 
 function readStoredFilters(): Partial<DirectoryFilters> {
@@ -216,17 +239,36 @@ const searchInputRef = useRef<HTMLInputElement>(null);
     if (v.length) params.set("verification", v.join(","));
     if (cc.length) params.set("card", cc.join(","));
     if (d.length) params.set("duration", d.join(","));
-    router.replace(`/directory${params.size ? `?${params}` : ""}`, { scroll: false });
+    const nextUrl = `/directory${params.size ? `?${params}` : ""}`;
+    replaceDirectoryUrl(nextUrl, router);
   }
 
+  useEffect(() => {
+    const hero = document.querySelector<HTMLInputElement>("input[data-directory-search]");
+    if (!hero) return;
+    const form = hero.closest("form");
+    const onInput = () => {
+      setSearch(hero.value);
+      syncUrl({ search: hero.value });
+    };
+    const onSubmit = (e: Event) => {
+      e.preventDefault();
+      setSearch(hero.value);
+      syncUrl({ search: hero.value });
+    };
+    hero.addEventListener("input", onInput);
+    form?.addEventListener("submit", onSubmit);
+    return () => {
+      hero.removeEventListener("input", onInput);
+      form?.removeEventListener("submit", onSubmit);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- syncUrl reads latest state
+  }, [category, region, kind, costType, tags, verificationNeeded, creditCardRequired, duration]);
+
+  const hasSearchQuery = Boolean(deferredSearch.trim());
   const fuse = useMemo(
-    () =>
-      new Fuse(resources, {
-        keys: ["name", "tagline", "description", "tags"],
-        threshold: 0.4,
-        ignoreLocation: true,
-      }),
-    [resources],
+    () => (hasSearchQuery ? getOrCreateFuse(resources) : EMPTY_FUSE),
+    [resources, hasSearchQuery],
   );
 
   const filters: DirectoryFilters = useMemo(
@@ -377,11 +419,18 @@ const searchInputRef = useRef<HTMLInputElement>(null);
     setVisibleCount(PAGE_SIZE);
   }
 
-  function addTag(tag: string) {
-    const next = tags.includes(tag) ? tags : [...tags, tag];
-    setTags(next);
-    syncUrl({ tags: next });
-  }
+  const addTag = useCallback(
+    (tag: string) => {
+      setTags((prev) => {
+        if (prev.includes(tag)) return prev;
+        const next = [...prev, tag];
+        syncUrl({ tags: next });
+        return next;
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- syncUrl uses latest state
+    [search, category, region, kind, costType, verificationNeeded, creditCardRequired, duration],
+  );
 
   function removeTag(tag: string) {
     const next = tags.filter((t) => t !== tag);
@@ -443,7 +492,9 @@ const searchInputRef = useRef<HTMLInputElement>(null);
     setVerificationNeeded([]);
     setCreditCardRequired([]);
     setDuration([]);
-    router.replace("/directory", { scroll: false });
+    const hero = document.querySelector<HTMLInputElement>("input[data-directory-search]");
+    if (hero) hero.value = "";
+    replaceDirectoryUrl("/directory", router);
   }
 
   const hasActiveFilters =

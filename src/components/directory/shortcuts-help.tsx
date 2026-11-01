@@ -25,6 +25,7 @@ export function ShortcutsHelp({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  if (!open) return null;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={`max-w-sm ${styles.dialog}`}>

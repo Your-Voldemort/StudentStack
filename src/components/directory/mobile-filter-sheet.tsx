@@ -16,6 +16,7 @@ export function MobileFilterSheet({
   resultCount: number;
   onClearAll?: () => void;
 } & ComponentProps<typeof FilterPanel>) {
+  if (!open) return null;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="top-auto bottom-0 left-0 flex flex-col max-h-[88vh] h-[88vh] w-full max-w-full translate-x-0 translate-y-0 overflow-hidden rounded-t-3xl rounded-b-none border-t border-[rgba(255,255,255,0.14)] bg-[#121215] p-0 text-[#f4f4f5] shadow-2xl sm:max-w-full font-sans">

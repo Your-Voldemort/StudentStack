@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import type { Resource } from "@/lib/resources";
 import { relativeTime } from "@/lib/format";
@@ -44,7 +43,7 @@ function ResourceIcon({ resource }: { resource: Resource }) {
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element -- external favicon
-    <img src={src} alt="" width={38} height={38} onError={() => setFailed(true)} />
+    <img src={src} alt="" width={38} height={38} loading="lazy" decoding="async" onError={() => setFailed(true)} />
   );
 }
 
@@ -87,7 +86,7 @@ function trackOfferClick(resourceId: number) {
   }
 }
 
-export function ResourceCard({
+export const ResourceCard = memo(function ResourceCard({
   resource,
   onTagClick,
 }: {
@@ -95,6 +94,7 @@ export function ResourceCard({
   onTagClick: (tag: string) => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const verified = relativeTime(resource.lastVerifiedAt);
   const title = resource.tagline || resource.name;
 
@@ -172,24 +172,31 @@ export function ResourceCard({
 
       <h3 className={styles.offerTitle}>{title}</h3>
 
-      <Dialog>
-        <DialogTrigger asChild>
-          <button type="button" style={{ textAlign: "left", background: "none", border: 0, padding: 0, cursor: "pointer" }}>
-            <p className={styles.offerDesc}>{resource.description}</p>
-          </button>
-        </DialogTrigger>
-        <DialogContent className={styles.dialog}>
-          <DialogHeader>
-            <DialogTitle>{resource.name}</DialogTitle>
-            <DialogDescription className="whitespace-pre-line">{resource.description}</DialogDescription>
-          </DialogHeader>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
-            {resource.tags.map((t) => (
-              <button key={t} type="button" onClick={() => onTagClick(t)} style={{ textDecoration: "underline" }}>{t}</button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <button
+        type="button"
+        onClick={() => setDialogOpen(true)}
+        style={{ textAlign: "left", background: "none", border: 0, padding: 0, cursor: "pointer" }}
+      >
+        <p className={styles.offerDesc}>{resource.description}</p>
+      </button>
+
+      {dialogOpen && (
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className={styles.dialog}>
+            <DialogHeader>
+              <DialogTitle>{resource.name}</DialogTitle>
+              <DialogDescription className="whitespace-pre-line">{resource.description}</DialogDescription>
+            </DialogHeader>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+              {resource.tags.map((t) => (
+                <button key={t} type="button" onClick={() => onTagClick(t)} style={{ textDecoration: "underline" }}>
+                  {t}
+                </button>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {resource.rating ? (
         <a href={`/r/${resource.slug}#reviews-heading`} className={styles.ratingRow}>
@@ -242,4 +249,4 @@ export function ResourceCard({
       </div>
     </article>
   );
-}
+});
