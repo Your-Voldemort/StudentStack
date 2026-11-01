@@ -18,26 +18,29 @@ interface MetallicCard3DProps {
 
 function createFrontTexture(live: number, categoryCount: number, year: number): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
-  canvas.width = 2048;
-  canvas.height = 1292;
+  const logicalWidth = 2048;
+  const logicalHeight = 1292;
+  canvas.width = 1024;
+  canvas.height = 646;
   const ctx = canvas.getContext("2d");
   if (!ctx) return new THREE.CanvasTexture(canvas);
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.scale(0.5, 0.5);
+  ctx.clearRect(0, 0, logicalWidth, logicalHeight);
 
-  const bgGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  const bgGrad = ctx.createLinearGradient(0, 0, logicalWidth, logicalHeight);
   bgGrad.addColorStop(0, "#f3f5f8");
   bgGrad.addColorStop(0.25, "#e5e9ee");
   bgGrad.addColorStop(0.5, "#f8fafc");
   bgGrad.addColorStop(0.75, "#dfe4ea");
   bgGrad.addColorStop(1, "#edf0f4");
   ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, logicalWidth, logicalHeight);
 
   ctx.fillStyle = "rgba(0, 0, 0, 0.02)";
-  for (let i = 0; i < canvas.height; i += 2) {
+  for (let i = 0; i < logicalHeight; i += 4) {
     if (Math.random() > 0.35) {
-      ctx.fillRect(0, i, canvas.width, 1.2);
+      ctx.fillRect(0, i, logicalWidth, 1.5);
     }
   }
 
@@ -48,10 +51,10 @@ function createFrontTexture(live: number, categoryCount: number, year: number): 
 
   ctx.font = "700 50px monospace";
   ctx.fillStyle = "#1a1d24";
-  ctx.fillText("STUDENT PASS", canvas.width - 560, 160);
+  ctx.fillText("STUDENT PASS", logicalWidth - 560, 160);
 
   ctx.fillStyle = "#0f1115";
-  ctx.fillRect(130, 210, canvas.width - 260, 6);
+  ctx.fillRect(130, 210, logicalWidth - 260, 6);
 
   const boxX = 130;
   const boxY = 275;
@@ -114,7 +117,7 @@ function createFrontTexture(live: number, categoryCount: number, year: number): 
 
   ctx.fillStyle = "#2d3036";
   ctx.font = "600 38px monospace";
-  ctx.fillText(`No. ${serial} - ${year}`, canvas.width - 560, barcodeY + 82);
+  ctx.fillText(`No. ${serial} - ${year}`, logicalWidth - 560, barcodeY + 82);
 
   ctx.fillStyle = "#43464d";
   ctx.font = "600 38px monospace";
@@ -129,26 +132,29 @@ function createFrontTexture(live: number, categoryCount: number, year: number): 
 
 function createBackTexture(zones: Zone[], moreZones: number): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
-  canvas.width = 2048;
-  canvas.height = 1292;
+  const logicalWidth = 2048;
+  const logicalHeight = 1292;
+  canvas.width = 1024;
+  canvas.height = 646;
   const ctx = canvas.getContext("2d");
   if (!ctx) return new THREE.CanvasTexture(canvas);
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.scale(0.5, 0.5);
+  ctx.clearRect(0, 0, logicalWidth, logicalHeight);
 
-  const bgGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  const bgGrad = ctx.createLinearGradient(0, 0, logicalWidth, logicalHeight);
   bgGrad.addColorStop(0, "#191a1d");
   bgGrad.addColorStop(0.5, "#22252a");
   bgGrad.addColorStop(1, "#151619");
   ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, logicalWidth, logicalHeight);
 
   ctx.fillStyle = "#e4e8ec";
   ctx.font = "900 68px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.fillText("ACCESS ZONES", 130, 150);
 
   ctx.fillStyle = "#555962";
-  ctx.fillRect(130, 185, canvas.width - 260, 4);
+  ctx.fillRect(130, 185, logicalWidth - 260, 4);
 
   const startY = 280;
   const colWidth = 840;
@@ -187,34 +193,37 @@ function createBackTexture(zones: Zone[], moreZones: number): THREE.CanvasTextur
 
 function createStudioEnvMap(): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
-  canvas.width = 1024;
-  canvas.height = 512;
+  const logicalWidth = 1024;
+  const logicalHeight = 512;
+  canvas.width = 512;
+  canvas.height = 256;
   const ctx = canvas.getContext("2d");
   if (!ctx) return new THREE.CanvasTexture(canvas);
 
+  ctx.scale(0.5, 0.5);
   ctx.fillStyle = "#08090b";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, logicalWidth, logicalHeight);
 
   const topGrad = ctx.createLinearGradient(0, 0, 0, 220);
   topGrad.addColorStop(0, "rgba(255, 255, 255, 1.0)");
   topGrad.addColorStop(0.5, "rgba(235, 240, 250, 0.7)");
   topGrad.addColorStop(1, "rgba(8, 9, 11, 0)");
   ctx.fillStyle = topGrad;
-  ctx.fillRect(0, 0, canvas.width, 220);
+  ctx.fillRect(0, 0, logicalWidth, 220);
 
   const blueGrad = ctx.createLinearGradient(680, 0, 1024, 0);
   blueGrad.addColorStop(0, "rgba(8, 9, 11, 0)");
   blueGrad.addColorStop(0.5, "rgba(103, 232, 249, 0.75)");
   blueGrad.addColorStop(1, "rgba(8, 9, 11, 0)");
   ctx.fillStyle = blueGrad;
-  ctx.fillRect(680, 0, 344, canvas.height);
+  ctx.fillRect(680, 0, 344, logicalHeight);
 
   const lavGrad = ctx.createLinearGradient(0, 0, 360, 0);
   lavGrad.addColorStop(0, "rgba(8, 9, 11, 0)");
   lavGrad.addColorStop(0.5, "rgba(216, 180, 254, 0.65)");
   lavGrad.addColorStop(1, "rgba(8, 9, 11, 0)");
   ctx.fillStyle = lavGrad;
-  ctx.fillRect(0, 0, 360, canvas.height);
+  ctx.fillRect(0, 0, 360, logicalHeight);
 
   const envTexture = new THREE.CanvasTexture(canvas);
   envTexture.mapping = THREE.EquirectangularReflectionMapping;
@@ -263,9 +272,16 @@ export function MetallicCard3D({
   const targetPitchRef = useRef(0);
   const currentYawRef = useRef(0);
   const currentPitchRef = useRef(0);
+  const flippedRef = useRef(flipped);
   const currentFlipRef = useRef(flipped ? Math.PI : 0);
   const scrollProgressRef = useRef(0);
   const currentYRef = useRef(0.08);
+  const wakeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    flippedRef.current = flipped;
+    wakeRef.current?.();
+  }, [flipped]);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -416,6 +432,7 @@ export function MetallicCard3D({
     const wake = () => {
       needsRender = true;
     };
+    wakeRef.current = wake;
 
     const handlePointerMove = (e: PointerEvent) => {
       if (!hasFinePointer || prefersReducedMotion) return;
@@ -494,7 +511,7 @@ export function MetallicCard3D({
       const alpha = 1 - Math.exp(-10 * deltaSeconds);
 
       const targetY = 0.08 + scrollProgressRef.current * 0.36;
-      const targetFlip = flipped ? Math.PI : 0;
+      const targetFlip = flippedRef.current ? Math.PI : 0;
 
       const yawDiff = Math.abs(targetYawRef.current - currentYawRef.current);
       const pitchDiff = Math.abs(targetPitchRef.current - currentPitchRef.current);
@@ -551,8 +568,9 @@ export function MetallicCard3D({
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
+      wakeRef.current = null;
     };
-  }, [live, categoryCount, year, zones, moreZones, flipped, webglSupported]);
+  }, [live, categoryCount, year, zones, moreZones, webglSupported]);
 
   if (!webglSupported) {
     return (

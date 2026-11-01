@@ -5,8 +5,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { LoaderFive } from "@/components/ui/loader";
 import styles from "./brand.module.css";
 
-const MIN_LOADER_DURATION_MS = 2500;
-const MAX_WAIT_DURATION_MS = 5500;
+const MIN_LOADER_DURATION_MS = 320;
+const MAX_WAIT_DURATION_MS = 1600;
 
 type ReadyWindow = Window & {
   __studentstackCardReady?: boolean;
@@ -24,6 +24,7 @@ function useAutonomousProgress(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
     let frameId: number;
+    let lastReportedPercent = 8;
     const win = window as ReadyWindow;
     const start = win.__studentstackLoaderStart ?? performance.now();
     win.__studentstackLoaderStart = start;
@@ -33,7 +34,11 @@ function useAutonomousProgress(enabled: boolean) {
       // Asymptotically approaches 0.92 while waiting for server stream
       const value = 0.08 + 0.84 * (1 - Math.exp(-elapsed / 1400));
       win.__studentstackLoaderProgress = value;
-      setAutoProgress(value);
+      const nextPercent = Math.round(value * 100);
+      if (Math.abs(nextPercent - lastReportedPercent) >= 2) {
+        lastReportedPercent = nextPercent;
+        setAutoProgress(value);
+      }
       frameId = requestAnimationFrame(tick);
     };
 
@@ -274,11 +279,12 @@ export function HomePreloader({
   const [progress, setProgress] = useState(0.08);
 
   useEffect(() => {
+    const win = window as ReadyWindow;
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
 
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion || win.__studentstackCardReady) {
       const skipId = requestAnimationFrame(() => setIsOpen(false));
       return () => cancelAnimationFrame(skipId);
     }
@@ -286,8 +292,8 @@ export function HomePreloader({
     let cancelled = false;
     let frameId: number;
     let finishTimer: ReturnType<typeof setTimeout> | undefined;
+    let lastReportedPercent = -1;
 
-    const win = window as ReadyWindow;
     const nowAtMount = performance.now();
     const mountTime = win.__studentstackLoaderStart ?? nowAtMount;
     win.__studentstackLoaderStart = mountTime;
@@ -331,6 +337,15 @@ export function HomePreloader({
       fontsReady = true;
     }
 
+    const reportProgress = (value: number, force = false) => {
+      const pct = Math.round(value * 100);
+      if (force || Math.abs(pct - lastReportedPercent) >= 2) {
+        lastReportedPercent = pct;
+        setHydrated(true);
+        setProgress(value);
+      }
+    };
+
     const tick = (now: number) => {
       if (cancelled) return;
 
@@ -346,13 +361,12 @@ export function HomePreloader({
         if (completionStartedAt === null) {
           completionStartedAt = now;
         }
-        const finalizeRatio = Math.min((now - completionStartedAt) / 320, 1);
+        const finalizeRatio = Math.min((now - completionStartedAt) / 160, 1);
         currentProgress = Math.max(
           currentProgress,
           0.92 + 0.08 * finalizeRatio,
         );
-        setHydrated(true);
-        setProgress(currentProgress);
+        reportProgress(currentProgress, finalizeRatio >= 1);
 
         if (finalizeRatio >= 1) {
           finishTimer = setTimeout(() => {
@@ -361,7 +375,7 @@ export function HomePreloader({
               delete win.__studentstackLoaderProgress;
               setIsOpen(false);
             }
-          }, 180);
+          }, 80);
           return;
         }
       } else {
@@ -376,13 +390,12 @@ export function HomePreloader({
           (cardReady ? 0.06 : 0);
         const target = Math.min(0.92, easedTime * 0.78 + readinessBonus);
         // Smooth velocity cap so heavy main-thread frames (like WebGL init) never jump abruptly
-        const maxStep = (dt / 1000) * 0.65;
+        const maxStep = (dt / 1000) * 1.4;
         currentProgress = Math.min(
           0.92,
           Math.max(currentProgress, Math.min(target, currentProgress + maxStep)),
         );
-        setHydrated(true);
-        setProgress(currentProgress);
+        reportProgress(currentProgress);
       }
 
       frameId = requestAnimationFrame(tick);

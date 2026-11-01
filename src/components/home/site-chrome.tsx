@@ -13,7 +13,8 @@ export function SiteHeader({}: { total?: number } = {}) {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled((window.scrollY || document.documentElement.scrollTop) > 25);
+      const next = (window.scrollY || document.documentElement.scrollTop) > 25;
+      setScrolled((prev) => (prev === next ? prev : next));
     };
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });

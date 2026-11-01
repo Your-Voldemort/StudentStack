@@ -47,8 +47,7 @@ export function IdCard({
           />
         </div>
         <picture>
-          <source media="(max-width: 640px)" srcSet="/images/leather-sleeve-mobile.webp" type="image/webp" />
-          <source srcSet="/images/leather-sleeve.webp" type="image/webp" />
+          <source srcSet="/images/leather-sleeve-mobile.webp" type="image/webp" />
           <img
             src="/images/leather-sleeve.png"
             alt="StudentStack leather sleeve cover"
@@ -56,6 +55,7 @@ export function IdCard({
             width={490}
             height={181}
             loading="eager"
+            fetchPriority="high"
             decoding="async"
             aria-hidden="true"
           />
