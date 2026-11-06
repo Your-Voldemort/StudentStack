@@ -169,6 +169,7 @@
 .wordmark {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   min-height: 40px;
   color: inherit;
   font-family: var(--display);
@@ -183,6 +184,11 @@
   flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
+}
+.logoMark {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
 }
 .nav {
   display: flex;

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LogoMark } from "@/components/ui/logo";
 import { Menu, X } from "lucide-react";
 import styles from "./brand.module.css";
 
@@ -39,7 +40,8 @@ export function SiteHeader({}: { total?: number } = {}) {
       >
         <div className={styles.liquidSheen} aria-hidden="true" />
         <Link href="/" className={styles.wordmark}>
-          StudentStack
+          <LogoMark className={styles.logoMark} />
+          <span>StudentStack</span>
         </Link>
         <nav aria-label="Main" className={styles.nav} data-has-theme-toggle>
           <div className={styles.desktopLinks}>
@@ -142,7 +144,8 @@ export function SiteFooter() {
     <footer className={styles.footer}>
       <div className={`${styles.wrap} ${styles.footerInner}`}>
         <Link href="/" className={styles.wordmark}>
-          StudentStack
+          <LogoMark className={styles.logoMark} />
+          <span>StudentStack</span>
         </Link>
         <nav aria-label="Footer" className={styles.nav}>
           <Link href="/directory" className={styles.navLink}>
